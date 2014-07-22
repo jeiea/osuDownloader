@@ -1,0 +1,225 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Canvas x:Key="bloodCat" Width="254" Height="386">
+        <Canvas.Resources>
+            <Ellipse Canvas.Left="-95" Width="190" Canvas.Top="-220" Height="240" Name="ellipse2990" Fill="#FFFFFFFF" x:Key="ellipse2990"/>
+            <Polygon Points="200,-300 200,0 -200,0 -200,-300 " Name="polygon2993" FillRule="NonZero" Fill="#FFFFFFFF" x:Key="polygon2993"/>
+            <Polygon Points="280,404 210,0 -210,0 -280,404 " Name="polygon2996" FillRule="NonZero" Fill="#FFFFFFFF" x:Key="polygon2996"/>
+            <Path Name="path2999" Fill="#FFFFFFFF" Stroke="#FF000000" x:Key="path2999">
+                <Path.Data>
+                    <PathGeometry Figures="m 27 10 c -30 130 116 130 86 0" FillRule="NonZero"/>
+                </Path.Data>
+            </Path>
+        </Canvas.Resources>
+        <Canvas Name="g3003">
+            <Canvas.RenderTransform>
+                <TranslateTransform X="-135.65713" Y="-79.537184"/>
+            </Canvas.RenderTransform>
+            <Path Name="path3258" Fill="#FFD50C0F" StrokeThickness="2" Stroke="#FF000000">
+                <Path.Data>
+                    <PathGeometry Figures="m 388.85713 160.27684 c 0 -105 -48 -105 -105 0" FillRule="NonZero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path3260" Fill="#FF000000" StrokeThickness="2" Stroke="#FF000000">
+                <Path.Data>
+                    <PathGeometry Figures="m 388.85713 160.27684 c 0 -105 -48 -105 -87 0" FillRule="NonZero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path3010" Fill="#FFD50C0F" StrokeThickness="2" Stroke="#FF000000">
+                <Path.Data>
+                    <PathGeometry Figures="m 136.85713 159.48718 c 0 -105 48 -105 105 0" FillRule="NonZero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path3012" Fill="#FF000000" StrokeThickness="2" Stroke="#FF000000">
+                <Path.Data>
+                    <PathGeometry Figures="m 136.85713 159.48718 c 0 -105 48 -105 87 0" FillRule="NonZero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="polygon3018" Fill="#FFD50C0F" StrokeThickness="2" Stroke="#FF000000">
+                <Path.Data>
+                    <PathGeometry Figures="m 199.85713 336.78718 -21 121.2 168 0 -21 -121.2 z" FillRule="NonZero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="ellipse30317" Fill="#FF000000" StrokeThickness="8">
+                <Path.Data>
+                    <PathGeometry Figures="m 331.85713 390.78718 c -16.55931 0 -29.7 16.80433 -29.7 37.2 0 10.19783 3.28517 19.49783 8.64026 26.24838 1.44915 1.82677 2.90182 3.5162 4.63004 4.93685 l 32.63223 0.0154 c 8.15922 -6.66052 13.49747 -18.20113 13.49747 -31.20068 0 -20.39567 -13.14069 -37.2 -29.7 -37.2 z" FillRule="nonzero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="ellipse303151" Fill="#FFD50C0F" StrokeThickness="8">
+                <Path.Data>
+                    <PathGeometry Figures="m 331.85719 393.11479 c 14.92092 0 27.3 15.43116 27.3 34.8 0 12.37743 -5.05526 23.14686 -12.5986 29.30883 l -28.91742 0.38748 c -7.81107 -6.09141 -13.08398 -17.05521 -13.08398 -29.69631 0 -19.36884 12.37907 -34.8 27.3 -34.8 z" FillRule="nonzero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path42631" Fill="#FF000000" StrokeThickness="8">
+                <Path.Data>
+                    <PathGeometry Figures="m 348.35713 410.28718 c -3.13381 0 -5.7 2.56619 -5.7 5.7 0 3.13381 2.56619 5.7 5.7 5.7 3.13381 0 5.7 -2.56619 5.7 -5.7 0 -3.13381 -2.56619 -5.7 -5.7 -5.7 z" FillRule="nonzero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path42615" Fill="#FF000000" StrokeThickness="8">
+                <Path.Data>
+                    <PathGeometry Figures="m 337.85713 398.28718 c -3.13381 0 -5.7 2.56619 -5.7 5.7 0 3.13381 2.56619 5.7 5.7 5.7 3.13381 0 5.7 -2.56619 5.7 -5.7 0 -3.13381 -2.56619 -5.7 -5.7 -5.7 z" FillRule="nonzero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path42592" Fill="#FF000000" StrokeThickness="8">
+                <Path.Data>
+                    <PathGeometry Figures="m 324.35713 398.28718 c -3.13381 0 -5.7 2.56619 -5.7 5.7 0 3.13381 2.56619 5.7 5.7 5.7 3.13381 0 5.7 -2.56619 5.7 -5.7 0 -3.13381 -2.56619 -5.7 -5.7 -5.7 z" FillRule="nonzero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="toenail7" Fill="#FF000000" StrokeThickness="8">
+                <Path.Data>
+                    <PathGeometry Figures="m 315.35713 410.28718 c -3.13381 0 -5.7 2.56619 -5.7 5.7 0 3.13381 2.56619 5.7 5.7 5.7 3.13381 0 5.7 -2.56619 5.7 -5.7 0 -3.13381 -2.56619 -5.7 -5.7 -5.7 z" FillRule="nonzero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="ellipse30426" Fill="#FF000000" StrokeThickness="8">
+                <Path.Data>
+                    <PathGeometry Figures="m 331.85713 422.28718 c -9.64331 0 -17.7 6.45151 -17.7 14.7 0 8.24849 8.05669 14.7 17.7 14.7 9.64331 0 17.7 -6.45151 17.7 -14.7 0 -8.24849 -8.05669 -14.7 -17.7 -14.7 z" FillRule="nonzero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path42571" Fill="#FF000000" StrokeThickness="8">
+                <Path.Data>
+                    <PathGeometry Figures="m 315.35713 410.28718 c -3.13381 0 -5.7 2.56619 -5.7 5.7 0 3.13381 2.56619 5.7 5.7 5.7 3.13381 0 5.7 -2.56619 5.7 -5.7 0 -3.13381 -2.56619 -5.7 -5.7 -5.7 z" FillRule="nonzero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="line3022" Fill="#FF000000" StrokeThickness="89">
+                <Path.Data>
+                    <PathGeometry Figures="m 199.85713 336.78718 -5.64493 32.57932 16.93243 18.58005 19.425 -18.31875 z" FillRule="nonzero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="circle3024" Fill="#FF000000" StrokeThickness="8">
+                <Path.Data>
+                    <PathGeometry Figures="m 220.85713 365.58718 c -7.27595 0 -13.2 5.92405 -13.2 13.2 0 7.27594 5.92405 13.2 13.2 13.2 7.27594 0 13.2 -5.92406 13.2 -13.2 0 -7.27595 -5.92406 -13.2 -13.2 -13.2 z" FillRule="nonzero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path3153" Fill="#FF000000" StrokeThickness="89">
+                <Path.Data>
+                    <PathGeometry Figures="m 325.85713 336.78718 5.64493 32.57932 -16.93243 18.58005 -19.425 -18.31875 z" FillRule="nonzero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path3155" Fill="#FF000000" StrokeThickness="8">
+                <Path.Data>
+                    <PathGeometry Figures="m 304.85713 365.58718 c 7.27594 0 13.2 5.92405 13.2 13.2 0 7.27594 -5.92406 13.2 -13.2 13.2 -7.27595 0 -13.2 -5.92406 -13.2 -13.2 0 -7.27595 5.92405 -13.2 13.2 -13.2 z" FillRule="nonzero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="ellipse3031" Fill="#FF000000" StrokeThickness="8">
+                <Path.Data>
+                    <PathGeometry Figures="m 193.85713 390.78718 c -16.55931 0 -29.7 16.80433 -29.7 37.2 0 10.19783 3.28517 19.49783 8.64026 26.24838 1.44915 1.82677 2.90182 3.5162 4.63004 4.93685 l 32.63223 0.0154 c 8.15922 -6.66052 13.49747 -18.20113 13.49747 -31.20068 0 -20.39567 -13.14069 -37.2 -29.7 -37.2 z" FillRule="nonzero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="ellipse30315" Fill="#FFD50C0F" StrokeThickness="8">
+                <Path.Data>
+                    <PathGeometry Figures="m 193.85719 393.11479 c 14.92092 0 27.3 15.43116 27.3 34.8 0 12.37743 -5.05526 23.14686 -12.5986 29.30883 l -28.91742 0.38748 c -7.81107 -6.09141 -13.08398 -17.05521 -13.08398 -29.69631 0 -19.36884 12.37907 -34.8 27.3 -34.8 z" FillRule="nonzero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path4263" Fill="#FF000000" StrokeThickness="8">
+                <Path.Data>
+                    <PathGeometry Figures="m 210.35713 410.28718 c -3.13381 0 -5.7 2.56619 -5.7 5.7 0 3.13381 2.56619 5.7 5.7 5.7 3.13381 0 5.7 -2.56619 5.7 -5.7 0 -3.13381 -2.56619 -5.7 -5.7 -5.7 z" FillRule="nonzero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path4261" Fill="#FF000000" StrokeThickness="8">
+                <Path.Data>
+                    <PathGeometry Figures="m 199.85713 398.28718 c -3.13381 0 -5.7 2.56619 -5.7 5.7 0 3.13381 2.56619 5.7 5.7 5.7 3.13381 0 5.7 -2.56619 5.7 -5.7 0 -3.13381 -2.56619 -5.7 -5.7 -5.7 z" FillRule="nonzero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path4259" Fill="#FF000000" StrokeThickness="8">
+                <Path.Data>
+                    <PathGeometry Figures="m 186.35713 398.28718 c -3.13381 0 -5.7 2.56619 -5.7 5.7 0 3.13381 2.56619 5.7 5.7 5.7 3.13381 0 5.7 -2.56619 5.7 -5.7 0 -3.13381 -2.56619 -5.7 -5.7 -5.7 z" FillRule="nonzero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="toenail" Fill="#FF000000" StrokeThickness="8">
+                <Path.Data>
+                    <PathGeometry Figures="m 177.35713 410.28718 c -3.13381 0 -5.7 2.56619 -5.7 5.7 0 3.13381 2.56619 5.7 5.7 5.7 3.13381 0 5.7 -2.56619 5.7 -5.7 0 -3.13381 -2.56619 -5.7 -5.7 -5.7 z" FillRule="nonzero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="ellipse3042" Fill="#FF000000" StrokeThickness="8">
+                <Path.Data>
+                    <PathGeometry Figures="m 193.85713 422.28718 c -9.64331 0 -17.7 6.45151 -17.7 14.7 0 8.24849 8.05669 14.7 17.7 14.7 9.64331 0 17.7 -6.45151 17.7 -14.7 0 -8.24849 -8.05669 -14.7 -17.7 -14.7 z" FillRule="nonzero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path4257" Fill="#FF000000" StrokeThickness="8">
+                <Path.Data>
+                    <PathGeometry Figures="m 177.35713 410.28718 c -3.13381 0 -5.7 2.56619 -5.7 5.7 0 3.13381 2.56619 5.7 5.7 5.7 3.13381 0 5.7 -2.56619 5.7 -5.7 0 -3.13381 -2.56619 -5.7 -5.7 -5.7 z" FillRule="nonzero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="rect3048" Fill="#FFD50C0F" StrokeThickness="2" Stroke="#FF000000">
+                <Path.Data>
+                    <PathGeometry Figures="m 136.85713 159.78718 252 0 0 177 -252 0 z" FillRule="NonZero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path5929" Fill="#FF000000" StrokeThickness="2" Stroke="#FF000000">
+                <Path.Data>
+                    <PathGeometry Figures="m 380.85501 315.90701 q -12.87241 -8.50066 -21.94663 -9.87855" FillRule="NonZero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path5931" Fill="#FF000000" StrokeThickness="2" Stroke="#FF000000">
+                <Path.Data>
+                    <PathGeometry Figures="m 384.31008 303.88003 q -14.15309 -6.13597 -23.32871 -5.91704" FillRule="NonZero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path5933" Fill="#FF000000" StrokeThickness="2" Stroke="#FF000000">
+                <Path.Data>
+                    <PathGeometry Figures="m 386.46074 291.78718 q -15 -3.6 -24 -1.8" FillRule="NonZero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="circle3051" Fill="#FFFFFFFF" StrokeThickness="2" Stroke="#FF000000">
+                <Path.Data>
+                    <PathGeometry Figures="m 235.85713 252.78718 c 0 19.88225 -16.11775 36 -36 36 -19.88225 0 -36 -16.11775 -36 -36 0 -19.88225 16.11775 -36 36 -36 19.88225 0 36 16.11775 36 36 z" FillRule="NonZero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="circle3053" Fill="#FF000000" StrokeThickness="2" Stroke="#FF000000">
+                <Path.Data>
+                    <PathGeometry Figures="m 228.35713 252.78718 c 0 15.74012 -12.75988 28.5 -28.5 28.5 -15.74012 0 -28.5 -12.75988 -28.5 -28.5 0 -15.74012 12.75988 -28.5 28.5 -28.5 15.74012 0 28.5 12.75988 28.5 28.5 z" FillRule="NonZero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path3059" Fill="#FFFEB6B6" StrokeThickness="2" Stroke="#FF000000">
+                <Path.Data>
+                    <PathGeometry Figures="m 249.95713 279.78718 c -9 39 34.8 39 25.8 0" FillRule="NonZero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path3061" Fill="#FF000000" StrokeThickness="8">
+                <Path.Data>
+                    <PathGeometry Figures="m 262.85713 292.83718 c -4.7182 0 -9.39122 2.63048 -11.99619 7.61991 l 1.44339 2.4664 c 1.99587 -5.24577 6.30183 -7.68631 10.5528 -7.68631 4.2631 0 8.58151 2.45449 10.56983 7.7313 l 1.48573 -2.39657 c -2.59291 -5.06389 -7.3013 -7.73473 -12.05556 -7.73473 z" FillRule="nonzero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path30614" Fill="#FFB91F6E" StrokeThickness="8">
+                <Path.Data>
+                    <PathGeometry Figures="m 262.74636 307.86438 c -3.98518 0 -7.78104 -2.4653 -9.90194 -6.18268 1.92607 -4.05923 5.76174 -6.44452 10.01271 -6.44452 4.2631 0 8.04091 2.27152 10.02923 6.47812 -1.97523 3.64466 -5.81169 6.14908 -10.14 6.14908 z" FillRule="nonzero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path3063" Fill="#FFD50C0F" StrokeThickness="2" Stroke="#FF000000">
+                <Path.Data>
+                    <PathGeometry Figures="m 241.85713 276.78718 q 9 12 21 3 12 9 21 -3" FillRule="NonZero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="circle3065" Fill="#FF000000" StrokeThickness="8">
+                <Path.Data>
+                    <PathGeometry Figures="m 262.85713 273.18718 c -1.97401 0 -3.6 1.62599 -3.6 3.6 0 1.97401 1.62599 3.6 3.6 3.6 1.97401 0 3.6 -1.62599 3.6 -3.6 0 -1.97401 -1.62599 -3.6 -3.6 -3.6 z" FillRule="nonzero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path5925" Fill="#FF000000" StrokeThickness="2" Stroke="#FF000000">
+                <Path.Data>
+                    <PathGeometry Figures="m 144.86286 315.90701 q 12.87241 -8.50066 21.94663 -9.87855" FillRule="NonZero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path5923" Fill="#FF000000" StrokeThickness="2" Stroke="#FF000000">
+                <Path.Data>
+                    <PathGeometry Figures="m 141.40779 303.88003 q 14.15309 -6.13597 23.32871 -5.91704" FillRule="NonZero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="beardD" Fill="#FF000000" StrokeThickness="2" Stroke="#FF000000">
+                <Path.Data>
+                    <PathGeometry Figures="m 139.25713 291.78718 q 15 -3.6 24 -1.8" FillRule="NonZero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path3212" Fill="#FFFFFFFF" StrokeThickness="2" Stroke="#FF000000">
+                <Path.Data>
+                    <PathGeometry Figures="m 361.85713 252.78718 c 0 19.88225 -16.11775 36 -36 36 -19.88225 0 -36 -16.11775 -36 -36 0 -19.88225 16.11775 -36 36 -36 19.88225 0 36 16.11775 36 36 z" FillRule="NonZero"/>
+                </Path.Data>
+            </Path>
+            <Path Name="path3214" Fill="#FF000000" StrokeThickness="2" Stroke="#FF000000">
+                <Path.Data>
+                    <PathGeometry Figures="m 354.35713 252.78718 c 0 15.74012 -12.75988 28.5 -28.5 28.5 -15.74012 0 -28.5 -12.75988 -28.5 -28.5 0 -15.74012 12.75988 -28.5 28.5 -28.5 15.74012 0 28.5 12.75988 28.5 28.5 z" FillRule="NonZero"/>
+                </Path.Data>
+            </Path>
+        </Canvas>
+    </Canvas>
+</ResourceDictionary>
