@@ -192,4 +192,8 @@
     <Copy Condition="'$(Platform)' == 'x86'" SourceFiles="..\Build\$(Configuration)\x86\EasyHook32Svc.exe" DestinationFiles="..\Build\$(Configuration)\x64\EasyHook32Svc.exe">
     </Copy>
   </Target>
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
 </Project>

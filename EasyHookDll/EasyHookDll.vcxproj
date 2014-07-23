@@ -119,32 +119,32 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='netfx3.5-Debug|Win32'">$(SolutionDir)Build\$(Configuration)\x86\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='netfx4-Debug|Win32'">$(SolutionDir)Build\$(Configuration)\x86\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='netfx3.5-Debug|Win32'">$(SolutionDir)Build\$(Configuration)\x86\Temp\EasyHookDll\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='netfx4-Debug|Win32'">$(SolutionDir)Build\$(Configuration)\x86\Temp\EasyHookDll\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='netfx3.5-Debug|Win32'">$(SolutionDir)build\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='netfx4-Debug|Win32'">$(SolutionDir)build\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='netfx3.5-Debug|Win32'">$(SolutionDir)build\$(Configuration)\Temp\EasyHookDll\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='netfx4-Debug|Win32'">$(SolutionDir)build\$(Configuration)\Temp\EasyHookDll\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='netfx3.5-Debug|Win32'">true</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='netfx4-Debug|Win32'">true</LinkIncremental>
     <LinkKeyFile Condition="'$(Configuration)|$(Platform)'=='netfx3.5-Debug|Win32'" />
     <LinkKeyFile Condition="'$(Configuration)|$(Platform)'=='netfx4-Debug|Win32'" />
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='netfx3.5-Debug|x64'">$(SolutionDir)Build\$(Configuration)\x64\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='netfx4-Debug|x64'">$(SolutionDir)Build\$(Configuration)\x64\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='netfx3.5-Debug|x64'">$(SolutionDir)Build\$(Configuration)\x64\Temp\EasyHookDll\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='netfx4-Debug|x64'">$(SolutionDir)Build\$(Configuration)\x64\Temp\EasyHookDll\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='netfx3.5-Debug|x64'">$(SolutionDir)build\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='netfx4-Debug|x64'">$(SolutionDir)build\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='netfx3.5-Debug|x64'">$(SolutionDir)build\$(Configuration)\Temp\EasyHookDll\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='netfx4-Debug|x64'">$(SolutionDir)build\$(Configuration)\Temp\EasyHookDll\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='netfx3.5-Debug|x64'">true</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='netfx4-Debug|x64'">true</LinkIncremental>
     <LinkKeyFile Condition="'$(Configuration)|$(Platform)'=='netfx3.5-Debug|x64'" />
     <LinkKeyFile Condition="'$(Configuration)|$(Platform)'=='netfx4-Debug|x64'" />
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='netfx3.5-Release|Win32'">$(SolutionDir)Build\$(Configuration)\x86\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='netfx4-Release|Win32'">$(SolutionDir)Build\$(Configuration)\x86\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='netfx3.5-Release|Win32'">$(SolutionDir)Build\$(Configuration)\x86\Temp\EasyHookDll\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='netfx4-Release|Win32'">$(SolutionDir)Build\$(Configuration)\x86\Temp\EasyHookDll\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='netfx3.5-Release|Win32'">$(SolutionDir)build\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='netfx4-Release|Win32'">$(SolutionDir)build\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='netfx3.5-Release|Win32'">$(SolutionDir)build\$(Configuration)\Temp\EasyHookDll\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='netfx4-Release|Win32'">$(SolutionDir)build\$(Configuration)\Temp\EasyHookDll\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='netfx3.5-Release|Win32'">false</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='netfx4-Release|Win32'">false</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='netfx3.5-Release|x64'">$(SolutionDir)Build\$(Configuration)\x64\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='netfx4-Release|x64'">$(SolutionDir)Build\$(Configuration)\x64\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='netfx3.5-Release|x64'">$(SolutionDir)Build\$(Configuration)\x64\Temp\EasyHookDll\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='netfx4-Release|x64'">$(SolutionDir)Build\$(Configuration)\x64\Temp\EasyHookDll\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='netfx3.5-Release|x64'">$(SolutionDir)build\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='netfx4-Release|x64'">$(SolutionDir)build\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='netfx3.5-Release|x64'">$(SolutionDir)build\$(Configuration)\Temp\EasyHookDll\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='netfx4-Release|x64'">$(SolutionDir)build\$(Configuration)\Temp\EasyHookDll\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='netfx3.5-Release|x64'">false</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='netfx4-Release|x64'">false</LinkIncremental>
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='netfx3.5-Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
@@ -206,7 +206,8 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(TargetPath)" "$(TargetDir)..\x64\EasyHook32.dll"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <MASM>
       <UseSafeExceptionHandlers>true</UseSafeExceptionHandlers>
@@ -238,7 +239,8 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(TargetPath)" "$(TargetDir)..\x64\EasyHook32.dll"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <MASM>
       <UseSafeExceptionHandlers>true</UseSafeExceptionHandlers>
@@ -272,7 +274,8 @@
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(TargetPath)" "$(TargetDir)..\x86\EasyHook64.dll"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <MASM>
       <UseSafeExceptionHandlers>true</UseSafeExceptionHandlers>
@@ -306,7 +309,8 @@
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(TargetPath)" "$(TargetDir)..\x86\EasyHook64.dll"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <MASM>
       <UseSafeExceptionHandlers>true</UseSafeExceptionHandlers>
@@ -344,7 +348,8 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(TargetPath)" "$(TargetDir)..\x64\EasyHook32.dll"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <MASM>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -383,7 +388,8 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(TargetPath)" "$(TargetDir)..\x64\EasyHook32.dll"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <MASM>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -423,7 +429,8 @@
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(TargetPath)" "$(TargetDir)..\x86\EasyHook64.dll"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <MASM>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -463,7 +470,8 @@
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(TargetPath)" "$(TargetDir)..\x86\EasyHook64.dll"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <MASM>
       <GenerateDebugInformation>false</GenerateDebugInformation>
