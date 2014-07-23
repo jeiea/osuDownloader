@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OsuDownloader", "osuDownloader\OsuDownloader.csproj", "{797F3CEB-F87A-46D3-979D-D041979F47C8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyHook", "EasyHook\EasyHook.csproj", "{AB53862B-3B5C-4EFC-9787-1F01199EBFBF}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D087E484-DBC9-4A2E-8368-C1D0E524994D} = {D087E484-DBC9-4A2E-8368-C1D0E524994D}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EasyHookDll", "EasyHookDll\EasyHookDll.vcxproj", "{D087E484-DBC9-4A2E-8368-C1D0E524994D}"
 EndProject
