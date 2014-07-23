@@ -680,16 +680,6 @@ ml.exe /D_WIN32 /c /Cx "%(FullPath)"
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\EasyHookSvc\EasyHookSvc.csproj">
-      <Project>{b9a68e47-237f-4045-a371-d5cceb896f7f}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\EasyHook\EasyHook.csproj">
-      <Project>{ab53862b-3b5c-4efc-9787-1f01199ebfbf}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
   <ItemGroup Condition="'$(Platform)'=='Win32'">
     <ResourceCompile Include="EasyHookDll_32.rc" />
   </ItemGroup>
