@@ -51,7 +51,7 @@ public class InvokeDownload : MarshalByRefObject
 		var beatmapJson = result["results"][0];
 		int beatmapId = (int)beatmapJson["id"];
 		string beatmapTitle = (string)beatmapJson["title"];
-		beatmapTitle = beatmapTitle.Except(System.IO.Path.GetInvalidFileNameChars()).ToString();
+		beatmapTitle = string.Concat(beatmapTitle.Except(System.IO.Path.GetInvalidFileNameChars()));
 		string downloadPath = DownloadDir + beatmapTitle + ".osz";
 		client.DownloadFile("http://bloodcat.com/osu/m/" + beatmapId, downloadPath);
 
@@ -109,11 +109,9 @@ class OsuHooker
 			}
 			catch (ApplicationException)
 			{
-
 				MessageBox.Show("DLL파일이 있는지, 관리자 권한이 있는지 확인해주세요.",
 								"후킹 실패", MessageBoxButton.OK);
-
-				System.Diagnostics.Process.GetCurrentProcess().Kill();
+				return false;
 			}
 
 			RemoteHooking.IpcCreateServer<InvokeDownload>(ref ChannelName, WellKnownObjectMode.SingleCall);

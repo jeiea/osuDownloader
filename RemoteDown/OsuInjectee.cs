@@ -122,14 +122,12 @@ public class OsuInjectee : EasyHook.IEntryPoint
 
 	static bool ShellExecuteEx_Hooked(ref SHELLEXECUTEINFO lpExecInfo)
 	{
-
 		try
 		{
-			OsuInjectee This = (OsuInjectee)HookRuntimeInfo.Callback;
-
 			if (lpExecInfo.lpFile.StartsWith("http://osu.ppy.sh/b/") ||
 				lpExecInfo.lpFile.StartsWith("http://osu.ppy.sh/s/"))
 			{
+				OsuInjectee This = (OsuInjectee)HookRuntimeInfo.Callback;
 				lock (This.Queue)
 				{
 					This.Queue.Enqueue(lpExecInfo.lpFile);
