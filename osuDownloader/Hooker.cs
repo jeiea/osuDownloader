@@ -7,9 +7,8 @@ using System.Runtime.Remoting;
 using EasyHook;
 using System.Windows;
 using System.Net;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System.Diagnostics;
+using System.IO;
 
 namespace OsuDownloader
 {
@@ -17,7 +16,6 @@ namespace OsuDownloader
 public class InvokeDownload : MarshalByRefObject
 {
 	static string Cookie;
-	static string DownloadDir = "C:\\";
 
 	public void IsInstalled(int clientPid)
 	{
@@ -26,40 +24,7 @@ public class InvokeDownload : MarshalByRefObject
 
 	public void OnBeatmapBrowse(int clientPid, string fileName)
 	{
-		StringBuilder query = new StringBuilder("http://bloodcat.com/osu/?mod=json");
-
-		char idKind = fileName[18];
-		query.Append("&m=");
-		query.Append(idKind);
-
-		query.Append("&q=");
-		query.Append(fileName.Split('/')[4]);
-
-		WebClient client = new WebClient();
-		client.Encoding = Encoding.UTF8;
-
-		byte[] json = client.DownloadData(new Uri(query.ToString()));
-		JObject result = JObject.Parse(Encoding.UTF8.GetString(json));
-
-		int count = (int)result["resultCount"];
-		if (count != 1)
-		{
-			MessageBox.Show("해당하는 비트맵 수가 " + count + "개 입니다.");
-			return;
-		}
-
-		var beatmapJson = result["results"][0];
-		int beatmapId = (int)beatmapJson["id"];
-		string beatmapTitle = (string)beatmapJson["title"];
-		beatmapTitle = string.Concat(beatmapTitle.Except(System.IO.Path.GetInvalidFileNameChars()));
-		string downloadPath = DownloadDir + beatmapTitle + ".osz";
-		client.DownloadFile("http://bloodcat.com/osu/m/" + beatmapId, downloadPath);
-
-		ProcessStartInfo psi = new ProcessStartInfo();
-		psi.Verb = "open";
-		psi.FileName = downloadPath;
-		psi.UseShellExecute = true;
-		Process.Start(psi);
+		return;
 	}
 
 	public void OnTerminate()
@@ -102,10 +67,15 @@ class OsuHooker
 		{
 			string thisFile = new Uri(System.Reflection.Assembly.GetExecutingAssembly().Location).LocalPath;
 			string injectee = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "RemoteDown.dll");
+			// On publish it can be merged so it should able to be excluded.
+			string jsonLib  = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Newtonsoft.Json.dll");
 
 			try
 			{
-				Config.Register("Osu beatmap downloader.", thisFile, injectee);
+				if (File.Exists(jsonLib))
+					Config.Register("Osu beatmap downloader.", thisFile, injectee, jsonLib);
+				else
+					Config.Register("Osu beatmap downloader.", thisFile, injectee);
 			}
 			catch (ApplicationException)
 			{

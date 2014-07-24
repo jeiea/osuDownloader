@@ -6,12 +6,17 @@ using System.Threading;
 using System.Threading.Tasks;
 using EasyHook;
 using System.Runtime.InteropServices;
+using System.Net;
+using System.Diagnostics;
+using Newtonsoft.Json.Linq;
 
 namespace RemoteDown
 {
 
 public class OsuInjectee : EasyHook.IEntryPoint
 {
+	static string DownloadDir = "C:\\";
+
 	OsuDownloader.InvokeDownload Interface;
 	LocalHook ShellExecuteExHook;
 	/// <summary>   ShowWindow function hook. This is necessary during fullscreen mode. </summary>
@@ -78,7 +83,14 @@ public class OsuInjectee : EasyHook.IEntryPoint
 
 					foreach (var fileName in package)
 					{
-						Interface.OnBeatmapBrowse(RemoteHooking.GetCurrentProcessId(), fileName);
+						try
+						{
+							Interface.OnBeatmapBrowse(RemoteHooking.GetCurrentProcessId(), fileName);
+							BloodcatDownload(fileName);
+						}
+						catch (Exception)
+						{
+						}
 					}
 				}
 				else
@@ -99,75 +111,55 @@ public class OsuInjectee : EasyHook.IEntryPoint
 		}
 	}
 
-	#region ShellExecuteEx pinvoke
-
-	[StructLayout(LayoutKind.Sequential)]
-	public struct SHELLEXECUTEINFO
+	private static void BloodcatDownload(string fileName)
 	{
-		public int cbSize;
-		public uint fMask;
-		public IntPtr hwnd;
-		[MarshalAs(UnmanagedType.LPTStr)]
-		public string lpVerb;
-		[MarshalAs(UnmanagedType.LPTStr)]
-		public string lpFile;
-		[MarshalAs(UnmanagedType.LPTStr)]
-		public string lpParameters;
-		[MarshalAs(UnmanagedType.LPTStr)]
-		public string lpDirectory;
-		public int nShow;
-		public IntPtr hInstApp;
-		public IntPtr lpIDList;
-		[MarshalAs(UnmanagedType.LPTStr)]
-		public string lpClass;
-		public IntPtr hkeyClass;
-		public uint dwHotKey;
-		public IntPtr hIcon;
-		public IntPtr hProcess;
-	}
+		StringBuilder query = new StringBuilder("http://bloodcat.com/osu/?mod=json");
 
-	[DllImport("shell32.dll", CharSet = CharSet.Auto)]
-	static extern bool ShellExecuteEx(ref SHELLEXECUTEINFO lpExecInfo);
+		char idKind = fileName[18];
+		query.Append("&m=");
+		query.Append(idKind);
 
-	[UnmanagedFunctionPointer(CallingConvention.StdCall,
-							  CharSet = CharSet.Auto,
-							  SetLastError = true)]
-	delegate bool DShellExecuteEx(ref SHELLEXECUTEINFO lpExecInfo);
+		query.Append("&q=");
+		query.Append(fileName.Split('/')[4]);
 
-	static bool ShellExecuteEx_Hooked(ref SHELLEXECUTEINFO lpExecInfo)
-	{
-		try
+		WebClient client = new WebClient();
+		client.Encoding = Encoding.UTF8;
+
+		byte[] json = client.DownloadData(new Uri(query.ToString()));
+		JObject result = JObject.Parse(Encoding.UTF8.GetString(json));
+
+		int count = (int)result["resultCount"];
+		if (count != 1)
 		{
-			if (lpExecInfo.lpFile.StartsWith("http://osu.ppy.sh/b/") ||
-				lpExecInfo.lpFile.StartsWith("http://osu.ppy.sh/s/"))
+			// If not found or undecidable, open official page.
+			SHELLEXECUTEINFO exInfo = new SHELLEXECUTEINFO()
 			{
-				OsuInjectee instance = (OsuInjectee)HookRuntimeInfo.Callback;
-				lock (instance.Queue)
-				{
-					instance.Queue.Enqueue(lpExecInfo.lpFile);
-				}
-				instance.QueueAppended.Set();
-
-				// For prevention of window minimization in fullscreen mode.
-				instance.IsHooked = true;
-
-				return true;
-			}
-
-		}
-		catch
-		{
+				nShow = ShowWindowCommands.ShowDefault,
+				lpVerb = "open",
+				lpFile = fileName,
+			};
+			exInfo.cbSize = Marshal.SizeOf(exInfo);
+			ShellExecuteEx(ref exInfo);
+			return;
 		}
 
-		//call original API...
-		return ShellExecuteEx(ref lpExecInfo);
+		var beatmapJson = result["results"][0];
+		int beatmapId = (int)beatmapJson["id"];
+		string beatmapTitle = (string)beatmapJson["title"];
+		beatmapTitle = string.Concat(beatmapTitle.Except(System.IO.Path.GetInvalidFileNameChars()));
+		string downloadPath = DownloadDir + beatmapTitle + ".osz";
+		client.DownloadFile("http://bloodcat.com/osu/m/" + beatmapId, downloadPath);
+
+		ProcessStartInfo psi = new ProcessStartInfo();
+		psi.Verb = "open";
+		psi.FileName = downloadPath;
+		psi.UseShellExecute = true;
+		Process.Start(psi);
 	}
-
-	#endregion
 
 	#region ShowWindow pinvoke
 
-	enum ShowWindowCommands
+	public enum ShowWindowCommands
 	{
 		/// <summary>   Hides the window and activates another window. </summary>
 		Hide = 0,
@@ -276,6 +268,72 @@ public class OsuInjectee : EasyHook.IEntryPoint
 			return true;
 		}
 		return ShowWindow(hWnd, nCmdShow);
+	}
+
+	#endregion
+
+	#region ShellExecuteEx pinvoke
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct SHELLEXECUTEINFO
+	{
+		public int cbSize;
+		public uint fMask;
+		public IntPtr hwnd;
+		[MarshalAs(UnmanagedType.LPTStr)]
+		public string lpVerb;
+		[MarshalAs(UnmanagedType.LPTStr)]
+		public string lpFile;
+		[MarshalAs(UnmanagedType.LPTStr)]
+		public string lpParameters;
+		[MarshalAs(UnmanagedType.LPTStr)]
+		public string lpDirectory;
+		public ShowWindowCommands nShow;
+		public IntPtr hInstApp;
+		public IntPtr lpIDList;
+		[MarshalAs(UnmanagedType.LPTStr)]
+		public string lpClass;
+		public IntPtr hkeyClass;
+		public uint dwHotKey;
+		public IntPtr hIcon;
+		public IntPtr hProcess;
+	}
+
+	[DllImport("shell32.dll", CharSet = CharSet.Auto)]
+	static extern bool ShellExecuteEx(ref SHELLEXECUTEINFO lpExecInfo);
+
+	[UnmanagedFunctionPointer(CallingConvention.StdCall,
+							  CharSet = CharSet.Auto,
+							  SetLastError = true)]
+	delegate bool DShellExecuteEx(ref SHELLEXECUTEINFO lpExecInfo);
+
+	static bool ShellExecuteEx_Hooked(ref SHELLEXECUTEINFO lpExecInfo)
+	{
+		try
+		{
+			if (lpExecInfo.lpFile.StartsWith("http://osu.ppy.sh/b/") ||
+				lpExecInfo.lpFile.StartsWith("http://osu.ppy.sh/s/"))
+			{
+				OsuInjectee instance = (OsuInjectee)HookRuntimeInfo.Callback;
+				lock (instance.Queue)
+				{
+					instance.Queue.Enqueue(lpExecInfo.lpFile);
+				}
+				instance.QueueAppended.Set();
+
+				// For prevention of window minimization in fullscreen mode.
+				instance.IsHooked = true;
+
+				return true;
+			}
+
+		}
+		catch
+		{
+		}
+
+		//call original API...
+		return ShellExecuteEx(ref lpExecInfo);
 	}
 
 	#endregion
