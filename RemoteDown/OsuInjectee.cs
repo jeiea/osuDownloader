@@ -13,7 +13,7 @@ namespace RemoteDown
 public class OsuInjectee : EasyHook.IEntryPoint
 {
 	OsuDownloader.InvokeDownload Interface;
-	LocalHook CreateFileHook;
+	LocalHook ShellExecuteExHook;
 	Queue<string> Queue = new Queue<string>();
 
 	public OsuInjectee(RemoteHooking.IContext context, string channelName)
@@ -29,12 +29,12 @@ public class OsuInjectee : EasyHook.IEntryPoint
 		// install hook...
 		try
 		{
-			CreateFileHook = LocalHook.Create(
-								 LocalHook.GetProcAddress("shell32.dll", "ShellExecuteExW"),
-								 new DShellExecuteEx(ShellExecuteEx_Hooked),
-								 this);
+			ShellExecuteExHook = LocalHook.Create(
+									 LocalHook.GetProcAddress("shell32.dll", "ShellExecuteExW"),
+									 new DShellExecuteEx(ShellExecuteEx_Hooked),
+									 this);
 
-			CreateFileHook.ThreadACL.SetExclusiveACL(new int[] { 0 });
+			ShellExecuteExHook.ThreadACL.SetExclusiveACL(new int[] { 0 });
 		}
 		catch (Exception extInfo)
 		{
@@ -81,6 +81,7 @@ public class OsuInjectee : EasyHook.IEntryPoint
 		}
 		finally
 		{
+			ShellExecuteExHook.Dispose();
 			Interface.OnTerminate();
 		}
 	}
@@ -116,7 +117,7 @@ public class OsuInjectee : EasyHook.IEntryPoint
 	static extern bool ShellExecuteEx(ref SHELLEXECUTEINFO lpExecInfo);
 
 	[UnmanagedFunctionPointer(CallingConvention.StdCall,
-							  CharSet = CharSet.Unicode,
+							  CharSet = CharSet.Auto,
 							  SetLastError = true)]
 	delegate bool DShellExecuteEx(ref SHELLEXECUTEINFO lpExecInfo);
 
@@ -127,14 +128,14 @@ public class OsuInjectee : EasyHook.IEntryPoint
 			if (lpExecInfo.lpFile.StartsWith("http://osu.ppy.sh/b/") ||
 				lpExecInfo.lpFile.StartsWith("http://osu.ppy.sh/s/"))
 			{
-				OsuInjectee This = (OsuInjectee)HookRuntimeInfo.Callback;
-				lock (This.Queue)
+				OsuInjectee instance = (OsuInjectee)HookRuntimeInfo.Callback;
+				lock (instance.Queue)
 				{
-					This.Queue.Enqueue(lpExecInfo.lpFile);
+					instance.Queue.Enqueue(lpExecInfo.lpFile);
 				}
+				return true;
 			}
 
-			return true;
 		}
 		catch
 		{

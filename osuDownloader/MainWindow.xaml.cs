@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -40,6 +41,49 @@ public partial class MainWindow : Window
 		OsuHooker.Hook();
 
 		MascotBtn.IsChecked = OsuHooker.IsHooked;
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct SHELLEXECUTEINFO
+	{
+		public int cbSize;
+		public uint fMask;
+		public IntPtr hwnd;
+		[MarshalAs(UnmanagedType.LPTStr)]
+		public string lpVerb;
+		[MarshalAs(UnmanagedType.LPTStr)]
+		public string lpFile;
+		[MarshalAs(UnmanagedType.LPTStr)]
+		public string lpParameters;
+		[MarshalAs(UnmanagedType.LPTStr)]
+		public string lpDirectory;
+		public int nShow;
+		public IntPtr hInstApp;
+		public IntPtr lpIDList;
+		[MarshalAs(UnmanagedType.LPTStr)]
+		public string lpClass;
+		public IntPtr hkeyClass;
+		public uint dwHotKey;
+		public IntPtr hIcon;
+		public IntPtr hProcess;
+	}
+
+	[DllImport("shell32.dll", CharSet = CharSet.Auto)]
+	static extern bool ShellExecuteEx(ref SHELLEXECUTEINFO lpExecInfo);
+
+	private void BlCatBtn_Click(object sender, RoutedEventArgs e)
+	{
+		var info = new SHELLEXECUTEINFO()
+		{
+			fMask = 0,
+			hwnd = IntPtr.Zero,
+			lpVerb = "open",
+			lpFile = "C:\\bloodcat.svg",
+			nShow = 1,
+		};
+		info.cbSize = System.Runtime.InteropServices.Marshal.SizeOf(info);
+
+		ShellExecuteEx(ref info);
 	}
 }
 }

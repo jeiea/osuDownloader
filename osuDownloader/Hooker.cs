@@ -69,7 +69,7 @@ public class InvokeDownload : MarshalByRefObject
 
 	public void ReportException(Exception info)
 	{
-		Console.WriteLine("The target process has reported an error:\r\n" + info.ToString());
+		MessageBox.Show(info.Message);
 	}
 
 	public void Ping()
@@ -100,8 +100,8 @@ class OsuHooker
 
 		try
 		{
-			string thisFile = new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).LocalPath;
-			string injectee = System.IO.Path.GetDirectoryName(thisFile) + "\\RemoteDown.dll";
+			string thisFile = new Uri(System.Reflection.Assembly.GetExecutingAssembly().Location).LocalPath;
+			string injectee = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "RemoteDown.dll");
 
 			try
 			{
