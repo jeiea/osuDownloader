@@ -15,6 +15,7 @@ public class OsuInjectee : EasyHook.IEntryPoint
 	OsuDownloader.InvokeDownload Interface;
 	LocalHook ShellExecuteExHook;
 	Queue<string> Queue = new Queue<string>();
+	ManualResetEvent QueueAppended;
 
 	public OsuInjectee(RemoteHooking.IContext context, string channelName)
 	{
@@ -47,12 +48,14 @@ public class OsuInjectee : EasyHook.IEntryPoint
 
 		RemoteHooking.WakeUpProcess();
 
+		QueueAppended = new ManualResetEvent(false);
 		// wait for host process termination...
 		try
 		{
 			while (true)
 			{
-				Thread.Sleep(500);
+				QueueAppended.WaitOne(500);
+				QueueAppended.Reset();
 
 				// transmit newly monitored file accesses...
 				if (Queue.Count > 0)
@@ -82,7 +85,7 @@ public class OsuInjectee : EasyHook.IEntryPoint
 		finally
 		{
 			ShellExecuteExHook.Dispose();
-			Interface.OnTerminate();
+			ShellExecuteExHook = null;
 		}
 	}
 
@@ -133,6 +136,7 @@ public class OsuInjectee : EasyHook.IEntryPoint
 				{
 					instance.Queue.Enqueue(lpExecInfo.lpFile);
 				}
+				instance.QueueAppended.Set();
 				return true;
 			}
 
