@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -21,6 +20,8 @@ namespace OsuDownloader
 /// </summary>
 public partial class MainWindow : Window
 {
+	System.Windows.Forms.NotifyIcon Tray;
+
 	public MainWindow()
 	{
 		InitializeComponent();
@@ -30,14 +31,25 @@ public partial class MainWindow : Window
 
 		MascotBtn.IsChecked = OsuHooker.IsHooked;
 
-		var tray = new System.Windows.Forms.NotifyIcon();
-		tray.Icon = new System.Drawing.Icon("pack://application:,,,/pic/osuLogo.png");
-		tray.Visible = true;
-		tray.DoubleClick += (s, e) =>
+		// 트레이 아이콘 생성과 등록
+		Tray = new System.Windows.Forms.NotifyIcon();
+		Tray.Icon = Properties.Resources.osuIcon;
+		Tray.Visible = true;
+		Tray.DoubleClick += (s, e) =>
 		{
 			this.Show();
 			this.WindowState = WindowState.Normal;
 		};
+		Tray.MouseDown += new System.Windows.Forms.MouseEventHandler(notifier_MouseDown);
+	}
+
+	void notifier_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
+	{
+		if (e.Button == System.Windows.Forms.MouseButtons.Right)
+		{
+			ContextMenu menu = (ContextMenu)this.FindResource("TrayContextMenu");
+			menu.IsOpen = true;
+		}
 	}
 
 	protected override void OnStateChanged(EventArgs e)
@@ -61,36 +73,13 @@ public partial class MainWindow : Window
 		MascotBtn.IsChecked = OsuHooker.IsHooked;
 	}
 
-	[StructLayout(LayoutKind.Sequential)]
-	public struct SHELLEXECUTEINFO
-	{
-		public int cbSize;
-		public uint fMask;
-		public IntPtr hwnd;
-		[MarshalAs(UnmanagedType.LPTStr)]
-		public string lpVerb;
-		[MarshalAs(UnmanagedType.LPTStr)]
-		public string lpFile;
-		[MarshalAs(UnmanagedType.LPTStr)]
-		public string lpParameters;
-		[MarshalAs(UnmanagedType.LPTStr)]
-		public string lpDirectory;
-		public int nShow;
-		public IntPtr hInstApp;
-		public IntPtr lpIDList;
-		[MarshalAs(UnmanagedType.LPTStr)]
-		public string lpClass;
-		public IntPtr hkeyClass;
-		public uint dwHotKey;
-		public IntPtr hIcon;
-		public IntPtr hProcess;
-	}
-
-	[DllImport("shell32.dll", CharSet = CharSet.Auto)]
-	static extern bool ShellExecuteEx(ref SHELLEXECUTEINFO lpExecInfo);
-
 	private void BlCatBtn_Click(object sender, RoutedEventArgs e)
 	{
+	}
+
+	private void MenuItem_Click(object sender, RoutedEventArgs e)
+	{
+
 	}
 }
 }
