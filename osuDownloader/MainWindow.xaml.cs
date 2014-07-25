@@ -29,6 +29,24 @@ public partial class MainWindow : Window
 		CommandBindings.Add(closeCommand);
 
 		MascotBtn.IsChecked = OsuHooker.IsHooked;
+
+		var tray = new System.Windows.Forms.NotifyIcon();
+		tray.Icon = new System.Drawing.Icon("pack://application:,,,/pic/osuLogo.png");
+		tray.Visible = true;
+		tray.DoubleClick += (s, e) =>
+		{
+			this.Show();
+			this.WindowState = WindowState.Normal;
+		};
+	}
+
+	protected override void OnStateChanged(EventArgs e)
+	{
+		if (WindowState == WindowState.Minimized)
+		{
+			this.Hide();
+		}
+		base.OnStateChanged(e);
 	}
 
 	private void CloseCommandHandler(object sender, ExecutedRoutedEventArgs e)
@@ -73,17 +91,6 @@ public partial class MainWindow : Window
 
 	private void BlCatBtn_Click(object sender, RoutedEventArgs e)
 	{
-		var info = new SHELLEXECUTEINFO()
-		{
-			fMask = 0,
-			hwnd = IntPtr.Zero,
-			lpVerb = "open",
-			lpFile = "C:\\bloodcat.svg",
-			nShow = 1,
-		};
-		info.cbSize = System.Runtime.InteropServices.Marshal.SizeOf(info);
-
-		ShellExecuteEx(ref info);
 	}
 }
 }

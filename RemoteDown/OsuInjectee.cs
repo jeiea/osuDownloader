@@ -145,9 +145,9 @@ public class OsuInjectee : EasyHook.IEntryPoint
 
 		var beatmapJson = result["results"][0];
 		int beatmapId = (int)beatmapJson["id"];
-		string beatmapTitle = (string)beatmapJson["title"];
-		beatmapTitle = string.Concat(beatmapTitle.Except(System.IO.Path.GetInvalidFileNameChars()));
-		string downloadPath = DownloadDir + beatmapTitle + ".osz";
+		string artist = GetValidFileName((string)beatmapJson["artist"]);
+		string beatmapTitle = GetValidFileName((string)beatmapJson["title"]);
+		string downloadPath = string.Format("{0}{1} {2} - {3}.osz", DownloadDir, beatmapId, artist, beatmapTitle);
 		client.DownloadFile("http://bloodcat.com/osu/m/" + beatmapId, downloadPath);
 
 		ProcessStartInfo psi = new ProcessStartInfo();
@@ -155,6 +155,18 @@ public class OsuInjectee : EasyHook.IEntryPoint
 		psi.FileName = downloadPath;
 		psi.UseShellExecute = true;
 		Process.Start(psi);
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>   Filter character which cannot be file name. </summary>
+	///
+	/// <param name="name"> The name. </param>
+	///
+	/// <returns>   The string removed invalid characters. </returns>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	private static string GetValidFileName(string name)
+	{
+		return string.Concat(name.Except(System.IO.Path.GetInvalidFileNameChars()));
 	}
 
 	#region ShowWindow pinvoke
