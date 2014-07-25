@@ -20,61 +20,11 @@ namespace OsuDownloader
 /// </summary>
 public partial class MainWindow : Window
 {
-	System.Windows.Forms.NotifyIcon Tray;
-
 	public MainWindow()
 	{
 		InitializeComponent();
 
-		CommandBinding closeCommand = new CommandBinding(ApplicationCommands.Close, CloseCommandHandler);
-		CommandBindings.Add(closeCommand);
-
 		MascotBtn.IsChecked = OsuHooker.IsHooked;
-
-		// Generate and register notifier icon.
-		Tray = new System.Windows.Forms.NotifyIcon();
-		Tray.Icon = Properties.Resources.osuIcon;
-		Tray.Visible = true;
-		Tray.DoubleClick += (s, e) =>
-		{
-			this.Show();
-			this.WindowState = WindowState.Normal;
-		};
-		Tray.MouseDown += new System.Windows.Forms.MouseEventHandler(notifier_MouseDown);
-	}
-
-	void notifier_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
-	{
-		if (e.Button == System.Windows.Forms.MouseButtons.Right)
-		{
-			ContextMenu menu = (ContextMenu)this.FindResource("TrayContextMenu");
-			menu.CommandBindings.AddRange(CommandBindings);
-			Mouse.Capture(menu);
-			menu.LostFocus += menu_LostFocus;
-			menu.LostMouseCapture += menu_LostFocus;
-			menu.IsOpen = true;
-		}
-	}
-
-	private void menu_LostFocus(object sender, RoutedEventArgs e)
-	{
-		ContextMenu menu = (ContextMenu)this.FindResource("TrayContextMenu");
-		menu.IsOpen = false;
-	}
-
-	class CloseCommand : ICommand
-	{
-		public bool CanExecute(object parameter)
-		{
-			return true;
-		}
-
-		public event EventHandler CanExecuteChanged;
-
-		public void Execute(object parameter)
-		{
-			throw new NotImplementedException();
-		}
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -100,7 +50,7 @@ public partial class MainWindow : Window
 		e.Cancel = true;
 	}
 
-	private void CloseCommandHandler(object sender, ExecutedRoutedEventArgs e)
+	private void MenuExit_Click(object sender, RoutedEventArgs e)
 	{
 		Tray.Dispose();
 		Application.Current.Shutdown();
@@ -125,12 +75,16 @@ public partial class MainWindow : Window
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	private void MenuHookToggle_Click(object sender, RoutedEventArgs e)
 	{
-
 	}
 
 	private void CloseButton_Click(object sender, RoutedEventArgs e)
 	{
 		this.Hide();
+	}
+
+	private void MenuWindow_Click(object sender, RoutedEventArgs e)
+	{
+		this.Show();
 	}
 }
 }
