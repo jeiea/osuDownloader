@@ -31,7 +31,7 @@ public partial class MainWindow : Window
 
 		MascotBtn.IsChecked = OsuHooker.IsHooked;
 
-		// 트레이 아이콘 생성과 등록
+		// Generate and register notifier icon.
 		Tray = new System.Windows.Forms.NotifyIcon();
 		Tray.Icon = Properties.Resources.osuIcon;
 		Tray.Visible = true;
@@ -48,10 +48,40 @@ public partial class MainWindow : Window
 		if (e.Button == System.Windows.Forms.MouseButtons.Right)
 		{
 			ContextMenu menu = (ContextMenu)this.FindResource("TrayContextMenu");
+			menu.CommandBindings.AddRange(CommandBindings);
+			Mouse.Capture(menu);
+			menu.LostFocus += menu_LostFocus;
+			menu.LostMouseCapture += menu_LostFocus;
 			menu.IsOpen = true;
 		}
 	}
 
+	private void menu_LostFocus(object sender, RoutedEventArgs e)
+	{
+		ContextMenu menu = (ContextMenu)this.FindResource("TrayContextMenu");
+		menu.IsOpen = false;
+	}
+
+	class CloseCommand : ICommand
+	{
+		public bool CanExecute(object parameter)
+		{
+			return true;
+		}
+
+		public event EventHandler CanExecuteChanged;
+
+		public void Execute(object parameter)
+		{
+			throw new NotImplementedException();
+		}
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>   Replace minimize action to hiding window. </summary>
+	///
+	/// <param name="e">    . </param>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
 	protected override void OnStateChanged(EventArgs e)
 	{
 		if (WindowState == WindowState.Minimized)
@@ -61,8 +91,18 @@ public partial class MainWindow : Window
 		base.OnStateChanged(e);
 	}
 
+	protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+	{
+		base.OnClosed(e);
+		//when user [Alt + F4] , this app will not work window close command.
+		//instead, this app window change to minimized state.
+		WindowState = System.Windows.WindowState.Minimized;
+		e.Cancel = true;
+	}
+
 	private void CloseCommandHandler(object sender, ExecutedRoutedEventArgs e)
 	{
+		Tray.Dispose();
 		Application.Current.Shutdown();
 	}
 
@@ -77,9 +117,20 @@ public partial class MainWindow : Window
 	{
 	}
 
-	private void MenuItem_Click(object sender, RoutedEventArgs e)
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>   Toggle hooking status. </summary>
+	///
+	/// <param name="sender">   Source of the event. </param>
+	/// <param name="e">        Routed event information. </param>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	private void MenuHookToggle_Click(object sender, RoutedEventArgs e)
 	{
 
+	}
+
+	private void CloseButton_Click(object sender, RoutedEventArgs e)
+	{
+		this.Hide();
 	}
 }
 }

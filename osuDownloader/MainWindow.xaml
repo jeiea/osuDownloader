@@ -1,8 +1,9 @@
 ﻿<Window x:Class="OsuDownloader.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="350" Width="525" SnapsToDevicePixels="True"
-        WindowStyle="None" ResizeMode="NoResize" UseLayoutRounding="True">
+        Title="Osu Beatmap Downloader" Height="350" Width="525" SnapsToDevicePixels="True"
+        WindowStyle="None" ResizeMode="NoResize" UseLayoutRounding="True"
+        x:Name="Win">
     <Window.Background>
         <RadialGradientBrush GradientOrigin="0.75,0.3" RadiusX="2" RadiusY="2">
             <GradientStop Color="#FF0023FF" Offset="0.726"/>
@@ -15,7 +16,9 @@
                 <ResourceDictionary Source="pack://application:,,,/pic/BloodCat.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <ContextMenu x:Key="TrayContextMenu" Placement="MousePoint">
-                <MenuItem Header="켜기" Click="MenuItem_Click"/>
+                <MenuItem Header="창 띄우기" Click="MenuHookToggle_Click"/>
+                <MenuItem Header="켜기" Click="MenuHookToggle_Click"/>
+                <MenuItem Header="종료" Command="ApplicationCommands.Close"/>
             </ContextMenu>
         </ResourceDictionary>
     </Window.Resources>
@@ -90,7 +93,7 @@
             </TextBlock.Effect>
         </TextBlock>
 
-        <Button Margin="497,0,0,322" Background="Transparent" BorderBrush="Transparent" Command="Close">
+        <Button Margin="497,0,0,322" Background="Transparent" BorderBrush="Transparent" Click="CloseButton_Click">
             <Path Data="M 0,0 L 1,1 M 1,0 L 0,1" Stroke="Black" StrokeThickness="3" Stretch="Fill" Margin="3"/>
         </Button>
     </Grid>

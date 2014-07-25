@@ -128,6 +128,10 @@
       <Project>{ab53862b-3b5c-4efc-9787-1f01199ebfbf}</Project>
       <Name>EasyHook</Name>
     </ProjectReference>
+    <ProjectReference Include="..\NotifyIconWpf\NotifyIconWpf.csproj">
+      <Project>{7ac63864-7638-41c4-969c-d3197ef2bed9}</Project>
+      <Name>NotifyIconWpf</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="pic\osuLogo.png" />
@@ -138,6 +142,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="osuIcon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="pic\osuIcon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
