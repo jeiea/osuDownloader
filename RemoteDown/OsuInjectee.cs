@@ -18,7 +18,7 @@ public class OsuInjectee : EasyHook.IEntryPoint
 {
 	static string DownloadDir = "C:\\";
 
-	OsuDownloader.InvokeDownload Interface;
+	OsuDownloader.HookSwitch Interface;
 	LocalHook ShellExecuteExHook;
 	/// <summary>   ShowWindow function hook. This is necessary during fullscreen mode. </summary>
 	LocalHook ShowWindowHook;
@@ -29,9 +29,25 @@ public class OsuInjectee : EasyHook.IEntryPoint
 	public OsuInjectee(RemoteHooking.IContext context, string channelName)
 	{
 		// connect to host...
-		Interface = RemoteHooking.IpcConnectClient<OsuDownloader.InvokeDownload>(channelName);
+		Interface = RemoteHooking.IpcConnectClient<OsuDownloader.HookSwitch>(channelName);
 
-		Interface.Ping();
+		Interface.Ping(false);
+
+		#region Allow client event handlers (bi-directional IPC)
+
+		// Attempt to create a IpcServerChannel so that any event handlers on the client will function correctly
+		System.Collections.IDictionary properties = new System.Collections.Hashtable();
+		properties["name"] = channelName;
+		// random portName so no conflict with existing channels of channelName
+		properties["portName"] = channelName + Guid.NewGuid().ToString("N");
+
+		var binaryProv = new System.Runtime.Remoting.Channels.BinaryServerFormatterSinkProvider();
+		binaryProv.TypeFilterLevel = System.Runtime.Serialization.Formatters.TypeFilterLevel.Full;
+
+		var _clientServerChannel = new System.Runtime.Remoting.Channels.Ipc.IpcServerChannel(properties, binaryProv);
+		System.Runtime.Remoting.Channels.ChannelServices.RegisterChannel(_clientServerChannel, false);
+
+		#endregion
 	}
 
 	public void Run(RemoteHooking.IContext context, string channelName)
@@ -39,22 +55,14 @@ public class OsuInjectee : EasyHook.IEntryPoint
 		// install hook...
 		try
 		{
-			ShellExecuteExHook = LocalHook.Create(
-									 LocalHook.GetProcAddress("shell32.dll", "ShellExecuteExW"),
-									 new DShellExecuteEx(ShellExecuteEx_Hooked), this);
+			EnableHook();
 
-			ShowWindowHook = LocalHook.Create(
-								 LocalHook.GetProcAddress("user32.dll", "ShowWindow"),
-								 new DShowWindow(ShowWindow_Hooked), this);
-
-			ShellExecuteExHook.ThreadACL.SetExclusiveACL(new int[] { 0 });
-			ShowWindowHook.ThreadACL.SetExclusiveACL(new int[] { 0 });
+			Interface.EnableHookRequest += EnableHook;
+			Interface.DisableHookRequest += DisableHook;
 		}
 		catch (Exception extInfo)
 		{
-			Interface.ReportException(extInfo);
-
-			return;
+			OsuDownloader.OsuHooker.LogException(extInfo);
 		}
 
 		RemoteHooking.WakeUpProcess();
@@ -93,7 +101,7 @@ public class OsuInjectee : EasyHook.IEntryPoint
 					}
 				}
 				else
-					Interface.Ping();
+					Interface.Ping(ShellExecuteExHook != null);
 			}
 		}
 		catch
@@ -102,12 +110,36 @@ public class OsuInjectee : EasyHook.IEntryPoint
 		}
 		finally
 		{
-			ShellExecuteExHook.Dispose();
-			ShowWindowHook.Dispose();
+			DisableHook();
+		}
+	}
 
+	private void DisableHook()
+	{
+		if (ShellExecuteExHook != null)
+		{
+			ShellExecuteExHook.Dispose();
 			ShellExecuteExHook = null;
+		}
+		if (ShowWindowHook != null)
+		{
+			ShowWindowHook.Dispose();
 			ShowWindowHook = null;
 		}
+	}
+
+	private void EnableHook()
+	{
+		ShellExecuteExHook = LocalHook.Create(
+								 LocalHook.GetProcAddress("shell32.dll", "ShellExecuteExW"),
+								 new DShellExecuteEx(ShellExecuteEx_Hooked), this);
+
+		ShowWindowHook = LocalHook.Create(
+							 LocalHook.GetProcAddress("user32.dll", "ShowWindow"),
+							 new DShowWindow(ShowWindow_Hooked), this);
+
+		ShellExecuteExHook.ThreadACL.SetExclusiveACL(new int[] { 0 });
+		ShowWindowHook.ThreadACL.SetExclusiveACL(new int[] { 0 });
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -379,8 +411,9 @@ public class OsuInjectee : EasyHook.IEntryPoint
 			}
 
 		}
-		catch
+		catch (Exception e)
 		{
+			OsuDownloader.OsuHooker.LogException(e);
 		}
 
 		//call original API...

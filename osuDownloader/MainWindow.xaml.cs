@@ -20,11 +20,18 @@ namespace OsuDownloader
 /// </summary>
 public partial class MainWindow : Window
 {
+
 	public MainWindow()
 	{
 		InitializeComponent();
 
-		MascotBtn.IsChecked = OsuHooker.IsHooked;
+		MascotBtn.IsChecked = OsuHooker.IsInjected;
+	}
+
+	protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+	{
+		DragMove();
+		base.OnMouseLeftButtonDown(e);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -79,7 +86,7 @@ public partial class MainWindow : Window
 	{
 		OsuHooker.Hook();
 
-		MascotBtn.IsChecked = OsuHooker.IsHooked;
+		MascotBtn.IsChecked = OsuHooker.IsInjected;
 	}
 
 	private void CloseButton_Click(object sender, RoutedEventArgs e)

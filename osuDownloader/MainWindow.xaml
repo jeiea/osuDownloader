@@ -60,6 +60,40 @@
                       Click="TryHook">
             <Image Source="pack://application:,,,/pic/osuMascot.png"/>
             <ToggleButton.Style>
+                <Style TargetType="ToggleButton">
+                    <Style.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter Property="Content">
+                                <Setter.Value>
+                                    <Image>
+                                        <Image.Source>
+                                            <FormatConvertedBitmap Source="pack://application:,,,/pic/osuMascot.png"
+                                                                   DestinationFormat="Gray32Float" />
+                                        </Image.Source>
+                                    </Image>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </ToggleButton.Style>
+            <!--<Image Source="pack://application:,,,/pic/osuMascot.png">
+                <Image.Style>
+                    <Style>
+                        <Style.Triggers>
+                            <Trigger Property="ToggleButton.IsChecked" Value="False">
+                                <Setter Property="Image.Source">
+                                    <Setter.Value>
+                                        <FormatConvertedBitmap Source="pack://application:,,,/pic/osuMascot.png"
+                                                               DestinationFormat="Gray32Float" />
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Image.Style>
+            </Image>
+            <ToggleButton.Style>
                 <Style>
                     <Style.Triggers>
                         <Trigger Property="ToggleButton.IsChecked" Value="False">
@@ -72,7 +106,7 @@
                         </Trigger>
                     </Style.Triggers>
                 </Style>
-            </ToggleButton.Style>
+            </ToggleButton.Style>-->
         </ToggleButton>
         <ToggleButton Name="BlCatBtn" Margin="6,20,422,218" Template="{StaticResource ImageToggleButon}"
                       RenderTransformOrigin="0.5,0.5" Click="BlCatBtn_Click">

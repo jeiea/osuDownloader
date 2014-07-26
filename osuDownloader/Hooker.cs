@@ -13,29 +13,98 @@ using System.IO;
 namespace OsuDownloader
 {
 
-public class InvokeDownload : MarshalByRefObject
+public class HookSwitch : MarshalByRefObject
 {
-	static string Cookie;
+	#region Injector to injectee event
 
-	public void ReportException(Exception info)
+	public bool IsHooking;
+	public DateTime LastPing;
+
+	public bool IsInstalled;
+
+	public event Action EnableHookRequest;
+
+	public event Action DisableHookRequest;
+
+	#endregion
+
+	public void Installed()
 	{
-		MessageBox.Show(info.Message);
+		IsInstalled = true;
 	}
 
-	public void Ping()
+	public void Ping(bool isHookEnabled)
 	{
+		IsHooking = isHookEnabled;
+		LastPing = DateTime.Now;
+	}
+
+	public bool EnableHook()
+	{
+		try
+		{
+			EnableHookRequest.Invoke();
+		}
+		catch
+		{
+			return false;
+		}
+		return true;
+	}
+
+	public bool DisableHook()
+	{
+		try
+		{
+			DisableHookRequest.Invoke();
+		}
+		catch
+		{
+			return false;
+		}
+		return true;
 	}
 }
 
 public class OsuHooker
 {
 	static string ChannelName = null;
-	public static bool IsHooked;
+	static HookSwitch HookChannel;
+	static int TargetPid;
+	public static bool IsInjected
+	{
+		get
+		{
+			try
+			{
+				return HookChannel.IsInstalled &&
+					   Process.GetProcessById(TargetPid) != null;
+			}
+			catch
+			{
+				return false;
+			}
+		}
+	}
+	public static bool IsHooking
+	{
+		get
+		{
+			return IsInjected && HookChannel.IsHooking;
+		}
+	}
 
 	public static bool Hook()
 	{
-		if (IsHooked)
+		if (IsHooking)
+		{
 			return true;
+		}
+		else if (IsInjected)
+		{
+			HookChannel.EnableHook();
+			return true;
+		}
 
 		try
 		{
@@ -58,32 +127,32 @@ public class OsuHooker
 				return false;
 			}
 
-			RemoteHooking.IpcCreateServer<InvokeDownload>(ref ChannelName, WellKnownObjectMode.SingleCall);
-
 			var osuCandidates = from proc in Process.GetProcesses()
 								where proc.ProcessName == "osu!"
 								select proc;
 
-			int targetPid;
 			if (osuCandidates.Count() == 1)
 			{
-				targetPid = osuCandidates.First().Id;
+				TargetPid = osuCandidates.First().Id;
 			}
 			else
 			{
 				// CreateAndInject doesn't work. I don't know reason.
-				targetPid = Process.Start(OsuHelper.GetOsuPath()).Id;
+				TargetPid = Process.Start(OsuHelper.GetOsuPath()).Id;
 			}
 
-			RemoteHooking.Inject(targetPid, injectee, injectee, ChannelName);
+			RemoteHooking.IpcCreateServer<HookSwitch>(ref ChannelName, WellKnownObjectMode.Singleton);
+			HookChannel = (HookSwitch)Activator.GetObject(typeof(HookSwitch), "ipc://" + ChannelName + "/" + ChannelName);
+
+			RemoteHooking.Inject(TargetPid, injectee, injectee, ChannelName);
 		}
 		catch (Exception extInfo)
 		{
+			HookChannel = null;
 			LogException(extInfo);
 			return false;
 		}
 
-		IsHooked = true;
 		return true;
 	}
 
