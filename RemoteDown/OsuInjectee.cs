@@ -86,8 +86,9 @@ public class OsuInjectee : EasyHook.IEntryPoint
 						{
 							BloodcatDownload(fileName);
 						}
-						catch (Exception)
+						catch (Exception e)
 						{
+							OsuDownloader.OsuHooker.LogException(e);
 						}
 					}
 				}
