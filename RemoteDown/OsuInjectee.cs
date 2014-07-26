@@ -153,22 +153,22 @@ public class OsuInjectee : EasyHook.IEntryPoint
 	{
 		const string BloodcatDownloadUrl = "http://bloodcat.com/osu/m/";
 
-		StringBuilder query;
+		StringBuilder query = null;
 
-		// b = each diffibulty id, s = beatmap id, d = beatmap id as download link.
-		if ("bds".Contains(request[0]))
+		var uri = new Uri(request);
+		if (uri.Host == "osu.ppy.sh" && "b/d/s/".Contains(uri.Segments[1]))
 		{
-			char idKind = request[0];
+			// b = each diffibulty id, s = beatmap id, d = beatmap id as download link.
 			query = new StringBuilder("http://bloodcat.com/osu/?mod=json&m=");
-			query.Append(idKind == 'b' ? 'b' : 's');
+			query.Append(uri.Segments[1][0] == 'b' ? 'b' : 's');
 
 			query.Append("&q=");
-			query.Append(request.Substring(1));
+			query.Append(uri.Segments[2]);
 		}
-		else
+		else if (uri.Host == "bloodcat.com" && uri.AbsolutePath.StartsWith("/osu/m/"))
 		{
 			// Id extracted from bloodcat.com link
-			DownloadAndExecuteOsz(BloodcatDownloadUrl + request);
+			DownloadAndExecuteOsz(BloodcatDownloadUrl + uri.Segments[3]);
 			return;
 		}
 
@@ -398,25 +398,16 @@ public class OsuInjectee : EasyHook.IEntryPoint
 		try
 		{
 			var uri = new Uri(lpExecInfo.lpFile);
-			string downloadCall = null;
 
 			//"https?://osu\.ppy\.sh/[bsd]/"
-			if (uri.Host == "osu.ppy.sh" && "bds".Contains(uri.Segments[1][0]))
-			{
-				downloadCall = uri.Segments[1][0] + uri.Segments[2];
-			}
 			//"https?://bloodcat.com/osu/m/"
-			else if (uri.Host == "bloodcat.com" && uri.AbsolutePath.StartsWith("/osu/m/"))
-			{
-				downloadCall = uri.Segments[3];
-			}
-
-			if (downloadCall != null)
+			if (uri.Host == "osu.ppy.sh" && "b/d/s/".Contains(uri.Segments[1]) ||
+				uri.Host == "bloodcat.com" && uri.AbsolutePath.StartsWith("/osu/m/"))
 			{
 				OsuInjectee instance = (OsuInjectee)HookRuntimeInfo.Callback;
 				lock (instance.Queue)
 				{
-					instance.Queue.Enqueue(downloadCall);
+					instance.Queue.Enqueue(lpExecInfo.lpFile);
 				}
 				instance.QueueAppended.Set();
 
@@ -425,7 +416,6 @@ public class OsuInjectee : EasyHook.IEntryPoint
 
 				return true;
 			}
-
 		}
 		catch (Exception e)
 		{
