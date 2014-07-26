@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Net;
 using System.Diagnostics;
 using Newtonsoft.Json.Linq;
+using System.IO;
 
 namespace RemoteDown
 {
@@ -108,16 +109,32 @@ public class OsuInjectee : EasyHook.IEntryPoint
 		}
 	}
 
-	private static void BloodcatDownload(string fileName)
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>   Download from bloodcat mirror. </summary>
+	///
+	/// <param name="url"> Official beatmap thread url or bloodcat.com beatmap url. </param>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	private static void BloodcatDownload(string url)
 	{
 		StringBuilder query = new StringBuilder("http://bloodcat.com/osu/?mod=json");
 
-		char idKind = fileName[18];
-		query.Append("&m=");
-		query.Append(idKind);
+		if (url.StartsWith("http://osu.ppy.sh/"))
+		{
+			// b = each diffibulty id, s = beatmap id, d = beatmap id as download link.
+			char idKind = url[18];
+			query.Append("&m=");
+			query.Append(idKind == 'b' ? 'b' : 's');
 
-		query.Append("&q=");
-		query.Append(fileName.Split('/')[4]);
+			query.Append("&q=");
+			query.Append(url.Split('/')[4]);
+		}
+		else
+		{
+			DownloadAndExecuteOsz(url);
+			return;
+		}
+
+		// Query to bloodcat.com. Difficulty id requires this process.
 
 		WebClient client = new WebClient();
 		client.Encoding = Encoding.UTF8;
@@ -133,19 +150,41 @@ public class OsuInjectee : EasyHook.IEntryPoint
 			{
 				nShow = ShowWindowCommands.ShowDefault,
 				lpVerb = "open",
-				lpFile = fileName,
+				lpFile = url,
 			};
 			exInfo.cbSize = Marshal.SizeOf(exInfo);
 			ShellExecuteEx(ref exInfo);
 			return;
 		}
 
+		// Parse and download.
+
 		var beatmapJson = result["results"][0];
 		int beatmapId = (int)beatmapJson["id"];
-		string artist = GetValidFileName((string)beatmapJson["artist"]);
-		string beatmapTitle = GetValidFileName((string)beatmapJson["title"]);
-		string downloadPath = string.Format("{0}{1} {2} - {3}.osz", DownloadDir, beatmapId, artist, beatmapTitle);
-		client.DownloadFile("http://bloodcat.com/osu/m/" + beatmapId, downloadPath);
+		DownloadAndExecuteOsz("http://bloodcat.com/osu/m/" + beatmapId);
+	}
+
+	private static void DownloadAndExecuteOsz(string url)
+	{
+		string downloadPath = null;
+
+		HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+		HttpWebResponse res = (HttpWebResponse)request.GetResponse();
+		using(Stream rstream = res.GetResponseStream())
+		{
+			string disposition = res.Headers["Content-Disposition"] != null ?
+								 res.Headers["Content-Disposition"].Replace("attachment; filename=", "").Replace("\"", "") :
+								 res.Headers["Location"] != null ? Path.GetFileName(res.Headers["Location"]) :
+								 Path.GetFileName(url).Contains('?') || Path.GetFileName(url).Contains('=') ?
+								 Path.GetFileName(res.ResponseUri.ToString()) : url.GetHashCode() + ".osz";
+			downloadPath = DownloadDir + disposition;
+
+			using(var destStream = File.Create(downloadPath))
+			{
+				rstream.CopyTo(destStream);
+			}
+		}
+		res.Close();
 
 		ProcessStartInfo psi = new ProcessStartInfo();
 		psi.Verb = "open";
@@ -321,7 +360,9 @@ public class OsuInjectee : EasyHook.IEntryPoint
 		try
 		{
 			if (lpExecInfo.lpFile.StartsWith("http://osu.ppy.sh/b/") ||
-				lpExecInfo.lpFile.StartsWith("http://osu.ppy.sh/s/"))
+				lpExecInfo.lpFile.StartsWith("http://osu.ppy.sh/s/") ||
+				lpExecInfo.lpFile.StartsWith("http://osu.ppy.sh/d/") ||
+				lpExecInfo.lpFile.StartsWith("http://bloodcat.com/osu/m/"))
 			{
 				OsuInjectee instance = (OsuInjectee)HookRuntimeInfo.Callback;
 				lock (instance.Queue)
