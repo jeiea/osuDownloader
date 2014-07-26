@@ -65,6 +65,8 @@ public class OsuInjectee : EasyHook.IEntryPoint
 			OsuDownloader.OsuHooker.LogException(extInfo);
 		}
 
+		Interface.Installed();
+
 		RemoteHooking.WakeUpProcess();
 
 		QueueAppended = new ManualResetEvent(false);
@@ -145,25 +147,28 @@ public class OsuInjectee : EasyHook.IEntryPoint
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>   Download from bloodcat mirror. </summary>
 	///
-	/// <param name="url"> Official beatmap thread url or bloodcat.com beatmap url. </param>
+	/// <param name="request"> Official beatmap thread url or bloodcat.com beatmap url. </param>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	private static void BloodcatDownload(string url)
+	private static void BloodcatDownload(string request)
 	{
-		StringBuilder query = new StringBuilder("http://bloodcat.com/osu/?mod=json");
+		const string BloodcatDownloadUrl = "http://bloodcat.com/osu/m/";
 
-		if (url.StartsWith("http://osu.ppy.sh/"))
+		StringBuilder query;
+
+		// b = each diffibulty id, s = beatmap id, d = beatmap id as download link.
+		if ("bds".Contains(request[0]))
 		{
-			// b = each diffibulty id, s = beatmap id, d = beatmap id as download link.
-			char idKind = url[18];
-			query.Append("&m=");
+			char idKind = request[0];
+			query = new StringBuilder("http://bloodcat.com/osu/?mod=json&m=");
 			query.Append(idKind == 'b' ? 'b' : 's');
 
 			query.Append("&q=");
-			query.Append(url.Split('/')[4]);
+			query.Append(request.Substring(1));
 		}
 		else
 		{
-			DownloadAndExecuteOsz(url);
+			// Id extracted from bloodcat.com link
+			DownloadAndExecuteOsz(BloodcatDownloadUrl + request);
 			return;
 		}
 
@@ -183,7 +188,7 @@ public class OsuInjectee : EasyHook.IEntryPoint
 			{
 				nShow = ShowWindowCommands.ShowDefault,
 				lpVerb = "open",
-				lpFile = url,
+				lpFile = request,
 			};
 			exInfo.cbSize = Marshal.SizeOf(exInfo);
 			ShellExecuteEx(ref exInfo);
@@ -194,7 +199,7 @@ public class OsuInjectee : EasyHook.IEntryPoint
 
 		var beatmapJson = result["results"][0];
 		int beatmapId = (int)beatmapJson["id"];
-		DownloadAndExecuteOsz("http://bloodcat.com/osu/m/" + beatmapId);
+		DownloadAndExecuteOsz(BloodcatDownloadUrl + beatmapId);
 	}
 
 	private static void DownloadAndExecuteOsz(string url)
@@ -392,15 +397,26 @@ public class OsuInjectee : EasyHook.IEntryPoint
 	{
 		try
 		{
-			if (lpExecInfo.lpFile.StartsWith("http://osu.ppy.sh/b/") ||
-				lpExecInfo.lpFile.StartsWith("http://osu.ppy.sh/s/") ||
-				lpExecInfo.lpFile.StartsWith("http://osu.ppy.sh/d/") ||
-				lpExecInfo.lpFile.StartsWith("http://bloodcat.com/osu/m/"))
+			var uri = new Uri(lpExecInfo.lpFile);
+			string downloadCall = null;
+
+			//"https?://osu\.ppy\.sh/[bsd]/"
+			if (uri.Host == "osu.ppy.sh" && "bds".Contains(uri.Segments[1][0]))
+			{
+				downloadCall = uri.Segments[1][0] + uri.Segments[2];
+			}
+			//"https?://bloodcat.com/osu/m/"
+			else if (uri.Host == "bloodcat.com" && uri.AbsolutePath.StartsWith("/osu/m/"))
+			{
+				downloadCall = uri.Segments[3];
+			}
+
+			if (downloadCall != null)
 			{
 				OsuInjectee instance = (OsuInjectee)HookRuntimeInfo.Callback;
 				lock (instance.Queue)
 				{
-					instance.Queue.Enqueue(lpExecInfo.lpFile);
+					instance.Queue.Enqueue(downloadCall);
 				}
 				instance.QueueAppended.Set();
 

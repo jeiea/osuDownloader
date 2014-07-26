@@ -47,16 +47,16 @@
         <tb:TaskbarIcon Name="Tray" IconSource="pack://application:,,,/pic/osuIcon.ico"
                         ToolTipText="Osu Beatmap Downloader v1.0" DoubleClickCommand="NavigationCommands.FirstPage">
             <tb:TaskbarIcon.ContextMenu>
-                <ContextMenu Placement="MousePoint">
+                <ContextMenu Placement="MousePoint" IsVisibleChanged="ContextMenu_IsVisibleChanged">
                     <MenuItem Header="창 띄우기" Click="MenuWindow_Click"/>
-                    <MenuItem Header="켜기" Click="TryHook"/>
+                    <MenuItem Name="ToggleHookItem" Header="켜기" Click="ToggleHooking"/>
                     <MenuItem Header="종료" Click="MenuExit_Click"/>
                 </ContextMenu>
             </tb:TaskbarIcon.ContextMenu>
         </tb:TaskbarIcon>
 
         <ToggleButton Name="MascotBtn" Margin="31,-100,208,-166" Template="{StaticResource ImageToggleButon}"
-                      Click="TryHook">
+                      Click="ToggleHooking">
             <Image>
                 <Image.Style>
                     <Style TargetType="Image">
@@ -82,16 +82,6 @@
                     </Style>
                 </Image.Style>
             </Image>
-            <ToggleButton.Style>
-                <Style TargetType="{x:Type ToggleButton}">
-                    <Setter Property="Cursor" Value="Cross"/>
-                    <Style.Triggers>
-                        <Trigger Property="IsChecked" Value="True">
-                            <Setter Property="Cursor" Value="IBeam"/>
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
-            </ToggleButton.Style>
         </ToggleButton>
         <ToggleButton Name="BlCatBtn" Margin="6,20,422,218" Template="{StaticResource ImageToggleButon}"
                       RenderTransformOrigin="0.5,0.5" Click="BlCatBtn_Click">

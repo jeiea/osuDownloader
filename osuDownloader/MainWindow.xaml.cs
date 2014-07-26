@@ -109,9 +109,9 @@ public partial class MainWindow : Window
 	/// <param name="sender">   Source of the event. </param>
 	/// <param name="e">        Routed event information. </param>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	private void TryHook(object sender, RoutedEventArgs e)
+	private void ToggleHooking(object sender, RoutedEventArgs e)
 	{
-		OsuHooker.Hook();
+		OsuHooker.ToggleHook();
 
 		MascotBtn.IsChecked = OsuHooker.IsInjected;
 	}
@@ -129,6 +129,11 @@ public partial class MainWindow : Window
 	private void MenuWindow_Click(object sender, RoutedEventArgs e)
 	{
 		PresentWindow();
+	}
+
+	private void ContextMenu_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+	{
+		ToggleHookItem.Header = OsuHooker.IsHooking ? "끄기" : "켜기";
 	}
 }
 }

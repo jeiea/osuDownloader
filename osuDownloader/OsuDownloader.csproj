@@ -139,9 +139,6 @@
     <Resource Include="pic\osuMascot.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="pic\bloodcat.png" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="osuIcon.ico" />
   </ItemGroup>
   <ItemGroup>

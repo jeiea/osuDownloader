@@ -99,10 +99,11 @@ public class OsuHooker
 		}
 	}
 
-	public static bool Hook()
+	public static bool ToggleHook()
 	{
 		if (IsHooking)
 		{
+			HookChannel.DisableHook();
 			return true;
 		}
 		else if (IsInjected)
