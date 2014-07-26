@@ -56,7 +56,7 @@
         </tb:TaskbarIcon>
 
         <ToggleButton Name="MascotBtn" Margin="31,-100,208,-166" Template="{StaticResource ImageToggleButon}"
-                      Click="ToggleHooking">
+                      Click="ToggleHooking" ToolTip="오스를 켜고 다운로더를 활성화합니다.">
             <Image>
                 <Image.Style>
                     <Style TargetType="Image">
@@ -105,6 +105,10 @@
             </ToggleButton.RenderTransform>
             <Image Source="pack://application:,,,/pic/osuLogo.png"/>
         </ToggleButton>
+        <TextBlock Margin="10,300,386,10">
+        Illust by Kun Knee<LineBreak/>
+        Programmed by 크빗
+        </TextBlock>
         <TextBlock HorizontalAlignment="Left" Margin="309,170,0,0" TextWrapping="Wrap"
                    VerticalAlignment="Top" FontSize="24" Text="Osu Beatmap Downloader v1.0"
                    Opacity="0.8" Foreground="White">
