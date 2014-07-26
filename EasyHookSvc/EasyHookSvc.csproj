@@ -83,7 +83,8 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'netfx4-Release|AnyCPU'">
-    <OutputPath>..\Build\netfx4-Release\x64\</OutputPath>
+    <OutputPath>..\Build\netfx4-Release\</OutputPath>
+    <AssemblyName>EasyHook64Svc</AssemblyName>
     <DefineConstants>TRACE;NET4</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
@@ -94,7 +95,8 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'netfx4-Release|x86'">
-    <OutputPath>..\Build\netfx4-Release\x86\</OutputPath>
+    <OutputPath>..\Build\netfx4-Release\</OutputPath>
+    <AssemblyName>EasyHook32Svc</AssemblyName>
     <DefineConstants>TRACE;NET4</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
