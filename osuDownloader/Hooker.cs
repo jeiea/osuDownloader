@@ -15,12 +15,11 @@ namespace OsuDownloader
 
 public class HookSwitch : MarshalByRefObject
 {
-	#region Injector to injectee event
-
 	public bool IsHooking;
+	public bool IsInstalled;
 	public DateTime LastPing;
 
-	public bool IsInstalled;
+	#region Injector to injectee event
 
 	public event Action EnableHookRequest;
 
@@ -71,6 +70,12 @@ public class OsuHooker
 	static string ChannelName = null;
 	static HookSwitch HookChannel;
 	static int TargetPid;
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>   Query whether injectee is ready. </summary>
+	///
+	/// <value> If last ping had been in 3 seconds, then it true. </value>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
 	public static bool IsInjected
 	{
 		get
@@ -78,7 +83,7 @@ public class OsuHooker
 			try
 			{
 				return HookChannel.IsInstalled &&
-					   Process.GetProcessById(TargetPid) != null;
+					   (DateTime.Now - HookChannel.LastPing).TotalSeconds < 3;
 			}
 			catch
 			{

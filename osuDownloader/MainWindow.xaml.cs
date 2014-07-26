@@ -20,12 +20,27 @@ namespace OsuDownloader
 /// </summary>
 public partial class MainWindow : Window
 {
+	/// <summary>   The timer which check hooking is enabled. </summary>
+	System.Windows.Threading.DispatcherTimer PingTimer;
 
 	public MainWindow()
 	{
 		InitializeComponent();
 
 		MascotBtn.IsChecked = OsuHooker.IsInjected;
+
+		PingTimer = new System.Windows.Threading.DispatcherTimer();
+		PingTimer.Interval = TimeSpan.FromSeconds(1);
+		PingTimer.Tick += CheckHooking;
+		PingTimer.Start();
+	}
+
+	private void CheckHooking(object sender, EventArgs e)
+	{
+		if (MascotBtn.IsChecked != OsuHooker.IsHooking)
+		{
+			MascotBtn.IsChecked = OsuHooker.IsHooking;
+		}
 	}
 
 	protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
@@ -43,9 +58,21 @@ public partial class MainWindow : Window
 	{
 		if (WindowState == WindowState.Minimized)
 		{
-			this.Hide();
+			DismissWindow();
 		}
 		base.OnStateChanged(e);
+	}
+
+	private void DismissWindow()
+	{
+		PingTimer.Stop();
+		this.Hide();
+	}
+
+	private void PresentWindow()
+	{
+		PingTimer.Start();
+		this.Show();
 	}
 
 	protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
@@ -71,7 +98,7 @@ public partial class MainWindow : Window
 	{
 		if (e.Key == Key.Escape)
 		{
-			this.Hide();
+			DismissWindow();
 		}
 		base.OnKeyDown(e);
 	}
@@ -91,17 +118,17 @@ public partial class MainWindow : Window
 
 	private void CloseButton_Click(object sender, RoutedEventArgs e)
 	{
-		this.Hide();
+		DismissWindow();
 	}
 
 	private void FirstPage_Executed(object sender, ExecutedRoutedEventArgs e)
 	{
-		this.Show();
+		PresentWindow();
 	}
 
 	private void MenuWindow_Click(object sender, RoutedEventArgs e)
 	{
-		this.Show();
+		PresentWindow();
 	}
 }
 }

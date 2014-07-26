@@ -55,21 +55,27 @@
             </tb:TaskbarIcon.ContextMenu>
         </tb:TaskbarIcon>
 
-        <ToggleButton Name="MascotBtn" Margin="31,-100,208,-166" Template="{StaticResource ImageToggleButon}">
-            <!--Click="TryHook">-->
+        <ToggleButton Name="MascotBtn" Margin="31,-100,208,-166" Template="{StaticResource ImageToggleButon}"
+                      Click="TryHook">
             <Image>
                 <Image.Style>
                     <Style TargetType="Image">
+                        <Setter Property="OpacityMask">
+                            <Setter.Value>
+                                <ImageBrush ImageSource="pack://application:,,,/pic/osuMascot.png"/>
+                            </Setter.Value>
+                        </Setter>
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsChecked, ElementName=MascotBtn}" Value="True">
+                            <DataTrigger Binding="{Binding IsChecked, ElementName=MascotBtn}" Value="False">
                                 <Setter Property="Source">
                                     <Setter.Value>
                                         <FormatConvertedBitmap Source="pack://application:,,,/pic/osuMascot.png"
-                                                               DestinationFormat="Gray32Float" />
+                                                               DestinationFormat="Gray32Float"
+                                                               AlphaThreshold="0"/>
                                     </Setter.Value>
                                 </Setter>
                             </DataTrigger>
-                            <DataTrigger Binding="{Binding IsChecked, ElementName=MascotBtn}" Value="False">
+                            <DataTrigger Binding="{Binding IsChecked, ElementName=MascotBtn}" Value="True">
                                 <Setter Property="Source" Value="pack://application:,,,/pic/osuMascot.png"/>
                             </DataTrigger>
                         </Style.Triggers>
