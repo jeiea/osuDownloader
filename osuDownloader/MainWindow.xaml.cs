@@ -56,15 +56,17 @@ public partial class MainWindow : Window
 		Application.Current.Shutdown();
 	}
 
-	private void Mascot_Click(object sender, RoutedEventArgs e)
-	{
-		OsuHooker.Hook();
-
-		MascotBtn.IsChecked = OsuHooker.IsHooked;
-	}
-
 	private void BlCatBtn_Click(object sender, RoutedEventArgs e)
 	{
+	}
+
+	protected override void OnKeyDown(KeyEventArgs e)
+	{
+		if (e.Key == Key.Escape)
+		{
+			this.Hide();
+		}
+		base.OnKeyDown(e);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -73,13 +75,21 @@ public partial class MainWindow : Window
 	/// <param name="sender">   Source of the event. </param>
 	/// <param name="e">        Routed event information. </param>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	private void MenuHookToggle_Click(object sender, RoutedEventArgs e)
+	private void TryHook(object sender, RoutedEventArgs e)
 	{
+		OsuHooker.Hook();
+
+		MascotBtn.IsChecked = OsuHooker.IsHooked;
 	}
 
 	private void CloseButton_Click(object sender, RoutedEventArgs e)
 	{
 		this.Hide();
+	}
+
+	private void FirstPage_Executed(object sender, ExecutedRoutedEventArgs e)
+	{
+		this.Show();
 	}
 
 	private void MenuWindow_Click(object sender, RoutedEventArgs e)

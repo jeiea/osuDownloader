@@ -17,21 +17,6 @@ public class InvokeDownload : MarshalByRefObject
 {
 	static string Cookie;
 
-	public void IsInstalled(int clientPid)
-	{
-		Console.WriteLine("FileMon has been installed in target {0}.\r\n", clientPid);
-	}
-
-	public void OnBeatmapBrowse(int clientPid, string fileName)
-	{
-		return;
-	}
-
-	public void OnTerminate()
-	{
-		OsuHooker.IsHooked = false;
-	}
-
 	public void ReportException(Exception info)
 	{
 		MessageBox.Show(info.Message);

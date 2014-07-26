@@ -41,18 +41,23 @@
                 </Border>
             </ControlTemplate>
         </Grid.Resources>
+        <Grid.CommandBindings>
+            <CommandBinding Command="NavigationCommands.FirstPage" Executed="FirstPage_Executed"/>
+        </Grid.CommandBindings>
+
         <tb:TaskbarIcon Name="Tray" IconSource="pack://application:,,,/pic/osuIcon.ico"
-                        ToolTipText="Osu Beatmap Downloader v1.0">
+                        ToolTipText="Osu Beatmap Downloader v1.0" DoubleClickCommand="NavigationCommands.FirstPage">
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu Placement="MousePoint">
                     <MenuItem Header="창 띄우기" Click="MenuWindow_Click"/>
-                    <MenuItem Header="켜기" Click="MenuHookToggle_Click"/>
+                    <MenuItem Header="켜기" Click="TryHook"/>
                     <MenuItem Header="종료" Click="MenuExit_Click"/>
                 </ContextMenu>
             </tb:TaskbarIcon.ContextMenu>
         </tb:TaskbarIcon>
+
         <ToggleButton Name="MascotBtn" Margin="31,-100,208,-166" Template="{StaticResource ImageToggleButon}"
-                      Click="Mascot_Click">
+                      Click="TryHook">
             <Image Source="pack://application:,,,/pic/osuMascot.png"/>
             <ToggleButton.Style>
                 <Style>

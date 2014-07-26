@@ -56,8 +56,6 @@ public class OsuInjectee : EasyHook.IEntryPoint
 			return;
 		}
 
-		Interface.IsInstalled(RemoteHooking.GetCurrentProcessId());
-
 		RemoteHooking.WakeUpProcess();
 
 		QueueAppended = new ManualResetEvent(false);
@@ -85,7 +83,6 @@ public class OsuInjectee : EasyHook.IEntryPoint
 					{
 						try
 						{
-							Interface.OnBeatmapBrowse(RemoteHooking.GetCurrentProcessId(), fileName);
 							BloodcatDownload(fileName);
 						}
 						catch (Exception)
