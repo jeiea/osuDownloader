@@ -1,0 +1,26 @@
+<?xml version='1.0'?>
+<Obfuscator>
+  <Var name="InPath" value="..\build\netfx4-Release" />
+  <Var name="OutPath" value="..\build\netfx4-Release\Obfuscar" />
+  <!-- <Var name="KeepPublicApi" value="false" /> -->
+  <!-- <Var name="HidePrivateApi" value="true" /> -->
+
+<!--   <Var name="KeyFile" value="..\RemoteDown\StrongNameJson.snk" />
+  <Module file="$(InPath)\Newtonsoft.Json.dll" /> -->
+
+<!--   <Var name="KeyFile" value="..\NotifyIconWpf\StrongName.snk" />
+  <Module file="$(InPath)\Hardcodet.Wpf.TaskbarNotification.dll" /> -->
+
+  <Var name="KeyFile" value="..\RemoteDown\StrongName.snk" />
+  <Module file="$(InPath)\RemoteDown.dll" />
+
+  <!-- <Var name="KeyFile" value="..\EasyHook\StrongName.snk" />
+  <Module file="$(InPath)\EasyHook.dll" /> -->
+
+  <Var name="KeyFile" value="..\osuDownloader\StrongName.snk" />
+  <Module file="$(InPath)\osuDownloader.exe">
+    <SkipType name="osuDownloader.MainWindow"/>
+    <SkipType name="osuDownloader.HookSwitch"/>
+    <SkipType name="osuDownloader.OsuHooker"/>
+  </Module>
+</Obfuscator>
