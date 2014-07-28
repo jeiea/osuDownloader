@@ -10,6 +10,9 @@ using System.Net;
 using System.Diagnostics;
 using Newtonsoft.Json.Linq;
 using System.IO;
+using System.Runtime.Remoting.Channels;
+using System.Runtime.Remoting.Channels.Ipc;
+using System.Runtime.Serialization.Formatters;
 
 namespace RemoteDown
 {
@@ -25,6 +28,7 @@ public class OsuInjectee : EasyHook.IEntryPoint
 	bool IsHooked;
 	Queue<string> Queue = new Queue<string>();
 	ManualResetEvent QueueAppended;
+	IpcServerChannel ClientServerChannel;
 
 	public OsuInjectee(RemoteHooking.IContext context, string channelName)
 	{
@@ -41,11 +45,11 @@ public class OsuInjectee : EasyHook.IEntryPoint
 		// random portName so no conflict with existing channels of channelName
 		properties["portName"] = channelName + Guid.NewGuid().ToString("N");
 
-		var binaryProv = new System.Runtime.Remoting.Channels.BinaryServerFormatterSinkProvider();
-		binaryProv.TypeFilterLevel = System.Runtime.Serialization.Formatters.TypeFilterLevel.Full;
+		var binaryProv = new BinaryServerFormatterSinkProvider();
+		binaryProv.TypeFilterLevel = TypeFilterLevel.Full;
 
-		var _clientServerChannel = new System.Runtime.Remoting.Channels.Ipc.IpcServerChannel(properties, binaryProv);
-		System.Runtime.Remoting.Channels.ChannelServices.RegisterChannel(_clientServerChannel, false);
+		ClientServerChannel = new IpcServerChannel(properties, binaryProv);
+		System.Runtime.Remoting.Channels.ChannelServices.RegisterChannel(ClientServerChannel, false);
 
 		#endregion
 	}
@@ -113,6 +117,7 @@ public class OsuInjectee : EasyHook.IEntryPoint
 		finally
 		{
 			DisableHook();
+			ChannelServices.UnregisterChannel(ClientServerChannel);
 		}
 	}
 
