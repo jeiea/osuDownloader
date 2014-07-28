@@ -1,10 +1,9 @@
 ﻿<Window x:Class="OsuDownloader.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:tb="http://www.hardcodet.net/taskbar"
+        xmlns:tb="clr-namespace:Hardcodet.Wpf.TaskbarNotification"
         Title="Osu Beatmap Downloader" Height="350" Width="525" SnapsToDevicePixels="True"
-        WindowStyle="None" ResizeMode="NoResize" UseLayoutRounding="True"
-        x:Name="Win">
+        WindowStyle="None" ResizeMode="NoResize" UseLayoutRounding="True" x:Name="Win">
     <Window.Background>
         <RadialGradientBrush GradientOrigin="0.75,0.3" RadiusX="2" RadiusY="2">
             <GradientStop Color="#FF0023FF" Offset="0.726"/>
@@ -43,17 +42,6 @@
         <Grid.CommandBindings>
             <CommandBinding Command="NavigationCommands.FirstPage" Executed="FirstPage_Executed"/>
         </Grid.CommandBindings>
-
-        <tb:TaskbarIcon Name="Tray" IconSource="pack://application:,,,/pic/osuIcon.ico"
-                        ToolTipText="Osu Beatmap Downloader v1.0" DoubleClickCommand="NavigationCommands.FirstPage">
-            <tb:TaskbarIcon.ContextMenu>
-                <ContextMenu Placement="MousePoint" IsVisibleChanged="ContextMenu_IsVisibleChanged">
-                    <MenuItem Header="창 띄우기" Click="MenuWindow_Click"/>
-                    <MenuItem Name="ToggleHookItem" Header="켜기" Click="ToggleHooking"/>
-                    <MenuItem Header="종료" Click="MenuExit_Click"/>
-                </ContextMenu>
-            </tb:TaskbarIcon.ContextMenu>
-        </tb:TaskbarIcon>
 
         <ToggleButton Name="MascotBtn" Margin="31,-100,208,-166" Template="{StaticResource ImageToggleButon}"
                       Click="ToggleHooking" ToolTip="오스를 켜고 다운로더를 활성화합니다.">

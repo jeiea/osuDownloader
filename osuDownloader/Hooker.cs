@@ -9,6 +9,7 @@ using System.Windows;
 using System.Net;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 
 namespace OsuDownloader
 {
@@ -121,15 +122,22 @@ public class OsuHooker
 
 			try
 			{
-				if (File.Exists(jsonLib))
-					Config.Register("Osu beatmap downloader.", thisFile, injectee, jsonLib);
-				else
-					Config.Register("Osu beatmap downloader.", thisFile, injectee);
+				// Why need?
+				//if (File.Exists(jsonLib))
+				//    Config.Register("Osu beatmap downloader.", thisFile, injectee, jsonLib);
+				//else
+				//    Config.Register("Osu beatmap downloader.", thisFile, injectee);
 			}
-			catch (ApplicationException)
+			catch (ApplicationException e)
 			{
-				MessageBox.Show("DLL파일이 있는지, 관리자 권한이 있는지 확인해주세요.",
-								"후킹 실패", MessageBoxButton.OK);
+				// Unless creating new thread, MessageBox will disappear immediately
+				// when invoked from tray icon without window.
+				new Thread(new ThreadStart(delegate
+				{
+					MessageBox.Show("DLL파일이 있는지, 관리자 권한이 있는지 확인해주세요.", "후킹 실패");
+				})).Start();
+
+				LogException(e);
 				return false;
 			}
 
@@ -150,7 +158,8 @@ public class OsuHooker
 			RemoteHooking.IpcCreateServer<HookSwitch>(ref ChannelName, WellKnownObjectMode.Singleton);
 			HookChannel = (HookSwitch)Activator.GetObject(typeof(HookSwitch), "ipc://" + ChannelName + "/" + ChannelName);
 
-			RemoteHooking.Inject(TargetPid, injectee, injectee, ChannelName);
+			RemoteHooking.Inject(TargetPid, InjectionOptions.DoNotRequireStrongName,
+								 injectee, injectee, ChannelName);
 		}
 		catch (Exception extInfo)
 		{

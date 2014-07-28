@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 12.0.30626.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OsuDownloader", "osuDownloader\OsuDownloader.csproj", "{797F3CEB-F87A-46D3-979D-D041979F47C8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B9A68E47-237F-4045-A371-D5CCEB896F7F} = {B9A68E47-237F-4045-A371-D5CCEB896F7F}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyHook", "EasyHook\EasyHook.csproj", "{AB53862B-3B5C-4EFC-9787-1F01199EBFBF}"
 	ProjectSection(ProjectDependencies) = postProject

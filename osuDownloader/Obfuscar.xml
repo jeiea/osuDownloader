@@ -2,8 +2,8 @@
 <Obfuscator>
   <Var name="InPath" value="..\build\netfx4-Release" />
   <Var name="OutPath" value="..\build\netfx4-Release\Obfuscar" />
-  <!-- <Var name="KeepPublicApi" value="false" /> -->
-  <!-- <Var name="HidePrivateApi" value="true" /> -->
+  <Var name="KeepPublicApi" value="false" />
+  <Var name="HidePrivateApi" value="true" />
 
 <!--   <Var name="KeyFile" value="..\RemoteDown\StrongNameJson.snk" />
   <Module file="$(InPath)\Newtonsoft.Json.dll" /> -->
@@ -18,9 +18,5 @@
   <Module file="$(InPath)\EasyHook.dll" /> -->
 
   <Var name="KeyFile" value="..\osuDownloader\StrongName.snk" />
-  <Module file="$(InPath)\osuDownloader.exe">
-    <SkipType name="osuDownloader.MainWindow"/>
-    <SkipType name="osuDownloader.HookSwitch"/>
-    <SkipType name="osuDownloader.OsuHooker"/>
-  </Module>
+  <Module file="$(InPath)\osuDownloader.exe"/>
 </Obfuscator>
