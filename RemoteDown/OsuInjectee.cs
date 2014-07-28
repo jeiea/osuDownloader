@@ -204,18 +204,24 @@ public class OsuInjectee : EasyHook.IEntryPoint
 
 	private static void DownloadAndExecuteOsz(string url)
 	{
-		string downloadPath = null;
-
 		HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
 		HttpWebResponse res = (HttpWebResponse)request.GetResponse();
+		string disposition = res.Headers["Content-Disposition"] != null ?
+							 res.Headers["Content-Disposition"].Replace("attachment; filename=", "").Replace("\"", "") :
+							 res.Headers["Location"] != null ? Path.GetFileName(res.Headers["Location"]) :
+							 Path.GetFileName(url).Contains('?') || Path.GetFileName(url).Contains('=') ?
+							 Path.GetFileName(res.ResponseUri.ToString()) : url.GetHashCode() + ".osz";
+
+		string downloadPath = DownloadDir + disposition;
+
+		// If user clicks several times, ignore.
+		if (File.Exists(downloadPath))
+		{
+			return;
+		}
+
 		using(Stream rstream = res.GetResponseStream())
 		{
-			string disposition = res.Headers["Content-Disposition"] != null ?
-								 res.Headers["Content-Disposition"].Replace("attachment; filename=", "").Replace("\"", "") :
-								 res.Headers["Location"] != null ? Path.GetFileName(res.Headers["Location"]) :
-								 Path.GetFileName(url).Contains('?') || Path.GetFileName(url).Contains('=') ?
-								 Path.GetFileName(res.ResponseUri.ToString()) : url.GetHashCode() + ".osz";
-			downloadPath = DownloadDir + disposition;
 
 			using(var destStream = File.Create(downloadPath))
 			{

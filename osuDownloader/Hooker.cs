@@ -123,10 +123,10 @@ public class OsuHooker
 			try
 			{
 				// Why need?
-				//if (File.Exists(jsonLib))
-				//    Config.Register("Osu beatmap downloader.", thisFile, injectee, jsonLib);
-				//else
-				//    Config.Register("Osu beatmap downloader.", thisFile, injectee);
+				if (File.Exists(jsonLib))
+					Config.Register("Osu beatmap downloader.", thisFile, injectee, jsonLib);
+				else
+					Config.Register("Osu beatmap downloader.", thisFile, injectee);
 			}
 			catch (ApplicationException e)
 			{
@@ -179,6 +179,7 @@ public class OsuHooker
 		while (inner != null)
 		{
 			log.WriteLine(extInfo.Message);
+			log.WriteLine(extInfo.StackTrace);
 			inner = inner.InnerException;
 		}
 		log.WriteLine("------------------------");
