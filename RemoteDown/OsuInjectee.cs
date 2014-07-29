@@ -13,11 +13,13 @@ using System.IO;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Ipc;
 using System.Runtime.Serialization.Formatters;
+using System.ServiceModel;
 
 namespace RemoteDown
 {
 
-public class OsuInjectee : EasyHook.IEntryPoint
+[ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
+public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 {
 	static string DownloadDir = "C:\\";
 
@@ -25,10 +27,10 @@ public class OsuInjectee : EasyHook.IEntryPoint
 	LocalHook ShellExecuteExHook;
 	/// <summary>   ShowWindow function hook. This is necessary during fullscreen mode. </summary>
 	LocalHook ShowWindowHook;
-	bool IsHooked;
 	Queue<string> Queue = new Queue<string>();
 	ManualResetEvent QueueAppended;
 	IpcServerChannel ClientServerChannel;
+	ServiceHost InjecteeHost;
 
 	public OsuInjectee(RemoteHooking.IContext context, string channelName)
 	{
@@ -50,6 +52,14 @@ public class OsuInjectee : EasyHook.IEntryPoint
 
 		ClientServerChannel = new IpcServerChannel(properties, binaryProv);
 		System.Runtime.Remoting.Channels.ChannelServices.RegisterChannel(ClientServerChannel, false);
+
+		#endregion
+
+		#region WCF server initialization
+
+		InjecteeHost = new ServiceHost(this, new Uri[] { new Uri("net.pipe://localhost") });
+		InjecteeHost.AddServiceEndpoint(typeof(OsuDownloader.IOsuInjectee), new NetNamedPipeBinding(), "PipeReverse");
+		InjecteeHost.Open();
 
 		#endregion
 	}
@@ -121,7 +131,14 @@ public class OsuInjectee : EasyHook.IEntryPoint
 		}
 	}
 
-	private void DisableHook()
+	#region WCF Implementation
+
+	public bool IsHookEnabled()
+	{
+		return ShellExecuteExHook != null;
+	}
+
+	public void DisableHook()
 	{
 		if (ShellExecuteExHook != null)
 		{
@@ -135,7 +152,7 @@ public class OsuInjectee : EasyHook.IEntryPoint
 		}
 	}
 
-	private void EnableHook()
+	public void EnableHook()
 	{
 		ShellExecuteExHook = LocalHook.Create(
 								 LocalHook.GetProcAddress("shell32.dll", "ShellExecuteExW"),
@@ -148,6 +165,8 @@ public class OsuInjectee : EasyHook.IEntryPoint
 		ShellExecuteExHook.ThreadACL.SetExclusiveACL(new int[] { 0 });
 		ShowWindowHook.ThreadACL.SetExclusiveACL(new int[] { 0 });
 	}
+
+	#endregion
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>   Download from bloodcat mirror. </summary>
@@ -421,9 +440,6 @@ public class OsuInjectee : EasyHook.IEntryPoint
 					instance.Queue.Enqueue(lpExecInfo.lpFile);
 				}
 				instance.QueueAppended.Set();
-
-				// For prevention of window minimization in fullscreen mode.
-				instance.IsHooked = true;
 
 				return true;
 			}

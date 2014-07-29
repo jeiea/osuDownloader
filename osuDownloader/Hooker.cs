@@ -10,6 +10,7 @@ using System.Net;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+using System.ServiceModel;
 
 namespace OsuDownloader
 {
@@ -66,11 +67,56 @@ public class HookSwitch : MarshalByRefObject
 	}
 }
 
+public interface ICallback
+{
+	[OperationContract(IsOneWay = true)]
+	void Installed();
+
+	[OperationContract(IsOneWay = true)]
+	void HookSwitched(bool status);
+}
+
+public class HookCallback : ICallback
+{
+	#region Callback implementation
+
+	public void Installed()
+	{
+		OsuHooker.IsInstalled = true;
+	}
+
+	public void HookSwitched(bool status)
+	{
+		OsuHooker.NewIsHooking = status;
+	}
+
+	#endregion
+}
+
+[ServiceContract(SessionMode = SessionMode.Required,
+				 CallbackContract = typeof(ICallback))]
+public interface IOsuInjectee
+{
+	[OperationContract]
+	void EnableHook();
+
+	[OperationContract]
+	void DisableHook();
+
+	[OperationContract]
+	bool IsHookEnabled();
+}
+
 public class OsuHooker
 {
 	static string ChannelName = null;
 	static HookSwitch HookChannel;
 	static int TargetPid;
+	static IOsuInjectee InjecteeHost;
+	static HookCallback Callback;
+
+	public static bool IsInstalled;
+	public static bool NewIsHooking;
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>   Query whether injectee is ready. </summary>
@@ -92,6 +138,7 @@ public class OsuHooker
 			}
 		}
 	}
+
 	public static bool IsHooking
 	{
 		get
@@ -168,21 +215,33 @@ public class OsuHooker
 			return false;
 		}
 
+		try
+		{
+			Callback = new HookCallback();
+			DuplexChannelFactory<IOsuInjectee> pipeFactory =
+				new DuplexChannelFactory<IOsuInjectee>(
+				Callback,
+				new NetNamedPipeBinding(),
+				new EndpointAddress("net.pipe://localhost/PipeReverse"));
+
+			InjecteeHost = pipeFactory.CreateChannel();
+
+			InjecteeHost.IsHookEnabled();
+		}
+		catch (Exception e)
+		{
+			LogException(e);
+		}
+
 		return true;
 	}
 
 	public static void LogException(Exception extInfo)
 	{
 		var log = System.IO.File.AppendText("C:\\osuDownloader.log");
-		log.WriteLine("------------------------");
-		var inner = extInfo;
-		while (inner != null)
-		{
-			log.WriteLine(extInfo.Message);
-			log.WriteLine(extInfo.StackTrace);
-			inner = inner.InnerException;
-		}
-		log.WriteLine("------------------------");
+		log.WriteLine("----------------------------------------");
+		log.WriteLine(extInfo.ToString());
+		log.WriteLine("-----------------------------------------");
 		log.Close();
 	}
 }
