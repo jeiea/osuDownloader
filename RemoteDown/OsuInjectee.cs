@@ -23,38 +23,16 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 {
 	static string DownloadDir = "C:\\";
 
-	OsuDownloader.HookSwitch Interface;
 	LocalHook ShellExecuteExHook;
 	/// <summary>   ShowWindow function hook. This is necessary during fullscreen mode. </summary>
 	LocalHook ShowWindowHook;
 	Queue<string> Queue = new Queue<string>();
 	ManualResetEvent QueueAppended;
-	IpcServerChannel ClientServerChannel;
 	ServiceHost InjecteeHost;
+	List<OsuDownloader.ICallback> Callbacks = new List<OsuDownloader.ICallback>();
 
 	public OsuInjectee(RemoteHooking.IContext context, string channelName)
 	{
-		// connect to host...
-		Interface = RemoteHooking.IpcConnectClient<OsuDownloader.HookSwitch>(channelName);
-
-		Interface.Ping(false);
-
-		#region Allow client event handlers (bi-directional IPC)
-
-		// Attempt to create a IpcServerChannel so that any event handlers on the client will function correctly
-		System.Collections.IDictionary properties = new System.Collections.Hashtable();
-		properties["name"] = channelName;
-		// random portName so no conflict with existing channels of channelName
-		properties["portName"] = channelName + Guid.NewGuid().ToString("N");
-
-		var binaryProv = new BinaryServerFormatterSinkProvider();
-		binaryProv.TypeFilterLevel = TypeFilterLevel.Full;
-
-		ClientServerChannel = new IpcServerChannel(properties, binaryProv);
-		System.Runtime.Remoting.Channels.ChannelServices.RegisterChannel(ClientServerChannel, false);
-
-		#endregion
-
 		#region WCF server initialization
 
 		InjecteeHost = new ServiceHost(this, new Uri[] { new Uri("net.pipe://localhost") });
@@ -71,17 +49,18 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 		{
 			EnableHook();
 
-			Interface.EnableHookRequest += EnableHook;
-			Interface.DisableHookRequest += DisableHook;
+			//Interface.EnableHookRequest += EnableHook;
+			//Interface.DisableHookRequest += DisableHook;
 		}
 		catch (Exception extInfo)
 		{
 			OsuDownloader.OsuHooker.LogException(extInfo);
 		}
 
-		Interface.Installed();
-
 		RemoteHooking.WakeUpProcess();
+
+		//Interface.Installed();
+		//InjecteeHost.ChannelDispatchers
 
 		QueueAppended = new ManualResetEvent(false);
 		// wait for host process termination...
@@ -116,8 +95,8 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 						}
 					}
 				}
-				else
-					Interface.Ping(ShellExecuteExHook != null);
+				//else
+				//    Interface.Ping(ShellExecuteExHook != null);
 			}
 		}
 		catch
@@ -127,11 +106,30 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 		finally
 		{
 			DisableHook();
-			ChannelServices.UnregisterChannel(ClientServerChannel);
 		}
 	}
 
 	#region WCF Implementation
+
+	public void Subscribe()
+	{
+		var callback = OperationContext.Current.GetCallbackChannel<OsuDownloader.ICallback>();
+		callback.Installed();
+
+		Callbacks.Add(callback);
+	}
+
+	public void Unsubscribe()
+	{
+		var callback = OperationContext.Current.GetCallbackChannel<OsuDownloader.ICallback>();
+		Callbacks.Remove(callback);
+
+		if (Callbacks.Count <= 0)
+		{
+			DisableHook();
+			// 추가로 뭐하지...
+		}
+	}
 
 	public bool IsHookEnabled()
 	{
@@ -150,6 +148,11 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 			ShowWindowHook.Dispose();
 			ShowWindowHook = null;
 		}
+
+		foreach (var callback in Callbacks)
+		{
+			callback.HookSwitched(ShellExecuteExHook != null);
+		}
 	}
 
 	public void EnableHook()
@@ -164,6 +167,11 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 
 		ShellExecuteExHook.ThreadACL.SetExclusiveACL(new int[] { 0 });
 		ShowWindowHook.ThreadACL.SetExclusiveACL(new int[] { 0 });
+
+		foreach (var callback in Callbacks)
+		{
+			callback.HookSwitched(ShellExecuteExHook != null);
+		}
 	}
 
 	#endregion

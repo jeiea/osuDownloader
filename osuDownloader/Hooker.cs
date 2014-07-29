@@ -15,58 +15,6 @@ using System.ServiceModel;
 namespace OsuDownloader
 {
 
-public class HookSwitch : MarshalByRefObject
-{
-	public bool IsHooking;
-	public bool IsInstalled;
-	public DateTime LastPing;
-
-	#region Injector to injectee event
-
-	public event Action EnableHookRequest;
-
-	public event Action DisableHookRequest;
-
-	#endregion
-
-	public void Installed()
-	{
-		IsInstalled = true;
-	}
-
-	public void Ping(bool isHookEnabled)
-	{
-		IsHooking = isHookEnabled;
-		LastPing = DateTime.Now;
-	}
-
-	public bool EnableHook()
-	{
-		try
-		{
-			EnableHookRequest.Invoke();
-		}
-		catch
-		{
-			return false;
-		}
-		return true;
-	}
-
-	public bool DisableHook()
-	{
-		try
-		{
-			DisableHookRequest.Invoke();
-		}
-		catch
-		{
-			return false;
-		}
-		return true;
-	}
-}
-
 public interface ICallback
 {
 	[OperationContract(IsOneWay = true)]
@@ -83,6 +31,7 @@ public class HookCallback : ICallback
 	public void Installed()
 	{
 		OsuHooker.IsInstalled = true;
+		OsuHooker.NewIsHooking = true;
 	}
 
 	public void HookSwitched(bool status)
@@ -97,10 +46,16 @@ public class HookCallback : ICallback
 				 CallbackContract = typeof(ICallback))]
 public interface IOsuInjectee
 {
-	[OperationContract]
+	[OperationContract(IsOneWay = true)]
+	void Subscribe();
+
+	[OperationContract(IsOneWay = true)]
+	void Unsubscribe();
+
+	[OperationContract(IsOneWay = true)]
 	void EnableHook();
 
-	[OperationContract]
+	[OperationContract(IsOneWay = true)]
 	void DisableHook();
 
 	[OperationContract]
@@ -110,7 +65,6 @@ public interface IOsuInjectee
 public class OsuHooker
 {
 	static string ChannelName = null;
-	static HookSwitch HookChannel;
 	static int TargetPid;
 	static IOsuInjectee InjecteeHost;
 	static HookCallback Callback;
@@ -129,8 +83,7 @@ public class OsuHooker
 		{
 			try
 			{
-				return HookChannel.IsInstalled &&
-					   (DateTime.Now - HookChannel.LastPing).TotalSeconds < 3;
+				return IsInstalled;
 			}
 			catch
 			{
@@ -143,7 +96,7 @@ public class OsuHooker
 	{
 		get
 		{
-			return IsInjected && HookChannel.IsHooking;
+			return IsInjected && NewIsHooking;
 		}
 	}
 
@@ -151,12 +104,12 @@ public class OsuHooker
 	{
 		if (IsHooking)
 		{
-			HookChannel.DisableHook();
+			InjecteeHost.DisableHook();
 			return true;
 		}
 		else if (IsInjected)
 		{
-			HookChannel.EnableHook();
+			InjecteeHost.EnableHook();
 			return true;
 		}
 
@@ -202,15 +155,11 @@ public class OsuHooker
 				TargetPid = Process.Start(OsuHelper.GetOsuPath()).Id;
 			}
 
-			RemoteHooking.IpcCreateServer<HookSwitch>(ref ChannelName, WellKnownObjectMode.Singleton);
-			HookChannel = (HookSwitch)Activator.GetObject(typeof(HookSwitch), "ipc://" + ChannelName + "/" + ChannelName);
-
 			RemoteHooking.Inject(TargetPid, InjectionOptions.DoNotRequireStrongName,
-								 injectee, injectee, ChannelName);
+								 injectee, injectee, "");
 		}
 		catch (Exception extInfo)
 		{
-			HookChannel = null;
 			LogException(extInfo);
 			return false;
 		}
@@ -218,15 +167,16 @@ public class OsuHooker
 		try
 		{
 			Callback = new HookCallback();
-			DuplexChannelFactory<IOsuInjectee> pipeFactory =
-				new DuplexChannelFactory<IOsuInjectee>(
-				Callback,
-				new NetNamedPipeBinding(),
+			var pipeFactory = new DuplexChannelFactory<IOsuInjectee>(
+				Callback, new NetNamedPipeBinding(),
 				new EndpointAddress("net.pipe://localhost/PipeReverse"));
 
-			InjecteeHost = pipeFactory.CreateChannel();
+			ThreadPool.QueueUserWorkItem(new WaitCallback(obj =>
+			{
+				InjecteeHost = pipeFactory.CreateChannel();
 
-			InjecteeHost.IsHookEnabled();
+				InjecteeHost.Subscribe();
+			}));
 		}
 		catch (Exception e)
 		{
