@@ -23,11 +23,14 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 {
 	static string DownloadDir = "C:\\";
 
+	/// <summary>   ShellExecuteEx hook. Intercept url opens. </summary>
 	LocalHook ShellExecuteExHook;
 	/// <summary>   ShowWindow function hook. This is necessary during fullscreen mode. </summary>
 	LocalHook ShowWindowHook;
+
 	Queue<string> Queue = new Queue<string>();
 	ManualResetEvent QueueAppended;
+
 	ServiceHost InjecteeHost;
 	List<OsuDownloader.ICallback> Callbacks = new List<OsuDownloader.ICallback>();
 
@@ -44,13 +47,9 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 
 	public void Run(RemoteHooking.IContext context, string channelName)
 	{
-		// install hook...
 		try
 		{
 			EnableHook();
-
-			//Interface.EnableHookRequest += EnableHook;
-			//Interface.DisableHookRequest += DisableHook;
 		}
 		catch (Exception extInfo)
 		{
@@ -59,10 +58,8 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 
 		RemoteHooking.WakeUpProcess();
 
-		//Interface.Installed();
-		//InjecteeHost.ChannelDispatchers
-
 		QueueAppended = new ManualResetEvent(false);
+
 		// wait for host process termination...
 		try
 		{
@@ -106,6 +103,7 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 		finally
 		{
 			DisableHook();
+			InjecteeHost.Close();
 		}
 	}
 
@@ -149,10 +147,7 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 			ShowWindowHook = null;
 		}
 
-		foreach (var callback in Callbacks)
-		{
-			callback.HookSwitched(ShellExecuteExHook != null);
-		}
+		NotifyHookSwitch();
 	}
 
 	public void EnableHook()
@@ -168,9 +163,22 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 		ShellExecuteExHook.ThreadACL.SetExclusiveACL(new int[] { 0 });
 		ShowWindowHook.ThreadACL.SetExclusiveACL(new int[] { 0 });
 
-		foreach (var callback in Callbacks)
+		NotifyHookSwitch();
+	}
+
+	void NotifyHookSwitch()
+	{
+		foreach (var callback in Callbacks.ToArray())
 		{
-			callback.HookSwitched(ShellExecuteExHook != null);
+			try
+			{
+				callback.HookSwitched(ShellExecuteExHook != null);
+			}
+			catch (Exception)
+			{
+				// Remove callback when it's terminal is terminated.
+				Callbacks.Remove(callback);
+			}
 		}
 	}
 
