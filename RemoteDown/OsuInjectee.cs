@@ -34,15 +34,14 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 	ServiceHost InjecteeHost;
 	List<OsuDownloader.ICallback> Callbacks = new List<OsuDownloader.ICallback>();
 
+	bool LastConnectionFaulted;
+
 	public OsuInjectee(RemoteHooking.IContext context, string channelName)
 	{
-		#region WCF server initialization
-
 		InjecteeHost = new ServiceHost(this, new Uri[] { new Uri("net.pipe://localhost") });
-		InjecteeHost.AddServiceEndpoint(typeof(OsuDownloader.IOsuInjectee), new NetNamedPipeBinding(), "osuBeatmapHooker");
+		InjecteeHost.AddServiceEndpoint(typeof(OsuDownloader.IOsuInjectee),
+										new NetNamedPipeBinding(), "osuBeatmapHooker");
 		InjecteeHost.Open();
-
-		#endregion
 	}
 
 	public void Run(RemoteHooking.IContext context, string channelName)
@@ -63,7 +62,7 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 		// wait for host process termination...
 		try
 		{
-			while (true)
+			while (LastConnectionFaulted == false)
 			{
 				QueueAppended.WaitOne(500);
 				QueueAppended.Reset();
@@ -105,6 +104,7 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 		{
 			DisableHook();
 			InjecteeHost.Close();
+			InjecteeHost = null;
 		}
 	}
 
@@ -114,8 +114,25 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 	{
 		var callback = OperationContext.Current.GetCallbackChannel<OsuDownloader.ICallback>();
 		callback.Installed();
+		(callback as ICommunicationObject).Faulted += ClientFaulted;
 
 		Callbacks.Add(callback);
+	}
+
+	void ClientFaulted(object sender, EventArgs e)
+	{
+		foreach (var callback in Callbacks.ToArray())
+		{
+			if ((callback as ICommunicationObject).State == CommunicationState.Faulted)
+			{
+				Callbacks.Remove(callback);
+				if (Callbacks.Count == 0)
+				{
+					LastConnectionFaulted = true;
+				}
+				break;
+			}
+		}
 	}
 
 	public void Unsubscribe()
