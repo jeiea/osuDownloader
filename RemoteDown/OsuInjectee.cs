@@ -39,7 +39,7 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 		#region WCF server initialization
 
 		InjecteeHost = new ServiceHost(this, new Uri[] { new Uri("net.pipe://localhost") });
-		InjecteeHost.AddServiceEndpoint(typeof(OsuDownloader.IOsuInjectee), new NetNamedPipeBinding(), "PipeReverse");
+		InjecteeHost.AddServiceEndpoint(typeof(OsuDownloader.IOsuInjectee), new NetNamedPipeBinding(), "osuBeatmapHooker");
 		InjecteeHost.Open();
 
 		#endregion

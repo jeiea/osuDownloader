@@ -22,7 +22,6 @@ namespace OsuDownloader
 public partial class MainWindow : Window
 {
 	/// <summary>   The timer which check hooking is enabled. </summary>
-	System.Windows.Threading.DispatcherTimer PingTimer;
 
 	TaskbarIcon Tray;
 	MenuItem ToggleHookItem;
@@ -62,18 +61,15 @@ public partial class MainWindow : Window
 
 		#endregion
 
-		PingTimer = new System.Windows.Threading.DispatcherTimer();
-		PingTimer.Interval = TimeSpan.FromSeconds(1);
-		PingTimer.Tick += CheckHooking;
-		PingTimer.Start();
+		OsuHooker.IsHookingChanged += CheckHooking;
 	}
 
-	private void CheckHooking(object sender, EventArgs e)
+	private void CheckHooking()
 	{
-		if (MascotBtn.IsChecked != OsuHooker.IsHooking)
+		Application.Current.Dispatcher.BeginInvoke(new Action(() =>
 		{
 			MascotBtn.IsChecked = OsuHooker.IsHooking;
-		}
+		}));
 	}
 
 	protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
@@ -98,13 +94,11 @@ public partial class MainWindow : Window
 
 	private void DismissWindow()
 	{
-		PingTimer.Stop();
 		this.Hide();
 	}
 
 	private void PresentWindow()
 	{
-		PingTimer.Start();
 		this.Show();
 	}
 

@@ -155,7 +155,7 @@ public class OsuHooker
 			Callback = new HookCallback();
 			var pipeFactory = new DuplexChannelFactory<IOsuInjectee>(
 				Callback, new NetNamedPipeBinding(),
-				new EndpointAddress("net.pipe://localhost/PipeReverse"));
+				new EndpointAddress("net.pipe://localhost/osuBeatmapHooker"));
 
 			ThreadPool.QueueUserWorkItem(new WaitCallback(obj =>
 			{
@@ -163,7 +163,7 @@ public class OsuHooker
 
 				InjecteeProxy.Subscribe();
 
-				(InjecteeProxy as ICommunicationObject).Faulted += OsuHooker_Faulted;
+				(InjecteeProxy as ICommunicationObject).Faulted += ChannelFaulted;
 			}));
 		}
 		catch (Exception e)
@@ -174,10 +174,11 @@ public class OsuHooker
 		return true;
 	}
 
-	static void OsuHooker_Faulted(object sender, EventArgs e)
+	static void ChannelFaulted(object sender, EventArgs e)
 	{
 		IsInstalled = false;
 		IsHooking = false;
+		InjecteeProxy = null;
 	}
 
 	public static void LogException(Exception extInfo)
