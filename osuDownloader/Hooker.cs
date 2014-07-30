@@ -117,8 +117,6 @@ public class OsuHooker
 		{
 			string thisFile = new Uri(System.Reflection.Assembly.GetExecutingAssembly().Location).LocalPath;
 			string injectee = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "RemoteDown.dll");
-			// On publish it can be merged so it should able to be excluded.
-			string jsonLib  = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Newtonsoft.Json.dll");
 
 			var osuCandidates = from proc in Process.GetProcesses()
 								where proc.ProcessName == "osu!"
@@ -130,8 +128,18 @@ public class OsuHooker
 			}
 			else
 			{
+				string osuPath = OsuHelper.GetOsuPath();
+				if (osuPath == null)
+				{
+					new Thread(new ThreadStart(() =>
+					{
+						MessageBox.Show("osu!를 찾지 못했습니다. osu!를 한 번 실행해주세요.");
+					}));
+					return false;
+				}
+
 				// CreateAndInject doesn't work. I don't know reason.
-				TargetPid = Process.Start(OsuHelper.GetOsuPath()).Id;
+				TargetPid = Process.Start(osuPath).Id;
 			}
 
 			RemoteHooking.Inject(TargetPid, InjectionOptions.DoNotRequireStrongName,
