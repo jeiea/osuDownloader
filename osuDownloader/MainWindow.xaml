@@ -43,6 +43,17 @@
             <CommandBinding Command="NavigationCommands.FirstPage" Executed="FirstPage_Executed"/>
         </Grid.CommandBindings>
 
+        <tb:TaskbarIcon x:Name="Tray" IconSource="pack://application:,,,/pic/osuIcon.ico"
+                        ToolTipText="Osu Beatmap Downloader v1.0" DoubleClickCommand="NavigationCommands.FirstPage">
+            <tb:TaskbarIcon.ContextMenu>
+                <ContextMenu Placement="MousePoint" IsVisibleChanged="ContextMenu_IsVisibleChanged">
+                    <MenuItem Header="창 띄우기" Click="MenuWindow_Click"/>
+                    <MenuItem Name="ToggleHookItem" Header="켜기" Click="ToggleHooking"/>
+                    <MenuItem Header="종료" Click="MenuExit_Click"/>
+                </ContextMenu>
+            </tb:TaskbarIcon.ContextMenu>
+        </tb:TaskbarIcon>
+
         <ToggleButton Name="MascotBtn" Margin="31,-100,208,-166" Template="{StaticResource ImageToggleButon}"
                       Click="ToggleHooking" ToolTip="오스를 켜고 다운로더를 활성화합니다.">
             <Image>

@@ -91,14 +91,11 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 						}
 					}
 				}
-				// TODO: Infinite loop exit routine.
-				//else
-				//    Interface.Ping(ShellExecuteExHook != null);
 			}
 		}
-		catch
+		catch (Exception e)
 		{
-			// Ping() will raise an exception if host is unreachable
+			OsuDownloader.OsuHooker.LogException(e);
 		}
 		finally
 		{
