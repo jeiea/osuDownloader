@@ -28,13 +28,10 @@ public partial class MainWindow : Window
 
 	public MainWindow()
 	{
-		this.Loaded += MainWindow_Loaded;
+		Initialized += WindowSettings_Loaded;
 
-		if (Properties.Settings.Default.StartAsTray)
-		{
-			Hide();
-			InitializeComponent();
-		}
+		Hide();
+		InitializeComponent();
 
 		#region Tray registration routine
 
@@ -43,15 +40,15 @@ public partial class MainWindow : Window
 		{
 			IconSource = new BitmapImage(new Uri("pack://application:,,,/Pic/osuIcon.ico")),
 			ToolTipText = "Osu Beatmap Downloader v1.0",
-			DoubleClickCommand = NavigationCommands.FirstPage,
 		};
+		Tray.TrayMouseDoubleClick += ShowWindow_Handler;
 
 		var contextMenu = new ContextMenu();
 		contextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint;
 		contextMenu.IsVisibleChanged += ContextMenu_IsVisibleChanged;
 
 		var headers = new[] { "창 띄우기", "켜기", "종료" };
-		var clicks = new RoutedEventHandler[] { MenuWindow_Click, ToggleHooking, MenuExit_Click };
+		var clicks = new RoutedEventHandler[] { ShowWindow_Handler, ToggleHooking, MenuExit_Click };
 		for (int i = 0; i < headers.Length; i++)
 		{
 			var item = new MenuItem();
@@ -66,18 +63,23 @@ public partial class MainWindow : Window
 		#endregion
 
 		OsuHooker.IsHookingChanged += CheckHooking;
-
-		if (Properties.Settings.Default.AutoStart)
-		{
-			OsuHooker.ToggleHook();
-		}
 	}
 
-	void MainWindow_Loaded(object sender, RoutedEventArgs e)
+	void WindowSettings_Loaded(object sender, EventArgs e)
 	{
 		MascotBtn.IsChecked = OsuHooker.IsInstalled;
 		AutoStart.IsChecked = Properties.Settings.Default.AutoStart;
 		StartAsTray.IsChecked = Properties.Settings.Default.StartAsTray;
+
+		if (Properties.Settings.Default.StartAsTray == false)
+		{
+			Show();
+			Activate();
+		}
+		if (Properties.Settings.Default.AutoStart)
+		{
+			OsuHooker.ToggleHook();
+		}
 	}
 
 	private void CheckHooking()
@@ -131,7 +133,7 @@ public partial class MainWindow : Window
 	{
 		if (e.Key == Key.Escape)
 		{
-			this.Hide();
+			Hide();
 		}
 		base.OnKeyDown(e);
 	}
@@ -151,17 +153,13 @@ public partial class MainWindow : Window
 
 	private void CloseButton_Click(object sender, RoutedEventArgs e)
 	{
-		this.Hide();
+		Hide();
 	}
 
-	private void FirstPage_Executed(object sender, ExecutedRoutedEventArgs e)
+	private void ShowWindow_Handler(object sender, RoutedEventArgs e)
 	{
-		this.Show();
-	}
-
-	private void MenuWindow_Click(object sender, RoutedEventArgs e)
-	{
-		this.Show();
+		Show();
+		Activate();
 	}
 
 	private void ContextMenu_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)

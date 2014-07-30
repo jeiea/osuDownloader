@@ -39,9 +39,6 @@
                 </ContentPresenter>
             </ControlTemplate>
         </Grid.Resources>
-        <Grid.CommandBindings>
-            <CommandBinding Command="NavigationCommands.FirstPage" Executed="FirstPage_Executed"/>
-        </Grid.CommandBindings>
 
         <ToggleButton Name="MascotBtn" Margin="31,-100,208,-166" Template="{StaticResource ImageToggleButon}"
                       Click="ToggleHooking" ToolTip="오스를 켜고 다운로더를 활성화합니다.">
