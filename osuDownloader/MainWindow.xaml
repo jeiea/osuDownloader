@@ -108,5 +108,7 @@
         <Button Margin="497,0,0,322" Background="Transparent" BorderBrush="Transparent" Click="CloseButton_Click">
             <Path Data="M 0,0 L 1,1 M 1,0 L 0,1" Stroke="Black" StrokeThickness="3" Stretch="Fill" Margin="3"/>
         </Button>
+        <CheckBox Name="AutoStart" Content="오스 자동실행" HorizontalAlignment="Left" Margin="322,305,0,0" VerticalAlignment="Top" Click="AutoStart_Click"/>
+        <CheckBox Name="StartAsTray" Content="시작할 때 트레이로 최소화하기" HorizontalAlignment="Left" Margin="322,325,0,0" VerticalAlignment="Top" Click="StartAsTray_Click"/>
     </Grid>
 </Window>

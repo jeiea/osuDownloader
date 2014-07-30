@@ -31,6 +31,9 @@ public partial class MainWindow : Window
 		InitializeComponent();
 
 		MascotBtn.IsChecked = OsuHooker.IsInstalled;
+		//Properties.Settings.Default.Providers.
+		AutoStart.IsChecked = Properties.Settings.Default.AutoStart;
+		StartAsTray.IsChecked = Properties.Settings.Default.StartAsTray;
 
 		#region Tray registration routine
 
@@ -151,6 +154,18 @@ public partial class MainWindow : Window
 	private void ContextMenu_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
 	{
 		ToggleHookItem.Header = OsuHooker.IsHooking ? "끄기" : "켜기";
+	}
+
+	private void AutoStart_Click(object sender, RoutedEventArgs e)
+	{
+		Properties.Settings.Default["AutoStart"] = AutoStart.IsChecked ?? false;
+		Properties.Settings.Default.Save();
+	}
+
+	private void StartAsTray_Click(object sender, RoutedEventArgs e)
+	{
+		Properties.Settings.Default["StartAsTray"] = StartAsTray.IsChecked ?? false;
+		Properties.Settings.Default.Save();
 	}
 }
 }
