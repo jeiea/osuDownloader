@@ -50,5 +50,19 @@ namespace OsuDownloader.Properties {
                 this["StartAsTray"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.SettingsProviderAttribute(typeof(PortableSettingsProvider))]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
+        public string OsuPath {
+            get {
+                return ((string)(this["OsuPath"]));
+            }
+            set {
+                this["OsuPath"] = value;
+            }
+        }
     }
 }

@@ -28,11 +28,12 @@ public partial class MainWindow : Window
 
 	public MainWindow()
 	{
+		this.Loaded += MainWindow_Loaded;
+
 		if (Properties.Settings.Default.StartAsTray)
 		{
 			Hide();
 			InitializeComponent();
-			StartAsTray.IsChecked = true;
 		}
 
 		#region Tray registration routine
@@ -65,13 +66,18 @@ public partial class MainWindow : Window
 		#endregion
 
 		OsuHooker.IsHookingChanged += CheckHooking;
-		MascotBtn.IsChecked = OsuHooker.IsInstalled;
 
 		if (Properties.Settings.Default.AutoStart)
 		{
 			OsuHooker.ToggleHook();
-			AutoStart.IsChecked = true;
 		}
+	}
+
+	void MainWindow_Loaded(object sender, RoutedEventArgs e)
+	{
+		MascotBtn.IsChecked = OsuHooker.IsInstalled;
+		AutoStart.IsChecked = Properties.Settings.Default.AutoStart;
+		StartAsTray.IsChecked = Properties.Settings.Default.StartAsTray;
 	}
 
 	private void CheckHooking()

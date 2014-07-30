@@ -36,7 +36,7 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 
 	bool LastConnectionFaulted;
 
-	public OsuInjectee(RemoteHooking.IContext context, string channelName)
+	public OsuInjectee(RemoteHooking.IContext context)
 	{
 		InjecteeHost = new ServiceHost(this, new Uri[] { new Uri("net.pipe://localhost") });
 		InjecteeHost.AddServiceEndpoint(typeof(OsuDownloader.IOsuInjectee),
@@ -44,7 +44,7 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 		InjecteeHost.Open();
 	}
 
-	public void Run(RemoteHooking.IContext context, string channelName)
+	public void Run(RemoteHooking.IContext context)
 	{
 		try
 		{

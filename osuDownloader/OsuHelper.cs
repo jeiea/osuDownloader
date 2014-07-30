@@ -19,11 +19,87 @@ static class OsuHelper
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	public static string GetOsuPath()
 	{
-		var beatmapOpenCommand = (string)Registry.GetValue(BeatmapHandlerKey, "", null);
-		if (beatmapOpenCommand != null)
+		// Find from settings.
+		string savedPath = Properties.Settings.Default.OsuPath;
+		if (savedPath != null && File.Exists(savedPath))
 		{
-			string executablePath = beatmapOpenCommand.Split('"')[1];
-			return executablePath;
+			return savedPath;
+		}
+
+		// Find from registry.
+		var valuesContainOsuPath = new string[]
+		{
+			"HKEY_LOCAL_MACHINE\\SOFTWARE\\Classes\\osu!\\shell\\open\\command",
+			"HKEY_LOCAL_MACHINE\\SOFTWARE\\Classes\\osu\\shell\\open\\command",
+			"HKEY_LOCAL_MACHINE\\SOFTWARE\\Classes\\osu!\\DefaultIcon",
+			"HKEY_LOCAL_MACHINE\\SOFTWARE\\Classes\\osu\\DefaultIcon",
+		};
+		foreach (var regPath in valuesContainOsuPath)
+		{
+			var beatmapOpenCommand = (string)Registry.GetValue(regPath, "", null);
+			if (beatmapOpenCommand != null)
+			{
+				string executablePath = beatmapOpenCommand.Split('"')[1];
+				if (File.Exists(executablePath))
+				{
+					return executablePath;
+				}
+			}
+		}
+
+		// Find suspecting directory.
+
+		// Constant program files.
+		var suspectingPaths = new List<string>
+		{
+			"C:\\Program Files",
+			"C:\\Program Files (x86)",
+		};
+
+		// Environmental program files.
+		suspectingPaths.Add(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles));
+		suspectingPaths.Add(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86));
+
+		// root directories.
+		foreach (var drive in DriveInfo.GetDrives())
+		{
+			suspectingPaths.Add(drive.Name);
+		}
+
+		// This executable's parent paths.
+		string executingDir = System.Reflection.Assembly.GetExecutingAssembly().Location;
+		while (executingDir != Path.GetPathRoot(executingDir))
+		{
+			executingDir = Path.GetDirectoryName(executingDir);
+			suspectingPaths.Add(executingDir);
+		}
+
+		// Query all.
+		foreach (string path in suspectingPaths.Distinct())
+		{
+			if (File.Exists(Path.Combine(path, "osu!.exe")))
+			{
+				return Path.Combine(path, "osu!.exe");
+			}
+			if (File.Exists(Path.Combine(path, "osu!\\osu!.exe")))
+			{
+				return Path.Combine(path, "osu!\\osu!.exe");
+			}
+		}
+
+		// Not found. Ask to user.
+		var ofd = new Microsoft.Win32.OpenFileDialog();
+		ofd.Title = "오스 실행파일 위치를 입력하세요";
+		ofd.Filter = "오스 실행파일|osu!.exe|모든 파일|*.*";
+		ofd.Multiselect = false;
+		if (ofd.ShowDialog() ?? false)
+		{
+			if (File.Exists(ofd.FileName))
+			{
+				Properties.Settings.Default.OsuPath = ofd.FileName;
+				Properties.Settings.Default.Save();
+				return ofd.FileName;
+			}
 		}
 
 		return null;

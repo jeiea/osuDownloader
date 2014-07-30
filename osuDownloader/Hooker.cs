@@ -134,7 +134,7 @@ public class OsuHooker
 					new Thread(new ThreadStart(() =>
 					{
 						MessageBox.Show("osu!를 찾지 못했습니다. osu!를 한 번 실행해주세요.");
-					}));
+					})).Start();
 					return false;
 				}
 
@@ -143,13 +143,13 @@ public class OsuHooker
 			}
 
 			RemoteHooking.Inject(TargetPid, InjectionOptions.DoNotRequireStrongName,
-								 injectee, injectee, "");
+								 injectee, injectee);
 		}
 		catch (Exception extInfo)
 		{
 			// Unless creating new thread, MessageBox will disappear immediately
 			// when invoked from tray icon without window.
-			new Thread(new ThreadStart(delegate
+			new Thread(new ThreadStart(() =>
 			{
 				MessageBox.Show("DLL파일이 있는지, 관리자 권한이 있는지 확인해주세요.", "후킹 실패");
 			})).Start();
