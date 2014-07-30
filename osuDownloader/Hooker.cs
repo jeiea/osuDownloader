@@ -120,27 +120,6 @@ public class OsuHooker
 			// On publish it can be merged so it should able to be excluded.
 			string jsonLib  = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Newtonsoft.Json.dll");
 
-			try
-			{
-				// Why need?
-				//if (File.Exists(jsonLib))
-				//    Config.Register("Osu beatmap downloader.", thisFile, injectee, jsonLib);
-				//else
-				//    Config.Register("Osu beatmap downloader.", thisFile, injectee);
-			}
-			catch (ApplicationException e)
-			{
-				// Unless creating new thread, MessageBox will disappear immediately
-				// when invoked from tray icon without window.
-				new Thread(new ThreadStart(delegate
-				{
-					MessageBox.Show("DLL파일이 있는지, 관리자 권한이 있는지 확인해주세요.", "후킹 실패");
-				})).Start();
-
-				LogException(e);
-				return false;
-			}
-
 			var osuCandidates = from proc in Process.GetProcesses()
 								where proc.ProcessName == "osu!"
 								select proc;
@@ -160,6 +139,13 @@ public class OsuHooker
 		}
 		catch (Exception extInfo)
 		{
+			// Unless creating new thread, MessageBox will disappear immediately
+			// when invoked from tray icon without window.
+			new Thread(new ThreadStart(delegate
+			{
+				MessageBox.Show("DLL파일이 있는지, 관리자 권한이 있는지 확인해주세요.", "후킹 실패");
+			})).Start();
+
 			LogException(extInfo);
 			return false;
 		}
