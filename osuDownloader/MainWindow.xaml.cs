@@ -23,11 +23,43 @@ public partial class MainWindow : Window
 {
 	/// <summary>   The timer which check hooking is enabled. </summary>
 
+	Hardcodet.Wpf.TaskbarNotification.TaskbarIcon Tray;
+	MenuItem ToggleHookItem;
+
 	public MainWindow()
 	{
 		InitializeComponent();
 
 		MascotBtn.IsChecked = OsuHooker.IsInstalled;
+
+		#region Tray registration routine
+
+		// Xaml seems to have problem with project settings.
+		Tray = new TaskbarIcon()
+		{
+			IconSource = new BitmapImage(new Uri("pack://application:,,,/Pic/osuIcon.ico")),
+			ToolTipText = "Osu Beatmap Downloader v1.0",
+			DoubleClickCommand = NavigationCommands.FirstPage,
+		};
+
+		var contextMenu = new ContextMenu();
+		contextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint;
+		contextMenu.IsVisibleChanged += ContextMenu_IsVisibleChanged;
+
+		var headers = new[] { "창 띄우기", "켜기", "종료" };
+		var clicks = new RoutedEventHandler[] { MenuWindow_Click, ToggleHooking, MenuExit_Click };
+		for (int i = 0; i < headers.Length; i++)
+		{
+			var item = new MenuItem();
+			item.Header = headers[i];
+			item.Click += clicks[i];
+			contextMenu.Items.Add(item);
+		}
+
+		Tray.ContextMenu = contextMenu;
+		ToggleHookItem = (MenuItem)contextMenu.Items[1];
+
+		#endregion
 
 		OsuHooker.IsHookingChanged += CheckHooking;
 	}
