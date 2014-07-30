@@ -1,16 +1,16 @@
 <?xml version='1.0'?>
 <Obfuscator>
-  <Var name="InPath" value="..\build\netfx4-Release" />
-  <Var name="OutPath" value="..\build\netfx4-Release\Obfuscar" />
+  <Var name="InPath" value="." />
+  <Var name="OutPath" value=".\Obfuscar" />
   <Var name="KeepPublicApi" value="false" />
   <Var name="HidePrivateApi" value="true" />
 
-  <Var name="KeyFile" value="..\RemoteDown\StrongName.snk" />
+  <Var name="KeyFile" value="..\..\RemoteDown\StrongName.snk" />
   <Module file="$(InPath)\RemoteDown.dll" />
 
   <!-- <Var name="KeyFile" value="..\EasyHook\StrongName.snk" />
   <Module file="$(InPath)\EasyHook.dll" /> -->
 
-  <Var name="KeyFile" value="..\osuDownloader\StrongName.snk" />
+  <Var name="KeyFile" value="..\..\osuDownloader\StrongName.snk" />
   <Module file="$(InPath)\osuDownloader.exe"/>
 </Obfuscator>
