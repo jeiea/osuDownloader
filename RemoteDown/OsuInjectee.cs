@@ -14,6 +14,7 @@ using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Ipc;
 using System.Runtime.Serialization.Formatters;
 using System.ServiceModel;
+using System.ComponentModel;
 
 namespace RemoteDown
 {
@@ -289,7 +290,19 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 		psi.Verb = "open";
 		psi.FileName = downloadPath;
 		psi.UseShellExecute = true;
-		Process.Start(psi);
+
+		try
+		{
+			Process.Start(psi);
+		}
+		// TODO: IDropTarget으로 강제 갱신하기
+		catch (Win32Exception e)
+		{
+			string osuExePath = Process.GetCurrentProcess().MainModule.FileName;
+			string destPath = Path.Combine(Path.GetDirectoryName(osuExePath),
+										   "Songs", Path.GetFileName(downloadPath));
+			File.Move(downloadPath, destPath);
+		}
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
