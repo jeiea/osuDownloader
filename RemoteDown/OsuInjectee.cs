@@ -286,19 +286,21 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 		}
 		res.Close();
 
-		ProcessStartInfo psi = new ProcessStartInfo();
-		psi.Verb = "open";
-		psi.FileName = downloadPath;
-		psi.UseShellExecute = true;
+		string osuExePath = Process.GetCurrentProcess().MainModule.FileName;
+		ProcessStartInfo psi = new ProcessStartInfo()
+		{
+			Verb = "open",
+			FileName = osuExePath,
+			Arguments = downloadPath,
+		};
 
 		try
 		{
 			Process.Start(psi);
 		}
-		// TODO: IDropTarget으로 강제 갱신하기
+		// TODO: IDropTarget으로 강제 갱신하는 방법 있음
 		catch (Win32Exception e)
 		{
-			string osuExePath = Process.GetCurrentProcess().MainModule.FileName;
 			string destPath = Path.Combine(Path.GetDirectoryName(osuExePath),
 										   "Songs", Path.GetFileName(downloadPath));
 			File.Move(downloadPath, destPath);
