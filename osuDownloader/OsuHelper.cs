@@ -4,14 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Windows;
 using Microsoft.Win32;
 
 namespace OsuDownloader
 {
 static class OsuHelper
 {
-	const string BeatmapHandlerKey = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Classes\\osu!\\shell\\open\\command";
-
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>   Gets osu path from registry. </summary>
 	///
@@ -88,18 +87,36 @@ static class OsuHelper
 		}
 
 		// Not found. Ask to user.
-		var ofd = new Microsoft.Win32.OpenFileDialog();
-		ofd.Title = "오스 실행파일 위치를 입력하세요";
-		ofd.Filter = "오스 실행파일|osu!.exe|모든 파일|*.*";
-		ofd.Multiselect = false;
-		if (ofd.ShowDialog() ?? false)
+
+		Window tempWindow = new Window()
 		{
-			if (File.Exists(ofd.FileName))
+			Width = 0,
+			Height = 0,
+			ShowInTaskbar = false,
+			WindowStyle = WindowStyle.None,
+			WindowStartupLocation = WindowStartupLocation.Manual,
+			Left = -10000,
+			Top = -10000,
+		};
+		tempWindow.Show();
+
+		try
+		{
+			var ofd = new Microsoft.Win32.OpenFileDialog();
+			ofd.Title = "오스 실행파일 위치를 입력하세요";
+			ofd.Filter = "오스 실행파일|osu!.exe|모든 파일|*.*";
+			ofd.Multiselect = false;
+			ofd.CheckFileExists = true;
+			if (ofd.ShowDialog() ?? false)
 			{
 				Properties.Settings.Default.OsuPath = ofd.FileName;
 				Properties.Settings.Default.Save();
 				return ofd.FileName;
 			}
+		}
+		catch (Exception e)
+		{
+			OsuHooker.LogException(e);
 		}
 
 		return null;
