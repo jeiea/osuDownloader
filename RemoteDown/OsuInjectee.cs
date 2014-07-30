@@ -230,11 +230,9 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 
 		// Query to bloodcat.com. Difficulty id requires this process.
 
-		WebClient client = new WebClient();
-		client.Encoding = Encoding.UTF8;
-
-		byte[] json = client.DownloadData(new Uri(query.ToString()));
-		JObject result = JObject.Parse(Encoding.UTF8.GetString(json));
+		WebClient client = new WebClient() { Encoding = Encoding.UTF8 };
+		string json = client.DownloadString(new Uri(query.ToString()));
+		JObject result = JObject.Parse(json);
 
 		int count = (int)result["resultCount"];
 		if (count != 1)
@@ -278,7 +276,6 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 
 		using(Stream rstream = res.GetResponseStream())
 		{
-
 			using(var destStream = File.Create(downloadPath))
 			{
 				rstream.CopyTo(destStream);
@@ -415,7 +412,7 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>
 	/// Hook function which corresponds to ShowWIndow. It seems osu minimize own window after
-	/// ShellExecute during fullscreen mode. So it's necessary.
+	/// ShellExecuteEx during fullscreen mode. So it's necessary.
 	/// </summary>
 	///
 	/// <param name="hWnd">     Window handle. </param>
@@ -461,12 +458,10 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 		public IntPtr hProcess;
 	}
 
-	[DllImport("shell32.dll", CharSet = CharSet.Auto)]
+	[DllImport("shell32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
 	static extern bool ShellExecuteEx(ref SHELLEXECUTEINFO lpExecInfo);
 
-	[UnmanagedFunctionPointer(CallingConvention.StdCall,
-							  CharSet = CharSet.Auto,
-							  SetLastError = true)]
+	[UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
 	delegate bool DShellExecuteEx(ref SHELLEXECUTEINFO lpExecInfo);
 
 	static bool ShellExecuteEx_Hooked(ref SHELLEXECUTEINFO lpExecInfo)
