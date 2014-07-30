@@ -31,7 +31,7 @@ public partial class MainWindow : Window
 	{
 		InitializeComponent();
 
-		MascotBtn.IsChecked = OsuHooker.IsInjected;
+		MascotBtn.IsChecked = OsuHooker.IsInstalled;
 
 		#region Tray registration routine
 
@@ -146,7 +146,7 @@ public partial class MainWindow : Window
 	{
 		OsuHooker.ToggleHook();
 
-		MascotBtn.IsChecked = OsuHooker.IsInjected;
+		MascotBtn.IsChecked = OsuHooker.IsInstalled;
 	}
 
 	private void CloseButton_Click(object sender, RoutedEventArgs e)

@@ -26,22 +26,19 @@ public interface ICallback
 
 public class HookCallback : ICallback
 {
-	#region Callback implementation
-
 	public void Installed()
 	{
 		OsuHooker.IsInstalled = true;
-		OsuHooker.NewIsHooking = true;
+		OsuHooker.IsHooking = true;
 	}
 
 	public void HookSwitched(bool status)
 	{
-		OsuHooker.NewIsHooking = status;
+		OsuHooker.IsHooking = status;
 	}
-
-	#endregion
 }
 
+/// <summary>   Interface for osu injectee. </summary>
 [ServiceContract(SessionMode = SessionMode.Required,
 				 CallbackContract = typeof(ICallback))]
 public interface IOsuInjectee
@@ -64,53 +61,56 @@ public interface IOsuInjectee
 
 public class OsuHooker
 {
-	static string ChannelName = null;
 	static int TargetPid;
-	static IOsuInjectee InjecteeHost;
+	static IOsuInjectee InjecteeProxy;
 	static HookCallback Callback;
 
 	public static bool IsInstalled;
-	public static bool NewIsHooking;
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	/// <summary>   Query whether injectee is ready. </summary>
-	///
-	/// <value> If last ping had been in 3 seconds, then it true. </value>
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	public static bool IsInjected
-	{
-		get
-		{
-			try
-			{
-				return IsInstalled;
-			}
-			catch
-			{
-				return false;
-			}
-		}
-	}
-
+	static bool isHooking;
 	public static bool IsHooking
 	{
 		get
 		{
-			return IsInjected && NewIsHooking;
+			return isHooking;
+		}
+		set
+		{
+			isHooking = value;
+			if (IsHookingChanged != null)
+			{
+				IsHookingChanged.Invoke();
+			}
 		}
 	}
 
+	/// <summary>   Event invoked when IsHooking is changed. </summary>
+	public static event Action IsHookingChanged;
+
 	public static bool ToggleHook()
 	{
-		if (IsHooking)
+		try
 		{
-			InjecteeHost.DisableHook();
-			return true;
+			if (IsHooking)
+			{
+				InjecteeProxy.DisableHook();
+				return true;
+			}
+			else if (IsInstalled)
+			{
+				InjecteeProxy.EnableHook();
+				return true;
+			}
 		}
-		else if (IsInjected)
+		catch (Exception)
 		{
-			InjecteeHost.EnableHook();
-			return true;
+			// Case of host terminated.
+			var proxy = InjecteeProxy as ICommunicationObject;
+			if (proxy != null)
+			{
+				proxy.Close();
+				InjecteeProxy = null;
+			}
 		}
 
 		try
@@ -123,10 +123,10 @@ public class OsuHooker
 			try
 			{
 				// Why need?
-				if (File.Exists(jsonLib))
-					Config.Register("Osu beatmap downloader.", thisFile, injectee, jsonLib);
-				else
-					Config.Register("Osu beatmap downloader.", thisFile, injectee);
+				//if (File.Exists(jsonLib))
+				//    Config.Register("Osu beatmap downloader.", thisFile, injectee, jsonLib);
+				//else
+				//    Config.Register("Osu beatmap downloader.", thisFile, injectee);
 			}
 			catch (ApplicationException e)
 			{
@@ -173,9 +173,11 @@ public class OsuHooker
 
 			ThreadPool.QueueUserWorkItem(new WaitCallback(obj =>
 			{
-				InjecteeHost = pipeFactory.CreateChannel();
+				InjecteeProxy = pipeFactory.CreateChannel();
 
-				InjecteeHost.Subscribe();
+				InjecteeProxy.Subscribe();
+
+				(InjecteeProxy as ICommunicationObject).Faulted += OsuHooker_Faulted;
 			}));
 		}
 		catch (Exception e)
@@ -184,6 +186,12 @@ public class OsuHooker
 		}
 
 		return true;
+	}
+
+	static void OsuHooker_Faulted(object sender, EventArgs e)
+	{
+		IsInstalled = false;
+		IsHooking = false;
 	}
 
 	public static void LogException(Exception extInfo)

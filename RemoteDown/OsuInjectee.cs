@@ -92,6 +92,7 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 						}
 					}
 				}
+				// TODO: Infinite loop exit routine.
 				//else
 				//    Interface.Ping(ShellExecuteExHook != null);
 			}
@@ -125,7 +126,7 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 		if (Callbacks.Count <= 0)
 		{
 			DisableHook();
-			// 추가로 뭐하지...
+			// TODO: Additional cleaner code.
 		}
 	}
 
