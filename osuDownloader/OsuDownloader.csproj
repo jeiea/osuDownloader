@@ -416,8 +416,16 @@
   </Target>-->
   <Target Name="AfterBuild">
     <MSBuild Projects="..\RemoteDown\RemoteDown.csproj" />
-    <Exec Condition="'$(Configuration)|$(Platform)' == 'netfx4-Release|AnyCPU'"
-          Command="cd /D &quot;$(TargetDir)&quot; &amp;
+    <CallTarget Condition="'$(Configuration)|$(Platform)' == 'netfx4-Release|AnyCPU'" Targets="Obfuscation" />
+  </Target>
+  <Target Name="Obfuscation">
+    <Exec Command="cd /D &quot;$(TargetDir)&quot; &amp;
           &quot;$(SolutionDir)packages\Obfuscar.2.0.1-beta2\tools\Obfuscar.Console.exe&quot; &quot;$(SolutionDir)OsuDownloader\Obfuscar.xml&quot;"/>
+    <MakeDir Directories="$(TargetDir)Original" />
+    <Move SourceFiles="$(TargetDir)osuDownloader.exe;$(TargetDir)RemoteDown.dll" DestinationFolder="$(TargetDir)Original" />
+    <ItemGroup>
+      <ObfuscatedResults Include="$(TargetDir)Obfuscar\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ObfuscatedResults)" DestinationFolder="$(TargetDir)" />
   </Target>
 </Project>
