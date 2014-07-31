@@ -12,5 +12,7 @@
   <Module file="$(InPath)\EasyHook.dll" /> -->
 
   <Var name="KeyFile" value="..\..\osuDownloader\StrongName.snk" />
-  <Module file="$(InPath)\osuDownloader.exe"/>
+  <Module file="$(InPath)\osuDownloader.exe">
+	<SkipProperty type="OsuDownloader.Properties.Settings" rx=".*" />
+  </Module>
 </Obfuscator>
