@@ -4,15 +4,15 @@
   <Var name="OutPath" value=".\Obfuscar" />
   <Var name="KeepPublicApi" value="false" />
   <Var name="HidePrivateApi" value="true" />
+  <Var name="ReuseNames" value="false" />
 
   <Var name="KeyFile" value="..\..\RemoteDown\StrongName.snk" />
-  <Module file="$(InPath)\RemoteDown.dll" />
-
-  <!-- <Var name="KeyFile" value="..\EasyHook\StrongName.snk" />
-  <Module file="$(InPath)\EasyHook.dll" /> -->
+  <Module file="$(InPath)\RemoteDown.dll">
+    <SkipMethod type="RemoteDown.OsuInjectee" rx="Run" />
+  </Module>
 
   <Var name="KeyFile" value="..\..\osuDownloader\StrongName.snk" />
   <Module file="$(InPath)\osuDownloader.exe">
-	<SkipProperty type="OsuDownloader.Properties.Settings" rx=".*" />
+  	<SkipProperty type="OsuDownloader.Properties.Settings" rx=".*" />
   </Module>
 </Obfuscator>

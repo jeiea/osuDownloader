@@ -80,7 +80,6 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
     <UseVSHostingProcess>false</UseVSHostingProcess>
-    <PostBuildEvent>"$(SolutionDir)packages\Obfuscar.2.0.1-beta2\tools\Obfuscar.Console.exe" "$(SolutionDir)OsuDownloader\Obfuscar.xml"</PostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
@@ -417,7 +416,8 @@
   </Target>-->
   <Target Name="AfterBuild">
     <MSBuild Projects="..\RemoteDown\RemoteDown.csproj" />
+    <Exec Condition="'$(Configuration)|$(Platform)' == 'netfx4-Release|AnyCPU'"
+          Command="cd /D &quot;$(TargetDir)&quot; &amp;
+          &quot;$(SolutionDir)packages\Obfuscar.2.0.1-beta2\tools\Obfuscar.Console.exe&quot; &quot;$(SolutionDir)OsuDownloader\Obfuscar.xml&quot;"/>
   </Target>
-  <!--     <Target Name="Build">
-    </Target> -->
 </Project>
