@@ -67,18 +67,25 @@ public partial class MainWindow : Window
 
 	void WindowSettings_Loaded(object sender, EventArgs e)
 	{
-		MascotBtn.IsChecked = OsuHooker.IsInstalled;
-		AutoStart.IsChecked = Properties.Settings.Default.AutoStart;
-		StartAsTray.IsChecked = Properties.Settings.Default.StartAsTray;
+		var setting = Properties.Settings.Default;
 
-		if (Properties.Settings.Default.StartAsTray == false)
+		MascotBtn.IsChecked = OsuHooker.IsInstalled;
+		AutoStart.IsChecked = setting.AutoStart;
+		StartAsTray.IsChecked = setting.StartAsTray;
+		AutoTerminate.IsChecked = setting.AutoTerminate;
+
+		if (setting.StartAsTray == false)
 		{
 			Show();
 			Activate();
 		}
-		if (Properties.Settings.Default.AutoStart)
+		if (setting.AutoStart)
 		{
 			OsuHooker.ToggleHook();
+		}
+		if (setting.AutoTerminate)
+		{
+
 		}
 	}
 

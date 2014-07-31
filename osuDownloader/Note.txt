@@ -1,0 +1,6 @@
+﻿
+난독화 설정만 바꿀 때 유용한 명령어
+cd /d "D:\Jeiea\Code\Projects\2014-07\osuDownloader\build\netfx4-Release" copy /y .\Original\* . & "D:\Jeiea\Code\Projects\2014-07\osuDownloader\packages\Obfuscar.2.0.1-beta2\tools\Obfuscar.Console.exe" "D:\Jeiea\Code\Projects\2014-07\osuDownloader\OsuDownloader\Obfuscar.xml" & copy /Y .\Obfuscar\* .
+
+추가할 점
+오스 종료 시 같이 종료 옵션 추가

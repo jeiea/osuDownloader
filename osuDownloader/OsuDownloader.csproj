@@ -427,7 +427,6 @@
       <ObfuscatedResults Include="$(TargetDir)Obfuscar\*" />
     </ItemGroup>
     <Exec Command="for %%A in (@(ObfuscatedResults)) do if exist &quot;$(TargetDir)%%~nxA&quot; move &quot;$(TargetDir)%%~nxA&quot; &quot;$(TargetDir)Original\%%~nxA&quot; >nul"/>
-    <!-- <Move SourceFiles="$(TargetDir)@(ObfuscatedResults->'%(Filename)%(Extension)')" DestinationFolder="$(TargetDir)Original" /> -->
     <Copy SourceFiles="@(ObfuscatedResults)" DestinationFolder="$(TargetDir)" />
   </Target>
 </Project>

@@ -64,5 +64,17 @@ namespace OsuDownloader.Properties {
                 this["OsuPath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool AutoTerminate {
+            get {
+                return ((bool)(this["AutoTerminate"]));
+            }
+            set {
+                this["AutoTerminate"] = value;
+            }
+        }
     }
 }

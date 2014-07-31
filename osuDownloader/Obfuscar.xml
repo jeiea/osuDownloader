@@ -9,7 +9,8 @@
   <Var name="KeyFile" value="..\..\osuDownloader\StrongName.snk" />
   <Module file="$(InPath)\osuDownloader.exe">
     <SkipProperty type="OsuDownloader.Properties.Settings" rx=".*" />
-    <SkipMethod type="OsuDownloader.ICallback" rx=".*"/>
+    <SkipMethod type="OsuDownloader.ICallback" rx=".*" />
+    <SkipMethod type="Newtonsoft.Json.Linq.JObject" rx="TryGetValue" />
   </Module>
 
   <Var name="KeyFile" value="..\..\RemoteDown\StrongName.snk" />
