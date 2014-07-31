@@ -25,7 +25,7 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 	static string DownloadDir = "C:\\";
 
 	/// <summary>   ShellExecuteEx hook. Intercept url opens. </summary>
-	LocalHook ShellExecuteExHook;
+	static LocalHook ShellExecuteExHook;
 	/// <summary>   ShowWindow function hook. This is necessary during fullscreen mode. </summary>
 	LocalHook ShowWindowHook;
 
@@ -35,7 +35,11 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 	ServiceHost InjecteeHost;
 	List<OsuDownloader.ICallback> Callbacks = new List<OsuDownloader.ICallback>();
 
+	/// <summary>   This is used to determine whether received no connection. </summary>
 	bool LastConnectionFaulted;
+
+	/// <summary>   Identifier for the hooking thread. </summary>
+	static int HookingThreadId;
 
 	public OsuInjectee(RemoteHooking.IContext context)
 	{
@@ -47,6 +51,7 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 
 	public void Run(RemoteHooking.IContext context)
 	{
+		HookingThreadId = (int)GetCurrentThreadId();
 		try
 		{
 			EnableHook();
@@ -176,8 +181,20 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 							 LocalHook.GetProcAddress("user32.dll", "ShowWindow"),
 							 new DShowWindow(ShowWindow_Hooked), this);
 
-		ShellExecuteExHook.ThreadACL.SetExclusiveACL(new int[] { 0 });
-		ShowWindowHook.ThreadACL.SetExclusiveACL(new int[] { 0 });
+		File.AppendAllLines("C:\\ThreadList.txt", new string[]
+		{
+			"EnableHook() : " + GetCurrentThreadId(),
+			" - IsThreadIntercepted : " + ShellExecuteExHook.IsThreadIntercepted((int)GetCurrentThreadId()),
+		});
+		var threadList = new List<int>();
+		foreach (ProcessThread thread in Process.GetCurrentProcess().Threads)
+		{
+			threadList.Add(thread.Id);
+		}
+		threadList.Remove(HookingThreadId);
+
+		ShellExecuteExHook.ThreadACL.SetInclusiveACL(threadList.ToArray());
+		ShowWindowHook.ThreadACL.SetExclusiveACL(new int[] { HookingThreadId });
 
 		NotifyHookSwitch();
 	}
@@ -237,6 +254,11 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 		int count = (int)result["resultCount"];
 		if (count != 1)
 		{
+			File.AppendAllLines("C:\\ThreadList.txt", new string[]
+			{
+				"BloodcatDownload() : " + GetCurrentThreadId(),
+				" - IsThreadIntercepted : " + ShellExecuteExHook.IsThreadIntercepted((int)GetCurrentThreadId()),
+			});
 			// If not found or undecidable, open official page.
 			SHELLEXECUTEINFO exInfo = new SHELLEXECUTEINFO()
 			{
@@ -315,6 +337,9 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 	{
 		return string.Concat(name.Except(System.IO.Path.GetInvalidFileNameChars()));
 	}
+
+	[DllImport("kernel32.dll")]
+	static extern uint GetCurrentThreadId();
 
 	#region ShowWindow pinvoke
 
@@ -466,6 +491,13 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 
 	static bool ShellExecuteEx_Hooked(ref SHELLEXECUTEINFO lpExecInfo)
 	{
+		File.AppendAllLines("C:\\ThreadList.txt", new string[]
+		{
+			"ShellExecuteEx_Hooked() : " + GetCurrentThreadId(),
+			" - IsThreadIntercepted : " + ShellExecuteExHook.IsThreadIntercepted((int)GetCurrentThreadId()),
+			" - lpExecInfo.lpFile : " + lpExecInfo.lpFile,
+			" - lpExecInfo.lpParameters : " + lpExecInfo.lpParameters,
+		});
 		try
 		{
 			var uri = new Uri(lpExecInfo.lpFile);
