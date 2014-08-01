@@ -56,7 +56,12 @@ static class OsuHelper
 
 		// Environmental program files.
 		suspectingPaths.Add(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles));
+
+#if NET20 || NET35
 		suspectingPaths.Add(Environment.GetEnvironmentVariable("ProgramFiles(x86)"));
+#else
+		suspectingPaths.Add(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86));
+#endif
 
 		// root directories.
 		foreach (var drive in DriveInfo.GetDrives())
@@ -134,7 +139,11 @@ static class OsuHelper
 		{
 			string osuPath = Path.GetDirectoryName(GetOsuPath());
 			string songsPath = Path.Combine(osuPath, "Songs");
+#if NET20 || NET35
 			int count = Directory.GetDirectories(songsPath)
+#else
+			int count = Directory.EnumerateDirectories(songsPath)
+#endif
 						.Where((s) => s.StartsWith(sid + " "))
 						.Count();
 			return count > 0;

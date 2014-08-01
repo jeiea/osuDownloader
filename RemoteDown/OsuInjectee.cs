@@ -519,10 +519,10 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 
 }
 
+#if NET35
 static class CompatibilityHelper
 {
 
-#if NET35
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>   Equal to above .NET 4.0 CopyTo method. </summary>
 	///
@@ -539,7 +539,7 @@ static class CompatibilityHelper
 			output.Write(buffer, 0, bytesRead);
 		}
 	}
-#endif
 }
+#endif
 
 }
