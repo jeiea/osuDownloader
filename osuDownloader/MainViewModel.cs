@@ -69,9 +69,9 @@ public class MainViewModel : ICallback, INotifyPropertyChanged
 		get { return _IsHooking; }
 		set
 		{
-			bool isHooked = _IsHooking;
-			if (isHooked != _IsHooking)
+			if (_IsHooking != value)
 			{
+				_IsHooking = value;
 				OnPropertyChanged("IsHooking");
 			}
 		}
@@ -105,7 +105,6 @@ public class MainViewModel : ICallback, INotifyPropertyChanged
 		}
 	}
 
-	bool _AutoTerminate;
 	public bool AutoTerminate
 	{
 		get { return Properties.Settings.Default.AutoTerminate; }
