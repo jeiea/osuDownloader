@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 using System.Windows;
 using Microsoft.Win32;
@@ -57,7 +56,7 @@ static class OsuHelper
 
 		// Environmental program files.
 		suspectingPaths.Add(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles));
-		suspectingPaths.Add(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86));
+		suspectingPaths.Add(Environment.GetEnvironmentVariable("ProgramFiles(x86)"));
 
 		// root directories.
 		foreach (var drive in DriveInfo.GetDrives())
@@ -135,7 +134,7 @@ static class OsuHelper
 		{
 			string osuPath = Path.GetDirectoryName(GetOsuPath());
 			string songsPath = Path.Combine(osuPath, "Songs");
-			int count = Directory.EnumerateDirectories(songsPath)
+			int count = Directory.GetDirectories(songsPath)
 						.Where((s) => s.StartsWith(sid + " "))
 						.Count();
 			return count > 0;

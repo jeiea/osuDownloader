@@ -9,7 +9,6 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>OsuDownloader</RootNamespace>
     <AssemblyName>osuDownloader</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
@@ -28,6 +27,7 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -38,7 +38,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -49,40 +49,68 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <UseVSHostingProcess>false</UseVSHostingProcess>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
+    <ApplicationIcon>osuIcon.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>StrongName.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'netfx4-Debug|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\build\netfx4-Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' != 'Debug|AnyCPU' And '$(Configuration)|$(Platform)' != 'Release|AnyCPU'">
+    <OutputPath>..\build\$(Configuration)\</OutputPath>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
     <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
-  <PropertyGroup>
-    <ApplicationIcon>osuIcon.ico</ApplicationIcon>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx3.5-Debug' Or '$(Configuration)' == 'netfx4.0-Debug' Or '$(Configuration)' == 'netfx4.5-Debug'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'netfx4-Release|AnyCPU'">
-    <OutputPath>..\build\netfx4-Release\</OutputPath>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx3.5-Release' Or '$(Configuration)' == 'netfx4.0-Release' Or '$(Configuration)' == 'netfx4.5-Release'">
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>true</Prefer32Bit>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx3.5-Debug' Or '$(Configuration)' == 'netfx3.5-Release'">
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx4.0-Debug' Or '$(Configuration)' == 'netfx4.0-Release'">
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx4.5-Debug' Or '$(Configuration)' == 'netfx4.5-Release'">
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx3.5-Debug'">
+    <DefineConstants>DEBUG;TRACE;NET35</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx3.5-Release'">
+    <DefineConstants>TRACE;NET35</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx4.0-Debug'">
+    <DefineConstants>DEBUG;TRACE;NET40</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx4.0-Release'">
+    <DefineConstants>TRACE;NET40</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx4.5-Debug'">
+    <DefineConstants>DEBUG;TRACE;NET40</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx4.5-Release'">
+    <DefineConstants>TRACE;NET40</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(Configuration)' != 'netfx3.5-Debug' And '$(Configuration)' != 'netfx3.5-Release'">
+    <Reference Include="Microsoft.CSharp" Condition="'$(Configuration)' != 'netfx3.5-Debug' And '$(Configuration)' != 'netfx3.5-Release'" />
+    <Reference Include="System.Xaml" Condition="'$(Configuration)' != 'netfx3.5-Debug' And '$(Configuration)' != 'netfx3.5-Release'" />
+    <Reference Include="System.Numerics" Condition="'$(Configuration)' != 'netfx3.5-Debug' And '$(Configuration)' != 'netfx3.5-Release'" />
+  </ItemGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
@@ -91,12 +119,10 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Numerics" />
     <Reference Include="System.Runtime.Remoting" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
@@ -147,12 +173,31 @@
     <Compile Include="NotifyIconWpf\TaskbarIcon.cs" />
     <Compile Include="NotifyIconWpf\TaskbarIcon.Declarations.cs" />
     <Compile Include="NotifyIconWpf\Util.cs" />
+    <None Include="app.config" />
     <None Include="NotifyIconWpf\Diagrams\TaskbarIcon Overview.cd" />
   </ItemGroup>
   <!-- NotifyIcon Static embed end -->
   <!-- Newtonsoft.Json static embed start -->
   <PropertyGroup>
     <NoWarn>3021</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'netfx3.5-Debug|AnyCPU'">
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'netfx3.5-Release|AnyCPU'">
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'netfx4.0-Debug|AnyCPU'">
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'netfx4.0-Release|AnyCPU'">
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'netfx4.5-Debug|AnyCPU'">
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'netfx4.5-Release|AnyCPU'">
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="NewtonsoftJson\Bson\BsonBinaryType.cs" />
@@ -374,9 +419,6 @@
     <None Include="StrongName.snk" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\EasyHook\EasyHook.csproj">
       <Project>{ab53862b-3b5c-4efc-9787-1f01199ebfbf}</Project>
       <Name>EasyHook</Name>
@@ -416,17 +458,16 @@
   </Target>-->
   <Target Name="AfterBuild">
     <MSBuild Projects="..\RemoteDown\RemoteDown.csproj" />
-    <CallTarget Condition="'$(Configuration)|$(Platform)' == 'netfx4-Release|AnyCPU'" Targets="Obfuscation" />
+    <CallTarget Condition="'$(Configuration)' == 'netfx3.5-Release' Or '$(Configuration)' == 'netfx4.0-Release' Or '$(Configuration)' == 'netfx4.5-Release'" Targets="Obfuscation" />
   </Target>
   <Target Name="Obfuscation">
     <RemoveDir Directories="$(TargetDir)Obfuscar;$(TargetDir)Original" />
     <MakeDir Directories="$(TargetDir)Obfuscar;$(TargetDir)Original" />
-    <Exec Command="cd /D &quot;$(TargetDir)&quot; &amp;
-          &quot;$(SolutionDir)packages\Obfuscar.2.0.1-beta2\tools\Obfuscar.Console.exe&quot; &quot;$(SolutionDir)OsuDownloader\Obfuscar.xml&quot;"/>
+    <Exec Command="cd /D &quot;$(TargetDir)&quot; &amp;&#xD;&#xA;          &quot;$(SolutionDir)packages\Obfuscar.2.0.1-beta2\tools\Obfuscar.Console.exe&quot; &quot;$(SolutionDir)OsuDownloader\Obfuscar.xml&quot;" />
     <ItemGroup>
       <ObfuscatedResults Include="$(TargetDir)Obfuscar\*" />
     </ItemGroup>
-    <Exec Command="for %%A in (@(ObfuscatedResults)) do if exist &quot;$(TargetDir)%%~nxA&quot; move &quot;$(TargetDir)%%~nxA&quot; &quot;$(TargetDir)Original\%%~nxA&quot; >nul"/>
+    <Exec Command="for %%A in (@(ObfuscatedResults)) do if exist &quot;$(TargetDir)%%~nxA&quot; move &quot;$(TargetDir)%%~nxA&quot; &quot;$(TargetDir)Original\%%~nxA&quot; &gt;nul" />
     <Copy SourceFiles="@(ObfuscatedResults)" DestinationFolder="$(TargetDir)" />
   </Target>
 </Project>

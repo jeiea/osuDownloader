@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Runtime.Remoting;
 using EasyHook;
 using System.Windows;
@@ -11,6 +10,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.ServiceModel;
+using System.ComponentModel;
 
 namespace OsuDownloader
 {
@@ -22,20 +22,6 @@ public interface ICallback
 
 	[OperationContract(IsOneWay = true)]
 	void HookSwitched(bool status);
-}
-
-public class HookCallback : ICallback
-{
-	public void Installed()
-	{
-		OsuHooker.IsInstalled = true;
-		OsuHooker.IsHooking = true;
-	}
-
-	public void HookSwitched(bool status)
-	{
-		OsuHooker.IsHooking = status;
-	}
 }
 
 /// <summary>   Interface for osu injectee. </summary>
@@ -59,35 +45,71 @@ public interface IOsuInjectee
 	bool IsHookEnabled();
 }
 
-public class OsuHooker
+public class OsuHooker : ICallback, INotifyPropertyChanged
 {
 	static int TargetPid;
 	static IOsuInjectee InjecteeProxy;
-	static HookCallback Callback;
 
-	public static bool IsInstalled;
+	#region Property declaration
 
-	static bool isHooking;
-	public static bool IsHooking
+	bool _IsInstalled;
+	public bool IsInstalled
 	{
-		get
-		{
-			return isHooking;
-		}
+		get { return _IsInstalled; }
 		set
 		{
-			isHooking = value;
-			if (IsHookingChanged != null)
+			_IsInstalled = value;
+			OnPropertyChanged("IsInstalled");
+		}
+	}
+
+	bool _IsHooking;
+	public bool IsHooking
+	{
+		get { return _IsHooking; }
+		set
+		{
+			bool isHooked = _IsHooking;
+			ToggleHook();
+			if (isHooked != _IsHooking)
 			{
-				IsHookingChanged.Invoke();
+				OnPropertyChanged("IsHooking");
 			}
 		}
 	}
 
-	/// <summary>   Event invoked when IsHooking is changed. </summary>
-	public static event Action IsHookingChanged;
+	#endregion
 
-	public static bool ToggleHook()
+	#region ICallback Implementation
+
+	public void Installed()
+	{
+		IsInstalled = true;
+		IsHooking = true;
+	}
+
+	public void HookSwitched(bool status)
+	{
+		IsHooking = status;
+	}
+
+	#endregion
+
+	#region INotifyPropertyChanged implementation
+
+	public event PropertyChangedEventHandler PropertyChanged;
+
+	public void OnPropertyChanged(string property)
+	{
+		if (PropertyChanged != null)
+		{
+			PropertyChanged(this, new PropertyChangedEventArgs(property));
+		}
+	}
+
+	#endregion
+
+	public bool ToggleHook()
 	{
 		try
 		{
@@ -160,9 +182,8 @@ public class OsuHooker
 
 		try
 		{
-			Callback = new HookCallback();
 			var pipeFactory = new DuplexChannelFactory<IOsuInjectee>(
-				Callback, new NetNamedPipeBinding(),
+				this, new NetNamedPipeBinding(),
 				new EndpointAddress("net.pipe://localhost/osuBeatmapHooker"));
 
 			ThreadPool.QueueUserWorkItem(new WaitCallback(obj =>
@@ -182,7 +203,7 @@ public class OsuHooker
 		return true;
 	}
 
-	static void ChannelFaulted(object sender, EventArgs e)
+	void ChannelFaulted(object sender, EventArgs e)
 	{
 		IsInstalled = false;
 		IsHooking = false;

@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:tb="clr-namespace:Hardcodet.Wpf.TaskbarNotification"
         Title="Osu Beatmap Downloader" Height="350" Width="525" SnapsToDevicePixels="True"
-        WindowStyle="None" ResizeMode="NoResize" UseLayoutRounding="True" x:Name="Win">
+        WindowStyle="None" ResizeMode="NoResize" x:Name="Win">
     <Window.Background>
         <RadialGradientBrush GradientOrigin="0.75,0.3" RadiusX="2" RadiusY="2">
             <GradientStop Color="#FF0023FF" Offset="0.726"/>
@@ -41,6 +41,7 @@
         </Grid.Resources>
 
         <ToggleButton Name="MascotBtn" Margin="31,-100,208,-166" Template="{StaticResource ImageToggleButon}"
+                      IsChecked="{Binding IsHooking}"
                       Click="ToggleHooking" ToolTip="오스를 켜고 다운로더를 활성화합니다.">
             <Image>
                 <Image.Style>

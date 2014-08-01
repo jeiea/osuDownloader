@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Configuration Condition=" '$(Configuration)' == '' ">netfx3.5-Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
@@ -27,18 +27,68 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
   </PropertyGroup>
+
+
+  <PropertyGroup>
+    <OutputPath>..\build\$(Configuration)\</OutputPath>
+    <DocumentationFile>..\Build\$(Configuration)\EasyHook.xml</DocumentationFile>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx3.5-Debug' Or '$(Configuration)' == 'netfx4.0-Debug' Or '$(Configuration)' == 'netfx4.5-Debug'">
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx3.5-Release' Or '$(Configuration)' == 'netfx4.0-Release' Or '$(Configuration)' == 'netfx4.5-Release'">
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx3.5-Debug' Or '$(Configuration)' == 'netfx3.5-Release'">
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx4.0-Debug' Or '$(Configuration)' == 'netfx4.0-Release'">
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx4.5-Debug' Or '$(Configuration)' == 'netfx4.5-Release'">
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx3.5-Debug'">
+    <DefineConstants>DEBUG;TRACE;NET35</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx3.5-Release'">
+    <DefineConstants>TRACE;NET35</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx4.0-Debug'">
+    <DefineConstants>DEBUG;TRACE;NET4</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx4.0-Release'">
+    <DefineConstants>TRACE;NET4</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx4.5-Debug'">
+    <DefineConstants>DEBUG;TRACE;NET4</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx4.5-Release'">
+    <DefineConstants>TRACE;NET4</DefineConstants>
+  </PropertyGroup>
+
+<!--
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'netfx3.5-Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\Build\$(Configuration)\x64\</OutputPath>
+    <OutputPath>..\Build\$(Configuration)\</OutputPath>
     <DefineConstants>DEBUG;TRACE;NET35</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+
     <DocumentationFile>..\Build\$(Configuration)\x64\EasyHook.XML</DocumentationFile>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
@@ -48,7 +98,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'netfx3.5-Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\Build\$(Configuration)\x64\</OutputPath>
+    <OutputPath>..\Build\$(Configuration)\</OutputPath>
     <DefineConstants>TRACE;NET35</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -59,7 +109,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'netfx4-Release|AnyCPU'">
-    <OutputPath>..\Build\netfx4-Release\</OutputPath>
+    <OutputPath>..\Build\$(Configuration)\</OutputPath>
     <DefineConstants>TRACE;NET4</DefineConstants>
     <DocumentationFile>..\Build\netfx4-Release\EasyHook.XML</DocumentationFile>
     <Optimize>true</Optimize>
@@ -73,7 +123,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'netfx4-Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\Build\netfx4-Debug\</OutputPath>
+    <OutputPath>..\Build\$(Configuration)\</OutputPath>
     <DefineConstants>DEBUG;TRACE;NET4</DefineConstants>
     <DocumentationFile>..\Build\netfx4-Debug\EasyHook.XML</DocumentationFile>
     <DebugType>full</DebugType>
@@ -83,7 +133,7 @@
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
+  </PropertyGroup> -->
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />

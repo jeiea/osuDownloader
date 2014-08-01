@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -25,6 +24,8 @@ public partial class MainWindow : Window
 
 	Hardcodet.Wpf.TaskbarNotification.TaskbarIcon Tray;
 	MenuItem ToggleHookItem;
+
+	OsuHooker Hooker = new OsuHooker();
 
 	public MainWindow()
 	{
@@ -61,15 +62,13 @@ public partial class MainWindow : Window
 		ToggleHookItem = (MenuItem)contextMenu.Items[1];
 
 		#endregion
-
-		OsuHooker.IsHookingChanged += CheckHooking;
 	}
 
 	void WindowSettings_Loaded(object sender, EventArgs e)
 	{
 		var setting = Properties.Settings.Default;
 
-		MascotBtn.IsChecked = OsuHooker.IsInstalled;
+		this.DataContext = Hooker;
 		AutoStart.IsChecked = setting.AutoStart;
 		StartAsTray.IsChecked = setting.StartAsTray;
 		AutoTerminate.IsChecked = setting.AutoTerminate;
@@ -81,20 +80,12 @@ public partial class MainWindow : Window
 		}
 		if (setting.AutoStart)
 		{
-			OsuHooker.ToggleHook();
+			Hooker.ToggleHook();
 		}
 		if (setting.AutoTerminate)
 		{
 
 		}
-	}
-
-	private void CheckHooking()
-	{
-		Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-		{
-			MascotBtn.IsChecked = OsuHooker.IsHooking;
-		}));
 	}
 
 	protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
@@ -153,9 +144,7 @@ public partial class MainWindow : Window
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	private void ToggleHooking(object sender, RoutedEventArgs e)
 	{
-		OsuHooker.ToggleHook();
-
-		MascotBtn.IsChecked = OsuHooker.IsInstalled;
+		Hooker.ToggleHook();
 	}
 
 	private void CloseButton_Click(object sender, RoutedEventArgs e)
@@ -171,7 +160,7 @@ public partial class MainWindow : Window
 
 	private void ContextMenu_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
 	{
-		ToggleHookItem.Header = OsuHooker.IsHooking ? "끄기" : "켜기";
+		ToggleHookItem.Header = Hooker.IsHooking ? "끄기" : "켜기";
 	}
 
 	private void AutoStart_Click(object sender, RoutedEventArgs e)

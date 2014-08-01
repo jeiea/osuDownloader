@@ -12,7 +12,6 @@
     <AssemblyName>EasyHookSvc</AssemblyName>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>StrongName.snk</AssemblyOriginatorKeyFile>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <OldToolsVersion>2.0</OldToolsVersion>
@@ -33,6 +32,66 @@
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <OutputPath>..\build\$(Configuration)\</OutputPath>
+    <DocumentationFile>..\Build\$(Configuration)\EasyHook.xml</DocumentationFile>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'netfx3.5-Debug|AnyCPU' Or '$(Configuration)|$(Platform)' == 'netfx4.0-Debug|AnyCPU' Or '$(Configuration)|$(Platform)' == 'netfx4.5-Debug|AnyCPU'">
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'netfx3.5-Release|AnyCPU' Or '$(Configuration)|$(Platform)' == 'netfx4.0-Release|AnyCPU' Or '$(Configuration)|$(Platform)' == 'netfx4.5-Release|AnyCPU'">
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx3.5-Debug' Or '$(Configuration)' == 'netfx3.5-Release'">
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx4.0-Debug' Or '$(Configuration)' == 'netfx4.0-Release'">
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx4.5-Debug' Or '$(Configuration)' == 'netfx4.5-Release'">
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx3.5-Debug'">
+    <DefineConstants>DEBUG;TRACE;NET35</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx3.5-Release'">
+    <DefineConstants>TRACE;NET35</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx4.0-Debug'">
+    <DefineConstants>DEBUG;TRACE;NET4</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx4.0-Release'">
+    <DefineConstants>TRACE;NET4</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx4.5-Debug'">
+    <DefineConstants>DEBUG;TRACE;NET4</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'netfx4.5-Release'">
+    <DefineConstants>TRACE;NET4</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Platform)' == 'AnyCPU'">
+    <AssemblyName>EasyHook64Svc</AssemblyName>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Platform)' == 'x86'">
+    <AssemblyName>EasyHook32Svc</AssemblyName>
+  </PropertyGroup>
+
+<!--
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'netfx3.5-Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -133,7 +192,7 @@
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
     <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
+  </PropertyGroup> -->
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />

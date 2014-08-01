@@ -16,8 +16,8 @@ using System.Windows.Markup;
 [assembly: AssemblyCulture("")]
 
 // Provides simplified declaration in XAML
-[assembly: XmlnsPrefix("http://www.hardcodet.net/taskbar", "tb")]
-[assembly: XmlnsDefinition("http://www.hardcodet.net/taskbar", "Hardcodet.Wpf.TaskbarNotification")]
+//[assembly: XmlnsPrefix("http://www.hardcodet.net/taskbar", "tb")]
+//[assembly: XmlnsDefinition("http://www.hardcodet.net/taskbar", "Hardcodet.Wpf.TaskbarNotification")]
 
 // Setting ComVisible to false makes the types in this assembly not visible
 // to COM components.  If you need to access a type in this assembly from

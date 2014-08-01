@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using EasyHook;
 using System.Runtime.InteropServices;
 using System.Net;
@@ -181,11 +180,6 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 							 LocalHook.GetProcAddress("user32.dll", "ShowWindow"),
 							 new DShowWindow(ShowWindow_Hooked), this);
 
-		File.AppendAllLines("C:\\ThreadList.txt", new string[]
-		{
-			"EnableHook() : " + GetCurrentThreadId(),
-			" - IsThreadIntercepted : " + ShellExecuteExHook.IsThreadIntercepted((int)GetCurrentThreadId()),
-		});
 		var threadList = new List<int>();
 		foreach (ProcessThread thread in Process.GetCurrentProcess().Threads)
 		{
@@ -254,11 +248,6 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 		int count = (int)result["resultCount"];
 		if (count != 1)
 		{
-			File.AppendAllLines("C:\\ThreadList.txt", new string[]
-			{
-				"BloodcatDownload() : " + GetCurrentThreadId(),
-				" - IsThreadIntercepted : " + ShellExecuteExHook.IsThreadIntercepted((int)GetCurrentThreadId()),
-			});
 			// If not found or undecidable, open official page.
 			SHELLEXECUTEINFO exInfo = new SHELLEXECUTEINFO()
 			{
@@ -320,11 +309,18 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 		// TODO: IDropTarget으로 강제 갱신하는 방법 있음
 		catch (Win32Exception e)
 		{
-			string destPath = Path.Combine(Path.GetDirectoryName(osuExePath),
-										   "Songs", Path.GetFileName(downloadPath));
+			string[] pathElements = new string[]
+			{
+				Path.GetDirectoryName(osuExePath),
+				"Songs",
+				Path.GetFileName(downloadPath),
+			};
+			// For .NET 3.5
+			string destPath = pathElements.Aggregate(Path.Combine);
 			File.Move(downloadPath, destPath);
 		}
 	}
+
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>   Filter character which cannot be file name. </summary>
@@ -491,13 +487,6 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 
 	static bool ShellExecuteEx_Hooked(ref SHELLEXECUTEINFO lpExecInfo)
 	{
-		File.AppendAllLines("C:\\ThreadList.txt", new string[]
-		{
-			"ShellExecuteEx_Hooked() : " + GetCurrentThreadId(),
-			" - IsThreadIntercepted : " + ShellExecuteExHook.IsThreadIntercepted((int)GetCurrentThreadId()),
-			" - lpExecInfo.lpFile : " + lpExecInfo.lpFile,
-			" - lpExecInfo.lpParameters : " + lpExecInfo.lpParameters,
-		});
 		try
 		{
 			var uri = new Uri(lpExecInfo.lpFile);
@@ -528,6 +517,29 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 
 	#endregion
 
+}
+
+static class CompatibilityHelper
+{
+
+#if NET35
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>   Equal to above .NET 4.0 CopyTo method. </summary>
+	///
+	/// <param name="input">    The input to act on. </param>
+	/// <param name="output">   The output. </param>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	public static void CopyTo(this Stream input, Stream output)
+	{
+		byte[] buffer = new byte[1024 * 1024]; // Fairly arbitrary size
+		int bytesRead;
+
+		while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
+		{
+			output.Write(buffer, 0, bytesRead);
+		}
+	}
+#endif
 }
 
 }
