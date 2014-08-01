@@ -106,9 +106,9 @@
     <DefineConstants>TRACE;NET40</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition="'$(Configuration)' != 'netfx3.5-Debug' And '$(Configuration)' != 'netfx3.5-Release'">
-    <Reference Include="Microsoft.CSharp" Condition="'$(Configuration)' != 'netfx3.5-Debug' And '$(Configuration)' != 'netfx3.5-Release'" />
-    <Reference Include="System.Xaml" Condition="'$(Configuration)' != 'netfx3.5-Debug' And '$(Configuration)' != 'netfx3.5-Release'" />
-    <Reference Include="System.Numerics" Condition="'$(Configuration)' != 'netfx3.5-Debug' And '$(Configuration)' != 'netfx3.5-Release'" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="PresentationCore" />
