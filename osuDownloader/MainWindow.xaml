@@ -41,8 +41,7 @@
         </Grid.Resources>
 
         <ToggleButton Name="MascotBtn" Margin="31,-100,208,-166" Template="{StaticResource ImageToggleButon}"
-                      IsChecked="{Binding IsHooking}"
-                      Click="ToggleHooking" ToolTip="오스를 켜고 다운로더를 활성화합니다.">
+                      IsChecked="{Binding IsHooking}" ToolTip="오스를 켜고 다운로더를 활성화합니다.">
             <Image>
                 <Image.Style>
                     <Style TargetType="Image">

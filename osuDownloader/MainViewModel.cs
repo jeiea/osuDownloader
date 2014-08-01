@@ -71,8 +71,7 @@ public class MainViewModel : ICallback, INotifyPropertyChanged
 		{
 			if (_IsHooking != value)
 			{
-				_IsHooking = value;
-				OnPropertyChanged("IsHooking");
+				ToggleHook();
 			}
 		}
 	}
@@ -125,13 +124,19 @@ public class MainViewModel : ICallback, INotifyPropertyChanged
 
 	public void Installed()
 	{
-		IsInstalled = true;
-		IsHooking = true;
+		_IsInstalled = true;
+		_IsHooking = true;
+		OnPropertyChanged("IsInstalled");
+		OnPropertyChanged("IsHooking");
 	}
 
 	public void HookSwitched(bool status)
 	{
-		IsHooking = status;
+		if (_IsHooking != status)
+		{
+			_IsHooking = status;
+			OnPropertyChanged("IsHooking");
+		}
 	}
 
 	#endregion
@@ -253,8 +258,6 @@ public class MainViewModel : ICallback, INotifyPropertyChanged
 
 	void ChannelFaulted(object sender, EventArgs e)
 	{
-		IsInstalled = false;
-		IsHooking = false;
 		InjecteeProxy = null;
 
 		if (AutoTerminate)
