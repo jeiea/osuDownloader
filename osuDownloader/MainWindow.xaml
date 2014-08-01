@@ -106,8 +106,8 @@
         <Button Margin="497,0,0,322" Background="Transparent" BorderBrush="Transparent" Click="CloseButton_Click">
             <Path Data="M 0,0 L 1,1 M 1,0 L 0,1" Stroke="Black" StrokeThickness="3" Stretch="Fill" Margin="3"/>
         </Button>
-        <CheckBox Name="AutoStart" Content="오스 자동실행" HorizontalAlignment="Left" Margin="348,285,0,0" VerticalAlignment="Top" Click="AutoStart_Click"/>
-        <CheckBox Name="StartAsTray" Content="시작할 때 트레이로 최소화" HorizontalAlignment="Left" Margin="348,305,0,0" VerticalAlignment="Top" Click="StartAsTray_Click"/>
-        <CheckBox Name="AutoTerminate" Content="오스 종료 시 같이 종료" HorizontalAlignment="Left" Margin="348,325,0,0" VerticalAlignment="Top" Click="AutoStart_Click"/>
+        <CheckBox Name="AutoStart" Content="오스 자동실행" IsChecked="{Binding AutoStart, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Margin="348,285,0,0" VerticalAlignment="Top" />
+        <CheckBox Name="StartAsTray" Content="시작할 때 트레이로 최소화" IsChecked="{Binding StartAsTray, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Margin="348,305,0,0" VerticalAlignment="Top" />
+        <CheckBox Name="AutoTerminate" Content="오스 종료 시 같이 종료" IsChecked="{Binding AutoTerminate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Margin="348,325,0,0" VerticalAlignment="Top" />
     </Grid>
 </Window>

@@ -57,7 +57,7 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 		}
 		catch (Exception extInfo)
 		{
-			OsuDownloader.OsuHooker.LogException(extInfo);
+			OsuDownloader.MainViewModel.LogException(extInfo);
 		}
 
 		RemoteHooking.WakeUpProcess();
@@ -92,7 +92,7 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 						}
 						catch (Exception e)
 						{
-							OsuDownloader.OsuHooker.LogException(e);
+							OsuDownloader.MainViewModel.LogException(e);
 						}
 					}
 				}
@@ -100,12 +100,12 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 		}
 		catch (Exception e)
 		{
-			OsuDownloader.OsuHooker.LogException(e);
+			OsuDownloader.MainViewModel.LogException(e);
 		}
 		finally
 		{
 			DisableHook();
-			InjecteeHost.Close();
+			InjecteeHost.Abort();
 			InjecteeHost = null;
 		}
 	}
@@ -145,7 +145,7 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 		if (Callbacks.Count <= 0)
 		{
 			DisableHook();
-			// TODO: Additional cleaner code.
+			LastConnectionFaulted = true;
 		}
 	}
 
@@ -508,7 +508,7 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 		}
 		catch (Exception e)
 		{
-			OsuDownloader.OsuHooker.LogException(e);
+			OsuDownloader.MainViewModel.LogException(e);
 		}
 
 		//call original API...

@@ -120,7 +120,7 @@ static class OsuHelper
 		}
 		catch (Exception e)
 		{
-			OsuHooker.LogException(e);
+			MainViewModel.LogException(e);
 		}
 
 		return null;

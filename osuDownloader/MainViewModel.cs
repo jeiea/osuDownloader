@@ -45,7 +45,7 @@ public interface IOsuInjectee
 	bool IsHookEnabled();
 }
 
-public class OsuHooker : ICallback, INotifyPropertyChanged
+public class MainViewModel : ICallback, INotifyPropertyChanged
 {
 	static int TargetPid;
 	static IOsuInjectee InjecteeProxy;
@@ -70,10 +70,52 @@ public class OsuHooker : ICallback, INotifyPropertyChanged
 		set
 		{
 			bool isHooked = _IsHooking;
-			ToggleHook();
 			if (isHooked != _IsHooking)
 			{
 				OnPropertyChanged("IsHooking");
+			}
+		}
+	}
+
+	public bool AutoStart
+	{
+		get { return Properties.Settings.Default.AutoStart; }
+		set
+		{
+			if (AutoStart != value)
+			{
+				Properties.Settings.Default.AutoStart = value;
+				Properties.Settings.Default.Save();
+				OnPropertyChanged("AutoStart");
+			}
+		}
+	}
+
+	public bool StartAsTray
+	{
+		get { return Properties.Settings.Default.StartAsTray; }
+		set
+		{
+			if (StartAsTray != value)
+			{
+				Properties.Settings.Default.StartAsTray = value;
+				Properties.Settings.Default.Save();
+				OnPropertyChanged("StartAsTray");
+			}
+		}
+	}
+
+	bool _AutoTerminate;
+	public bool AutoTerminate
+	{
+		get { return Properties.Settings.Default.AutoTerminate; }
+		set
+		{
+			if (AutoTerminate != value)
+			{
+				Properties.Settings.Default.AutoTerminate = value;
+				Properties.Settings.Default.Save();
+				OnPropertyChanged("AutoTerminate");
 			}
 		}
 	}
@@ -108,6 +150,14 @@ public class OsuHooker : ICallback, INotifyPropertyChanged
 	}
 
 	#endregion
+
+	public MainViewModel()
+	{
+		if (AutoStart)
+		{
+			ToggleHook();
+		}
+	}
 
 	public bool ToggleHook()
 	{
@@ -164,8 +214,7 @@ public class OsuHooker : ICallback, INotifyPropertyChanged
 				TargetPid = Process.Start(osuPath).Id;
 			}
 
-			RemoteHooking.Inject(TargetPid, InjectionOptions.DoNotRequireStrongName,
-								 injectee, injectee);
+			RemoteHooking.Inject(TargetPid, InjectionOptions.DoNotRequireStrongName, injectee, injectee);
 		}
 		catch (Exception extInfo)
 		{
@@ -208,6 +257,15 @@ public class OsuHooker : ICallback, INotifyPropertyChanged
 		IsInstalled = false;
 		IsHooking = false;
 		InjecteeProxy = null;
+
+		if (AutoTerminate)
+		{
+			// BeginInvokeShutdown doesn't care OnExit() and the others.
+			Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+			{
+				Application.Current.Shutdown();
+			}));
+		}
 	}
 
 	public static void LogException(Exception extInfo)

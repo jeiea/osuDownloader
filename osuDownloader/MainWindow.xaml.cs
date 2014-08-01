@@ -25,11 +25,13 @@ public partial class MainWindow : Window
 	Hardcodet.Wpf.TaskbarNotification.TaskbarIcon Tray;
 	MenuItem ToggleHookItem;
 
-	OsuHooker Hooker = new OsuHooker();
+	MainViewModel Hooker = new MainViewModel();
 
 	public MainWindow()
 	{
 		Initialized += WindowSettings_Loaded;
+
+		this.DataContext = Hooker;
 
 		Hide();
 		InitializeComponent();
@@ -66,25 +68,10 @@ public partial class MainWindow : Window
 
 	void WindowSettings_Loaded(object sender, EventArgs e)
 	{
-		var setting = Properties.Settings.Default;
-
-		this.DataContext = Hooker;
-		AutoStart.IsChecked = setting.AutoStart;
-		StartAsTray.IsChecked = setting.StartAsTray;
-		AutoTerminate.IsChecked = setting.AutoTerminate;
-
-		if (setting.StartAsTray == false)
+		if (StartAsTray.IsChecked == false)
 		{
 			Show();
 			Activate();
-		}
-		if (setting.AutoStart)
-		{
-			Hooker.ToggleHook();
-		}
-		if (setting.AutoTerminate)
-		{
-
 		}
 	}
 

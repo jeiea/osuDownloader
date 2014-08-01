@@ -58,9 +58,14 @@
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>StrongName.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' != 'Debug|AnyCPU' And '$(Configuration)|$(Platform)' != 'Release|AnyCPU'">
-    <OutputPath>..\build\$(Configuration)\</OutputPath>
+  <PropertyGroup Condition="'$(Platform)' == 'x86'">
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Platform)' == 'AnyCPU'">
     <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' != 'Debug' And '$(Configuration)' != 'Release'">
+    <OutputPath>..\build\$(Configuration)\</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
@@ -145,7 +150,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Hooker.cs" />
+    <Compile Include="MainViewModel.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

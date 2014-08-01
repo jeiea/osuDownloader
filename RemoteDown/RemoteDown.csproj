@@ -75,26 +75,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
-  <!--   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'netfx4-Debug|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\build\netfx4-Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'netfx4-Release|AnyCPU'">
-    <OutputPath>..\build\netfx4-Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <UseVSHostingProcess>true</UseVSHostingProcess>
-  </PropertyGroup>
- -->
+
   <ItemGroup Condition="'$(Configuration)' != 'netfx3.5-Debug' And '$(Configuration)' != 'netfx3.5-Release'">
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Xaml" />
