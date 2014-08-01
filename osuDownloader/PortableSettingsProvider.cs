@@ -145,7 +145,7 @@ public class PortableSettingsProvider : SettingsProvider
 
 		catch (Exception ex)
 		{
-			if ((setting.DefaultValue != null))
+			if (setting.DefaultValue != null)
 			{
 				ret = setting.DefaultValue.ToString();
 			}

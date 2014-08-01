@@ -8,9 +8,19 @@
 
   <Var name="KeyFile" value="..\..\osuDownloader\StrongName.snk" />
   <Module file="$(InPath)\osuDownloader.exe">
+<!-- Obfuscation filtering test intention -->
+<!--     <SkipMethod type="OsuDownloader.App" rx=".*" />
+    <SkipProperty type="OsuDownloader.App" rx=".*" />
+    <SkipField type="OsuDownloader.App" rx=".*" />
+    <SkipStringHiding type="OsuDownloader.App" rx=".*" />
+    <SkipType name="OsuDownloader.App" />
+    <SkipEvent type="OsuDownloader.App" rx=".*" /> -->
+    <!-- <SkipNamespace name="OsuDownloader" /> -->
+
     <SkipProperty type="OsuDownloader.Properties.Settings" rx=".*" />
     <SkipMethod type="OsuDownloader.ICallback" rx=".*" />
     <SkipMethod type="Newtonsoft.Json.Linq.JObject" rx="TryGetValue" />
+    <SkipProperty type="OsuDownloader.MainViewModel" rx=".*" />
   </Module>
 
   <Var name="KeyFile" value="..\..\RemoteDown\StrongName.snk" />
