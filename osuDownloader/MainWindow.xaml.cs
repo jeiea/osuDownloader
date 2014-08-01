@@ -12,6 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Hardcodet.Wpf.TaskbarNotification;
+using System.Windows.Media.Animation;
 
 namespace OsuDownloader
 {
@@ -112,6 +113,8 @@ public partial class MainWindow : Window
 
 	private void BlCatBtn_Click(object sender, RoutedEventArgs e)
 	{
+		var resName = (bool)BlCatBtn.IsChecked ? "Appearing" : "Disappearing";
+		BloodcatPopup.BeginStoryboard(BloodcatPopup.Resources[resName] as Storyboard);
 	}
 
 	protected override void OnKeyDown(KeyEventArgs e)

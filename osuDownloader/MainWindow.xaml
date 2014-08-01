@@ -108,5 +108,60 @@
         <CheckBox Name="AutoStart" Content="오스 자동실행" IsChecked="{Binding AutoStart, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Margin="348,285,0,0" VerticalAlignment="Top" />
         <CheckBox Name="StartAsTray" Content="시작할 때 트레이로 최소화" IsChecked="{Binding StartAsTray, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Margin="348,305,0,0" VerticalAlignment="Top" />
         <CheckBox Name="AutoTerminate" Content="오스 종료 시 같이 종료" IsChecked="{Binding AutoTerminate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Margin="348,325,0,0" VerticalAlignment="Top" />
+
+        <GroupBox Name="BloodcatPopup" Visibility="Collapsed" Margin="31,150,256,77" >
+            <GroupBox.Background>
+                <SolidColorBrush Color="Black" Opacity="0.3"/>
+            </GroupBox.Background>
+            <GroupBox.RenderTransform>
+                <TranslateTransform/>
+            </GroupBox.RenderTransform>
+            <GroupBox.Resources>
+                <Storyboard x:Key="Appearing">
+                    <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:0">
+                            <DiscreteObjectKeyFrame.Value>
+                                <Visibility>Visible</Visibility>
+                            </DiscreteObjectKeyFrame.Value>
+                        </DiscreteObjectKeyFrame>
+                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation Storyboard.TargetProperty="RenderTransform.X" From="-15" To="0" Duration="0:0:0.3"/>
+                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.3"/>
+                </Storyboard>
+                <Storyboard x:Key="Disappearing">
+                    <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:0.3">
+                            <DiscreteObjectKeyFrame.Value>
+                                <Visibility>Collapsed</Visibility>
+                            </DiscreteObjectKeyFrame.Value>
+                        </DiscreteObjectKeyFrame>
+                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation Storyboard.TargetProperty="RenderTransform.X" To="-15" Duration="0:0:0.3"/>
+                    <DoubleAnimation Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.3"/>
+                </Storyboard>
+            </GroupBox.Resources>
+            <StackPanel>
+                <StackPanel.Style>
+                    <Style>
+                        <Setter Property="TextElement.Foreground" Value="White"/>
+                    </Style>
+                </StackPanel.Style>
+                <TextBlock FontSize="27" Text="Bloodcat 설정" HorizontalAlignment="Center"/>
+                <GroupBox Header="배경그림">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <RadioButton Foreground="White" Margin="3,0" Content="그대로 두기" IsChecked="True"/>
+                        <RadioButton Foreground="White" Margin="3,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="단색"/>
+                                <Rectangle Fill="Black" Margin="2,0,0,0" Width="14" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton Foreground="White" Margin="3,0" Content="지우기" />
+                    </StackPanel>
+                </GroupBox>
+                <CheckBox Foreground="White" Margin="0,5" Content="동영상/스토리보드 지우기"/>
+                <CheckBox Foreground="White" Content="스킨 지우기"/>
+            </StackPanel>
+        </GroupBox>
     </Grid>
 </Window>
