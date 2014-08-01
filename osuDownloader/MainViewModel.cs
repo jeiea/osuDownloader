@@ -268,6 +268,11 @@ public class MainViewModel : ICallback, INotifyPropertyChanged
 				Application.Current.Shutdown();
 			}));
 		}
+
+		_IsHooking = false;
+		_IsInstalled = false;
+		OnPropertyChanged("IsInstalled");
+		OnPropertyChanged("IsHooking");
 	}
 
 	public static void LogException(Exception extInfo)
