@@ -53,7 +53,7 @@ public enum BloodcatWallpaperOption { NoTouch, SolidColor, ReplaceWithPicture, R
 public class BloodcatDownloadOption
 {
 	public BloodcatWallpaperOption Background = BloodcatWallpaperOption.NoTouch;
-	public System.Windows.Media.Color BackgroundColor;
+	public System.Windows.Media.Color BackgroundColor = System.Windows.Media.Colors.Black;
 	public bool RemoveVideoAndStoryboard;
 	public bool RemoveSkin;
 }
@@ -97,7 +97,6 @@ public class MainViewModel : ICallback, INotifyPropertyChanged
 			if (AutoStart != value)
 			{
 				Properties.Settings.Default.AutoStart = value;
-				Properties.Settings.Default.Save();
 				OnPropertyChanged("AutoStart");
 			}
 		}
@@ -111,7 +110,6 @@ public class MainViewModel : ICallback, INotifyPropertyChanged
 			if (StartAsTray != value)
 			{
 				Properties.Settings.Default.StartAsTray = value;
-				Properties.Settings.Default.Save();
 				OnPropertyChanged("StartAsTray");
 			}
 		}
@@ -125,7 +123,6 @@ public class MainViewModel : ICallback, INotifyPropertyChanged
 			if (AutoTerminate != value)
 			{
 				Properties.Settings.Default.AutoTerminate = value;
-				Properties.Settings.Default.Save();
 				OnPropertyChanged("AutoTerminate");
 			}
 		}
@@ -139,6 +136,10 @@ public class MainViewModel : ICallback, INotifyPropertyChanged
 		{
 			_BloodcatOption = value;
 			OnPropertyChanged("BloodcatOption");
+			if (InjecteeProxy != null)
+			{
+				InjecteeProxy.OptionChanged(_BloodcatOption);
+			}
 		}
 	}
 
@@ -181,6 +182,7 @@ public class MainViewModel : ICallback, INotifyPropertyChanged
 
 	public MainViewModel()
 	{
+		_BloodcatOption = new BloodcatDownloadOption();
 		if (AutoStart)
 		{
 			ToggleHook();

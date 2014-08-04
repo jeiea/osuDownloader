@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:tb="clr-namespace:Hardcodet.Wpf.TaskbarNotification"
+        xmlns:local="clr-namespace:OsuDownloader"
         Title="Osu Beatmap Downloader" Height="350" Width="525" SnapsToDevicePixels="True"
         WindowStyle="None" ResizeMode="NoResize" x:Name="Win">
     <Window.Background>
@@ -81,7 +82,7 @@
             </Viewbox>
         </ToggleButton>
         <ToggleButton Name="OsuBtn" Template="{StaticResource ImageToggleButon}"
-                      Margin="264,6,151,230" RenderTransformOrigin="0.5,0.5">
+                      Margin="264,6,151,230" RenderTransformOrigin="0.5,0.5" Click="OsuBtn_Click">
             <ToggleButton.RenderTransform>
                 <TransformGroup>
                     <ScaleTransform/>
@@ -139,6 +140,7 @@
                     <DoubleAnimation Storyboard.TargetProperty="RenderTransform.X" To="-15" Duration="0:0:0.3"/>
                     <DoubleAnimation Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.3"/>
                 </Storyboard>
+                <local:BloodcatDownOptionConverter x:Key="BloodcatConverter"/>
             </GroupBox.Resources>
             <StackPanel>
                 <StackPanel.Style>
@@ -149,18 +151,32 @@
                 <TextBlock FontSize="27" Text="Bloodcat 설정" HorizontalAlignment="Center"/>
                 <GroupBox Header="배경그림">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <RadioButton Foreground="White" Margin="3,0" Content="그대로 두기" IsChecked="True"/>
-                        <RadioButton Foreground="White" Margin="3,0">
+                        <RadioButton Name="NoTouch" Foreground="White" Margin="3,0" Content="그대로 두기"
+                                     IsChecked="{Binding BloodcatOption, Converter={StaticResource BloodcatConverter},
+                                                         UpdateSourceTrigger=PropertyChanged, ConverterParameter=NoTouch}" />
+                        <RadioButton Name="SolidColor" Foreground="White" Margin="3,0"
+                                     IsChecked="{Binding BloodcatOption, Converter={StaticResource BloodcatConverter},
+                                                         UpdateSourceTrigger=PropertyChanged, ConverterParameter=SolidColor}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="단색"/>
-                                <Rectangle Fill="Black" Margin="2,0,0,0" Width="14" />
+                                <Rectangle Name="ColorBrush" Margin="2,0,0,0" Width="14"
+                                           Fill="{Binding BloodcatOption, Converter={StaticResource BloodcatConverter},
+                                    ConverterParameter=ColorBrush, UpdateSourceTrigger=PropertyChanged}"
+                                           MouseLeftButtonDown="ColorBrush_MouseLeftButtonDown"/>
                             </StackPanel>
                         </RadioButton>
-                        <RadioButton Foreground="White" Margin="3,0" Content="지우기" />
+                        <RadioButton Name="RemoveBackground" Foreground="White" Margin="3,0" Content="지우기" Validation.ErrorTemplate="{x:Null}" 
+                                     IsChecked="{Binding BloodcatOption, Converter={StaticResource BloodcatConverter},
+                            ConverterParameter=RemoveBackground, UpdateSourceTrigger=PropertyChanged}"/>
                     </StackPanel>
                 </GroupBox>
-                <CheckBox Foreground="White" Margin="0,5" Content="동영상/스토리보드 지우기"/>
-                <CheckBox Foreground="White" Content="스킨 지우기"/>
+                <CheckBox Name="RemoveVideoAndStoryboard" Foreground="White" Validation.ErrorTemplate="{x:Null}" Margin="0,5"
+                          Content="동영상/스토리보드 지우기" IsChecked="{Binding BloodcatOption,
+                    Converter={StaticResource BloodcatConverter}, ConverterParameter=RemoveVideoAndStoryboard,
+                    UpdateSourceTrigger=PropertyChanged}"/>
+                <CheckBox Name="RemoveSkin" Foreground="White" Validation.ErrorTemplate="{x:Null}" Content="스킨 지우기" IsChecked="{Binding
+                    BloodcatOption, Converter={StaticResource BloodcatConverter}, ConverterParameter=RemoveSkin,
+                    UpdateSourceTrigger=PropertyChanged}"/>
             </StackPanel>
         </GroupBox>
     </Grid>

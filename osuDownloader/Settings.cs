@@ -20,16 +20,12 @@ internal sealed partial class Settings
 		//
 		// this.SettingsSaving += this.SettingsSavingEventHandler;
 		//
+		PropertyChanged += Settings_PropertyChanged;
 	}
 
-	private void SettingChangingEventHandler(object sender, System.Configuration.SettingChangingEventArgs e)
+	void Settings_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
 	{
-		// Add code to handle the SettingChangingEvent event here.
-	}
-
-	private void SettingsSavingEventHandler(object sender, System.ComponentModel.CancelEventArgs e)
-	{
-		// Add code to handle the SettingsSaving event here.
+		Save();
 	}
 }
 }

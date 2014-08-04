@@ -14,6 +14,7 @@ using System.Runtime.Remoting.Channels.Ipc;
 using System.Runtime.Serialization.Formatters;
 using System.ServiceModel;
 using System.ComponentModel;
+using System.Text.RegularExpressions;
 
 namespace OsuDownloader
 {
@@ -33,7 +34,8 @@ public class OsuInjectee : OsuDownloader.IOsuInjectee, EasyHook.IEntryPoint
 
 	ServiceHost InjecteeHost;
 	List<OsuDownloader.ICallback> Callbacks = new List<OsuDownloader.ICallback>();
-	OsuDownloader.BloodcatDownloadOption BloodcatOption = new OsuDownloader.BloodcatDownloadOption();
+
+	BloodcatDownloadOption BloodcatOption = new BloodcatDownloadOption();
 
 	/// <summary>   This is used to determine whether received no connection. </summary>
 	bool LastConnectionFaulted;
@@ -228,7 +230,7 @@ public class OsuInjectee : OsuDownloader.IOsuInjectee, EasyHook.IEntryPoint
 	///
 	/// <param name="request"> Official beatmap thread url or bloodcat.com beatmap url. </param>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	private static void BloodcatDownload(string request)
+	private void BloodcatDownload(string request)
 	{
 		const string BloodcatDownloadUrl = "http://bloodcat.com/osu/m/";
 
@@ -279,12 +281,17 @@ public class OsuInjectee : OsuDownloader.IOsuInjectee, EasyHook.IEntryPoint
 		DownloadAndExecuteOsz(BloodcatDownloadUrl + beatmapId);
 	}
 
-	private static void DownloadAndExecuteOsz(string url)
+	private void DownloadAndExecuteOsz(string url)
 	{
 		HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+
+		ApplyBloodcatOption(request);
+
 		HttpWebResponse res = (HttpWebResponse)request.GetResponse();
+
+		// TODO: It must be SID Artist - Title format for avoiding duplication.
 		string disposition = res.Headers["Content-Disposition"] != null ?
-							 res.Headers["Content-Disposition"].Replace("attachment; filename=", "").Replace("\"", "") :
+							 Regex.Match(res.Headers["Content-Disposition"], "filename\\s*=\\s*\"(.*?)\"").Groups[1].ToString() :
 							 res.Headers["Location"] != null ? Path.GetFileName(res.Headers["Location"]) :
 							 Path.GetFileName(url).Contains('?') || Path.GetFileName(url).Contains('=') ?
 							 Path.GetFileName(res.ResponseUri.ToString()) : url.GetHashCode() + ".osz";
@@ -331,6 +338,38 @@ public class OsuInjectee : OsuDownloader.IOsuInjectee, EasyHook.IEntryPoint
 			string destPath = pathElements.Aggregate(Path.Combine);
 			File.Move(downloadPath, destPath);
 		}
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>   Add cookie which describe download manipulation option. </summary>
+	///
+	/// <param name="request">  WebRequest to use. </param>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	private void ApplyBloodcatOption(HttpWebRequest request)
+	{
+		StringBuilder cookieJson = new StringBuilder(100);
+		cookieJson.Append("{\"direct\":false,\"droid\":false,\"bg\":");
+		switch (BloodcatOption.Background)
+		{
+		case BloodcatWallpaperOption.RemoveBackground:
+			cookieJson.Append("\"delete\"");
+			break;
+		case BloodcatWallpaperOption.SolidColor:
+			cookieJson.Append("\"color\"");
+			break;
+		default:
+			cookieJson.Append("false");
+			break;
+		}
+		cookieJson.Append(",\"video\":");
+		cookieJson.Append(BloodcatOption.RemoveVideoAndStoryboard ? "true" : "false");
+		cookieJson.Append(",\"skin\":");
+		cookieJson.Append(BloodcatOption.RemoveSkin ? "true" : "false");
+		cookieJson.Append('}');
+
+		var downloadOption = new Cookie("DLOPT", Uri.EscapeDataString(cookieJson.ToString()), "/", "bloodcat.com");
+		request.CookieContainer = new CookieContainer();
+		request.CookieContainer.Add(downloadOption);
 	}
 
 

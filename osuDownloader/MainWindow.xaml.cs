@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Hardcodet.Wpf.TaskbarNotification;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,11 +9,10 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using Hardcodet.Wpf.TaskbarNotification;
-using System.Windows.Media.Animation;
 
 namespace OsuDownloader
 {
@@ -22,6 +22,7 @@ namespace OsuDownloader
 public partial class MainWindow : Window
 {
 	/// <summary>   The timer which check hooking is enabled. </summary>
+	public static MainWindow InUseWindow;
 
 	Hardcodet.Wpf.TaskbarNotification.TaskbarIcon Tray;
 	MenuItem ToggleHookItem;
@@ -30,7 +31,8 @@ public partial class MainWindow : Window
 
 	public MainWindow()
 	{
-		Initialized += WindowSettings_Loaded;
+		InUseWindow = this;
+		Initialized += Window_Loaded;
 
 		this.DataContext = Hooker;
 
@@ -67,7 +69,7 @@ public partial class MainWindow : Window
 		#endregion
 	}
 
-	void WindowSettings_Loaded(object sender, EventArgs e)
+	void Window_Loaded(object sender, EventArgs e)
 	{
 		if (StartAsTray.IsChecked == false)
 		{
@@ -153,16 +155,99 @@ public partial class MainWindow : Window
 		ToggleHookItem.Header = Hooker.IsHooking ? "끄기" : "켜기";
 	}
 
-	private void AutoStart_Click(object sender, RoutedEventArgs e)
+	private void OsuBtn_Click(object sender, RoutedEventArgs e)
 	{
-		Properties.Settings.Default["AutoStart"] = AutoStart.IsChecked ?? false;
-		Properties.Settings.Default.Save();
 	}
 
-	private void StartAsTray_Click(object sender, RoutedEventArgs e)
+	private void ColorBrush_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
 	{
-		Properties.Settings.Default["StartAsTray"] = StartAsTray.IsChecked ?? false;
-		Properties.Settings.Default.Save();
+		var dlg = new System.Windows.Forms.ColorDialog();
+		dlg.AllowFullOpen = true;
+		var color = Hooker.BloodcatOption.BackgroundColor;
+		dlg.Color = System.Drawing.Color.FromArgb(color.A, color.R, color.G, color.B);
+
+		if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+		{
+			var col = dlg.Color;
+			color = System.Windows.Media.Color.FromArgb(col.A, col.R, col.G, col.B);
+			Hooker.BloodcatOption.BackgroundColor = color;
+			// Invoke changed event
+			Hooker.BloodcatOption = Hooker.BloodcatOption;
+		}
+	}
+}
+
+public class BloodcatDownOptionConverter : IValueConverter
+{
+	public object Convert(object value, Type targetType, object parameter,
+						  System.Globalization.CultureInfo culture)
+	{
+		BloodcatDownloadOption option = value as BloodcatDownloadOption;
+		if (parameter == null || option == null)
+		{
+			return false;
+		}
+
+		switch (parameter as string)
+		{
+		case "NoTouch":
+			return option.Background == BloodcatWallpaperOption.NoTouch;
+		case "SolidColor":
+			return option.Background == BloodcatWallpaperOption.SolidColor;
+		case "RemoveBackground":
+			return option.Background == BloodcatWallpaperOption.RemoveBackground;
+		case "ColorBrush":
+			return new SolidColorBrush(option.BackgroundColor);
+		case "RemoveSkin":
+			return option.RemoveSkin;
+		case "RemoveVideoAndStoryboard":
+			return option.RemoveVideoAndStoryboard;
+		}
+
+		throw new Exception("Not expected download option.");
+	}
+
+	public object ConvertBack(object value, Type targetType, object parameter,
+							  System.Globalization.CultureInfo culture)
+	{
+		BloodcatDownloadOption option = new BloodcatDownloadOption();
+
+		var window = MainWindow.InUseWindow;
+		if (window.NoTouch.IsChecked ?? false)
+		{ }
+		else if (window.SolidColor.IsChecked ?? false)
+		{
+			var brush = window.ColorBrush.Fill as SolidColorBrush;
+			option.BackgroundColor = brush.Color;
+		}
+		else if (window.RemoveBackground.IsChecked ?? false)
+		{
+			option.Background = BloodcatWallpaperOption.RemoveBackground;
+		}
+
+		option.RemoveVideoAndStoryboard = window.RemoveVideoAndStoryboard.IsChecked ?? false;
+		option.RemoveSkin = window.RemoveSkin.IsChecked ?? false;
+
+		switch (parameter as string)
+		{
+		case "NoTouch":
+			option.Background = BloodcatWallpaperOption.NoTouch;
+			break;
+		case "SolidColor":
+			option.Background = BloodcatWallpaperOption.SolidColor;
+			break;
+		case "RemoveBackground":
+			option.Background = BloodcatWallpaperOption.RemoveBackground;
+			break;
+		case "RemoveSkin":
+			option.RemoveSkin = (bool)value;
+			break;
+		case "RemoveVideoAndStoryboard":
+			option.RemoveVideoAndStoryboard = (bool)value;
+			break;
+		}
+
+		return option;
 	}
 }
 }
