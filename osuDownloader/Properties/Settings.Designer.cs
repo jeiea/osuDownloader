@@ -82,42 +82,29 @@ namespace OsuDownloader.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Configuration.SettingsProviderAttribute(typeof(PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("NoTouch")]
+        [global::System.Configuration.DefaultSettingValueAttribute(@"<?xml version=""1.0"" encoding=""utf-16""?>
+<BloodcatDownloadOption xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"">
+  <Background>NoTouch</Background>
+  <BackgroundColor>
+    <A>255</A>
+    <R>0</R>
+    <G>0</G>
+    <B>0</B>
+    <ScA>1</ScA>
+    <ScR>0</ScR>
+    <ScG>0</ScG>
+    <ScB>0</ScB>
+  </BackgroundColor>
+  <RemoveVideoAndStoryboard>false</RemoveVideoAndStoryboard>
+  <RemoveSkin>false</RemoveSkin>
+</BloodcatDownloadOption>")]
         [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public string BDOptBackground {
+        public global::OsuDownloader.BloodcatDownloadOption BloodcatOption {
             get {
-                return ((string)(this["BDOptBackground"]));
+                return ((global::OsuDownloader.BloodcatDownloadOption)(this["BloodcatOption"]));
             }
             set {
-                this["BDOptBackground"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Configuration.SettingsProviderAttribute(typeof(PortableSettingsProvider))]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public bool BDOptRemoveVideo {
-            get {
-                return ((bool)(this["BDOptRemoveVideo"]));
-            }
-            set {
-                this["BDOptRemoveVideo"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Configuration.SettingsProviderAttribute(typeof(PortableSettingsProvider))]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public bool BDOptRemoveSkin {
-            get {
-                return ((bool)(this["BDOptRemoveSkin"]));
-            }
-            set {
-                this["BDOptRemoveSkin"] = value;
+                this["BloodcatOption"] = value;
             }
         }
     }

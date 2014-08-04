@@ -160,7 +160,6 @@ public class PortableSettingsProvider : SettingsProvider
 
 	private void SetValue(SettingsPropertyValue propVal)
 	{
-
 		XmlElement MachineNode = default(XmlElement);
 		XmlElement SettingNode = default(XmlElement);
 
@@ -184,7 +183,7 @@ public class PortableSettingsProvider : SettingsProvider
 		}
 
 		//Check to see if the node exists, if so then set its new value
-		if ((SettingNode != null))
+		if (SettingNode != null)
 		{
 			SettingNode.InnerText = propVal.SerializedValue.ToString();
 		}
@@ -192,18 +191,17 @@ public class PortableSettingsProvider : SettingsProvider
 		{
 			if (IsRoaming(propVal.Property))
 			{
-				//Store the value as an element of the Settings Root Node
+				// Store the value as an element of the Settings Root Node
 				SettingNode = SettingsXML.CreateElement(propVal.Name);
 				SettingNode.InnerText = propVal.SerializedValue.ToString();
 				SettingsXML.SelectSingleNode(SETTINGSROOT).AppendChild(SettingNode);
 			}
 			else
 			{
-				//Its machine specific, store as an element of the machine name node,
-				//creating a new machine name node if one doesnt exist.
+				// Its machine specific, store as an element of the machine name node,
+				// creating a new machine name node if one doesn't exist.
 				try
 				{
-
 					MachineNode = (XmlElement)SettingsXML.SelectSingleNode(SETTINGSROOT + "/" + Environment.MachineName);
 				}
 				catch (Exception ex)

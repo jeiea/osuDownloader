@@ -11,6 +11,7 @@ using System.IO;
 using System.Threading;
 using System.ServiceModel;
 using System.ComponentModel;
+using System.Xml;
 
 namespace OsuDownloader
 {
@@ -128,17 +129,16 @@ public class MainViewModel : ICallback, INotifyPropertyChanged
 		}
 	}
 
-	BloodcatDownloadOption _BloodcatOption;
 	public BloodcatDownloadOption BloodcatOption
 	{
-		get { return _BloodcatOption; }
+		get { return Properties.Settings.Default.BloodcatOption; }
 		set
 		{
-			_BloodcatOption = value;
+			Properties.Settings.Default.BloodcatOption = value;
 			OnPropertyChanged("BloodcatOption");
 			if (InjecteeProxy != null)
 			{
-				InjecteeProxy.OptionChanged(_BloodcatOption);
+				InjecteeProxy.OptionChanged(Properties.Settings.Default.BloodcatOption);
 			}
 		}
 	}
@@ -182,7 +182,6 @@ public class MainViewModel : ICallback, INotifyPropertyChanged
 
 	public MainViewModel()
 	{
-		_BloodcatOption = new BloodcatDownloadOption();
 		if (AutoStart)
 		{
 			ToggleHook();

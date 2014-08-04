@@ -4,27 +4,43 @@
   <Var name="OutPath" value=".\Obfuscar" />
   <Var name="KeepPublicApi" value="false" />
   <Var name="HidePrivateApi" value="true" />
-  <Var name="ReuseNames" value="false" />
 
-  <Var name="KeyFile" value="..\..\osuDownloader\StrongName.snk" />
+  <!-- <Var name="KeyFile" value="..\..\osuDownloader\StrongName.snk" /> -->
   <Module file="$(InPath)\osuDownloader.exe">
-<!-- Obfuscation filtering test intention -->
-<!--     <SkipMethod type="OsuDownloader.App" rx=".*" />
-    <SkipProperty type="OsuDownloader.App" rx=".*" />
-    <SkipField type="OsuDownloader.App" rx=".*" />
-    <SkipStringHiding type="OsuDownloader.App" rx=".*" />
-    <SkipType name="OsuDownloader.App" />
-    <SkipEvent type="OsuDownloader.App" rx=".*" /> -->
-    <!-- <SkipNamespace name="OsuDownloader" /> -->
-
-    <SkipProperty type="OsuDownloader.Properties.Settings" rx=".*" />
-    <SkipMethod type="OsuDownloader.ICallback" rx=".*" />
-    <SkipMethod type="Newtonsoft.Json.Linq.JObject" rx="TryGetValue" />
+  <!-- Obfuscation filtering test intention -->
+  <!--<SkipMethod type="OsuDownloader.MainViewModel" rx=".*" />
     <SkipProperty type="OsuDownloader.MainViewModel" rx=".*" />
+    <SkipField type="OsuDownloader.MainViewModel" rx=".*" />
+    <SkipStringHiding type="OsuDownloader.MainViewModel" rx=".*" />
+    <SkipType name="OsuDownloader.MainViewModel" />
+    <SkipEvent type="OsuDownloader.MainViewModel" rx=".*" /> -->
+  <!--<SkipNamespace name="OsuDownloader" /> -->
+
+    <!-- Exported as xml serialized settings file. -->
+    <SkipType name="OsuDownloader.BloodcatDownloadOption" />
+    <SkipField type="OsuDownloader.BloodcatDownloadOption" rx=".*" />
+
+    <!-- Included in BloodcatDownloadOption -->
+    <SkipType name="OsuDownloader.BloodcatWallpaperOption" />
+    <SkipField type="OsuDownloader.BloodcatWallpaperOption" rx=".*" />
+
+    <!-- Used in xaml binding. -->
+    <SkipType name="OsuDownloader.BloodcatDownOptionConverter" />
+    <SkipMethod type="OsuDownloader.BloodcatDownOptionConverter" rx=".*" />
+
+    <!-- Perperty name is inevitable. -->
+    <SkipProperty type="OsuDownloader.Properties.Settings" rx=".*" />
+
+    <!-- WCF Callback method name should be correspondant. -->
+    <SkipMethod type="OsuDownloader.ICallback" rx=".*" />
+
+    <!-- Xaml binding properties. -->
+    <SkipProperty type="OsuDownloader.MainViewModel" rx=".*" />
+
+    <!-- Easyhook entrypoint. -->
+    <SkipMethod type="OsuDownloader.OsuInjectee" rx="Run" />
+
+    <SkipMethod type="Newtonsoft.Json.Linq.JObject" rx="TryGetValue" />
   </Module>
 
-  <Var name="KeyFile" value="..\..\RemoteDown\StrongName.snk" />
-  <Module file="$(InPath)\RemoteDown.dll">
-    <SkipMethod type="RemoteDown.OsuInjectee" rx="Run" />
-  </Module>
 </Obfuscator>

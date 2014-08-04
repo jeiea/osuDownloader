@@ -165,16 +165,16 @@
                                            MouseLeftButtonDown="ColorBrush_MouseLeftButtonDown"/>
                             </StackPanel>
                         </RadioButton>
-                        <RadioButton Name="RemoveBackground" Foreground="White" Margin="3,0" Content="지우기" Validation.ErrorTemplate="{x:Null}" 
+                        <RadioButton Name="RemoveBackground" Foreground="White" Margin="3,0" Content="지우기"
                                      IsChecked="{Binding BloodcatOption, Converter={StaticResource BloodcatConverter},
                             ConverterParameter=RemoveBackground, UpdateSourceTrigger=PropertyChanged}"/>
                     </StackPanel>
                 </GroupBox>
-                <CheckBox Name="RemoveVideoAndStoryboard" Foreground="White" Validation.ErrorTemplate="{x:Null}" Margin="0,5"
+                <CheckBox Name="RemoveVideoAndStoryboard" Foreground="White" Margin="0,5"
                           Content="동영상/스토리보드 지우기" IsChecked="{Binding BloodcatOption,
                     Converter={StaticResource BloodcatConverter}, ConverterParameter=RemoveVideoAndStoryboard,
                     UpdateSourceTrigger=PropertyChanged}"/>
-                <CheckBox Name="RemoveSkin" Foreground="White" Validation.ErrorTemplate="{x:Null}" Content="스킨 지우기" IsChecked="{Binding
+                <CheckBox Name="RemoveSkin" Foreground="White" Content="스킨 지우기" IsChecked="{Binding
                     BloodcatOption, Converter={StaticResource BloodcatConverter}, ConverterParameter=RemoveSkin,
                     UpdateSourceTrigger=PropertyChanged}"/>
             </StackPanel>
