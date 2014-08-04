@@ -56,7 +56,7 @@
     <ApplicationIcon>osuIcon.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>StrongName.snk</AssemblyOriginatorKeyFile>
+    <!-- <AssemblyOriginatorKeyFile>StrongName.snk</AssemblyOriginatorKeyFile> -->
   </PropertyGroup>
   <PropertyGroup Condition="'$(Platform)' == 'x86'">
     <PlatformTarget>x86</PlatformTarget>
@@ -137,6 +137,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="BackEnd.cs" />
+    <Compile Include="IncompleteSettingsProvider.cs" />
     <Compile Include="Settings.cs" />
     <Page Include="pic\BloodCat.xaml">
       <SubType>Designer</SubType>
@@ -465,7 +467,6 @@
   <Target Name="BeforeBuild">
   </Target>-->
   <Target Name="AfterBuild">
-    <MSBuild Projects="..\RemoteDown\RemoteDown.csproj" />
     <CallTarget Condition="'$(Configuration)' == 'netfx3.5-Release' Or '$(Configuration)' == 'netfx4.0-Release' Or '$(Configuration)' == 'netfx4.5-Release'" Targets="Obfuscation" />
   </Target>
   <Target Name="Obfuscation">

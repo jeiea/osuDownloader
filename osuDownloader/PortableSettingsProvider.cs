@@ -45,23 +45,24 @@ public class PortableSettingsProvider : SettingsProvider
 	{
 		get { return "PortableSettingsProvider"; }
 	}
+
 	public virtual string GetAppSettingsPath()
 	{
-		//Used to determine where to store the settings
+		// Used to determine where to store the settings
 		System.IO.FileInfo fi = new System.IO.FileInfo(Application.ExecutablePath);
 		return fi.DirectoryName;
 	}
 
 	public virtual string GetAppSettingsFilename()
 	{
-		//Used to determine the filename to store the settings
+		// Used to determine the filename to store the settings
 		return ApplicationName + ".settings";
 	}
 
 	public override void SetPropertyValues(SettingsContext context, SettingsPropertyValueCollection propvals)
 	{
-		//Iterate through the settings to be stored
-		//Only dirty settings are included in propvals, and only ones relevant to this provider
+		// Iterate through the settings to be stored
+		// Only dirty settings are included in propvals, and only ones relevant to this provider
 		foreach (SettingsPropertyValue propval in propvals)
 		{
 			SetValue(propval);
@@ -74,18 +75,17 @@ public class PortableSettingsProvider : SettingsProvider
 		catch (Exception ex)
 		{
 		}
-		//Ignore if cant save, device been ejected
+		// Ignore if cant save, device been ejected
 	}
 
 	public override SettingsPropertyValueCollection GetPropertyValues(SettingsContext context, SettingsPropertyCollection props)
 	{
-		//Create new collection of values
+		// Create new collection of values
 		SettingsPropertyValueCollection values = new SettingsPropertyValueCollection();
 
-		//Iterate through the settings to be retrieved
+		// Iterate through the settings to be retrieved
 		foreach (SettingsProperty setting in props)
 		{
-
 			SettingsPropertyValue value = new SettingsPropertyValue(setting);
 			value.IsDirty = false;
 			value.SerializedValue = GetValue(setting);

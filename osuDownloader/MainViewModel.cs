@@ -25,8 +25,7 @@ public interface ICallback
 }
 
 /// <summary>   Interface for osu injectee. </summary>
-[ServiceContract(SessionMode = SessionMode.Required,
-				 CallbackContract = typeof(ICallback))]
+[ServiceContract(SessionMode = SessionMode.Required, CallbackContract = typeof(ICallback))]
 public interface IOsuInjectee
 {
 	[OperationContract(IsOneWay = true)]
@@ -41,8 +40,22 @@ public interface IOsuInjectee
 	[OperationContract(IsOneWay = true)]
 	void DisableHook();
 
+	[OperationContract(IsOneWay = true)]
+	void OptionChanged(BloodcatDownloadOption option);
+
 	[OperationContract]
 	bool IsHookEnabled();
+}
+
+/// <summary>   Wallpaper download option at bloodcat.com. </summary>
+public enum BloodcatWallpaperOption { NoTouch, SolidColor, ReplaceWithPicture, RemoveBackground }
+
+public class BloodcatDownloadOption
+{
+	public BloodcatWallpaperOption Background = BloodcatWallpaperOption.NoTouch;
+	public System.Windows.Media.Color BackgroundColor;
+	public bool RemoveVideoAndStoryboard;
+	public bool RemoveSkin;
 }
 
 public class MainViewModel : ICallback, INotifyPropertyChanged
@@ -115,6 +128,17 @@ public class MainViewModel : ICallback, INotifyPropertyChanged
 				Properties.Settings.Default.Save();
 				OnPropertyChanged("AutoTerminate");
 			}
+		}
+	}
+
+	BloodcatDownloadOption _BloodcatOption;
+	public BloodcatDownloadOption BloodcatOption
+	{
+		get { return _BloodcatOption; }
+		set
+		{
+			_BloodcatOption = value;
+			OnPropertyChanged("BloodcatOption");
 		}
 	}
 
@@ -218,7 +242,7 @@ public class MainViewModel : ICallback, INotifyPropertyChanged
 				TargetPid = Process.Start(osuPath).Id;
 			}
 
-			RemoteHooking.Inject(TargetPid, InjectionOptions.DoNotRequireStrongName, injectee, injectee);
+			RemoteHooking.Inject(TargetPid, InjectionOptions.DoNotRequireStrongName, "osuDownloader.exe", injectee);
 		}
 		catch (Exception extInfo)
 		{

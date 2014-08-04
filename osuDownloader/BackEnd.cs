@@ -15,11 +15,11 @@ using System.Runtime.Serialization.Formatters;
 using System.ServiceModel;
 using System.ComponentModel;
 
-namespace RemoteDown
+namespace OsuDownloader
 {
 
 [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
-public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
+public class OsuInjectee : OsuDownloader.IOsuInjectee, EasyHook.IEntryPoint
 {
 	static string DownloadDir = "C:\\";
 
@@ -33,6 +33,7 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 
 	ServiceHost InjecteeHost;
 	List<OsuDownloader.ICallback> Callbacks = new List<OsuDownloader.ICallback>();
+	OsuDownloader.BloodcatDownloadOption BloodcatOption = new OsuDownloader.BloodcatDownloadOption();
 
 	/// <summary>   This is used to determine whether received no connection. </summary>
 	bool LastConnectionFaulted;
@@ -51,6 +52,7 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 	public void Run(RemoteHooking.IContext context)
 	{
 		HookingThreadId = (int)GetCurrentThreadId();
+
 		try
 		{
 			EnableHook();
@@ -108,6 +110,11 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 			InjecteeHost.Abort();
 			InjecteeHost = null;
 		}
+	}
+
+	void watcher_Changed(object sender, FileSystemEventArgs e)
+	{
+		Properties.Settings.Default.Reload();
 	}
 
 	#region WCF Implementation
@@ -191,6 +198,11 @@ public class OsuInjectee : EasyHook.IEntryPoint, OsuDownloader.IOsuInjectee
 		ShowWindowHook.ThreadACL.SetExclusiveACL(new int[] { HookingThreadId });
 
 		NotifyHookSwitch();
+	}
+
+	public void OptionChanged(OsuDownloader.BloodcatDownloadOption option)
+	{
+		BloodcatOption = option;
 	}
 
 	void NotifyHookSwitch()
@@ -541,5 +553,4 @@ static class CompatibilityHelper
 	}
 }
 #endif
-
 }
