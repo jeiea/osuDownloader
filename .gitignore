@@ -1,5 +1,8 @@
 ## Compilation .gitignore file for MSVC
 
+# User custom
+packages/
+
 #OS junk files
 [Tt]humbs.db
 *.DS_Store
