@@ -31,8 +31,9 @@
     <!-- Perperty name is inevitable. -->
     <SkipProperty type="OsuDownloader.Properties.Settings" rx=".*" />
 
-    <!-- WCF Callback method name should be correspondant. -->
+    <!-- WCF method name should be correspondant. -->
     <SkipMethod type="OsuDownloader.ICallback" rx=".*" />
+    <SkipMethod type="OsuDownloader.IOsuInjectee" rx=".*" />
 
     <!-- Xaml binding properties. -->
     <SkipProperty type="OsuDownloader.MainViewModel" rx=".*" />
