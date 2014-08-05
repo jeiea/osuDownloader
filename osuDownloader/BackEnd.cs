@@ -17,6 +17,7 @@ using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
+using System.Windows;
 
 namespace OsuDownloader
 {
@@ -51,7 +52,16 @@ public class OsuInjectee : IOsuInjectee, EasyHook.IEntryPoint
 	static string AlternativeImage;
 	/// <summary>   The alternative storyboard file path for boss mode. </summary>
 	static string AlternativeStoryboard;
+	/// <summary>   The alternative black screen video path for boss mode. </summary>
 	static string AlternativeVideo;
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>
+	/// The requested beatmap list to determine whether or not clicked before. It's used at force
+	/// download.
+	/// </summary>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	Dictionary<int, DateTime> requestedBeatmaps = new Dictionary<int, DateTime>();
 
 	static Regex SkinNames;
 
@@ -77,6 +87,12 @@ public class OsuInjectee : IOsuInjectee, EasyHook.IEntryPoint
 
 	public void Run(RemoteHooking.IContext context)
 	{
+		AppDomain currentDomain = AppDomain.CurrentDomain;
+		currentDomain.AssemblyResolve += (sender, args) =>
+		{
+			return this.GetType().Assembly.FullName == args.Name ? this.GetType().Assembly : null;
+		};
+
 		HookingThreadId = (int)GetCurrentThreadId();
 
 		try
@@ -112,11 +128,11 @@ public class OsuInjectee : IOsuInjectee, EasyHook.IEntryPoint
 						Queue.Clear();
 					}
 
-					foreach (var fileName in package)
+					foreach (var request in package)
 					{
 						try
 						{
-							BloodcatDownload(fileName);
+							BloodcatDownload(request);
 						}
 						catch (Exception e)
 						{
@@ -320,10 +336,10 @@ public class OsuInjectee : IOsuInjectee, EasyHook.IEntryPoint
 		StringBuilder query = null;
 
 		var uri = new Uri(request);
+		query = new StringBuilder("http://bloodcat.com/osu/?mod=json&m=");
 		if (uri.Host == "osu.ppy.sh" && "b/d/s/".Contains(uri.Segments[1]))
 		{
 			// b = each diffibulty id, s = beatmap id, d = beatmap id as download link.
-			query = new StringBuilder("http://bloodcat.com/osu/?mod=json&m=");
 			query.Append(uri.Segments[1][0] == 'b' ? 'b' : 's');
 
 			query.Append("&q=");
@@ -332,11 +348,11 @@ public class OsuInjectee : IOsuInjectee, EasyHook.IEntryPoint
 		else if (uri.Host == "bloodcat.com" && uri.AbsolutePath.StartsWith("/osu/m/"))
 		{
 			// Id extracted from bloodcat.com link
-			DownloadAndExecuteOsz(BloodcatDownloadUrl + uri.Segments[3]);
-			return;
+			query.Append("s&q=");
+			query.Append(uri.Segments[3]);
 		}
 
-		// Query to bloodcat.com. Difficulty id requires this process.
+		// Query to bloodcat.com whether the beatmap exists.
 
 		WebClient client = new WebClient() { Encoding = Encoding.UTF8 };
 		string json = client.DownloadString(new Uri(query.ToString()));
@@ -357,11 +373,28 @@ public class OsuInjectee : IOsuInjectee, EasyHook.IEntryPoint
 			return;
 		}
 
-		// Parse and download.
-
 		var beatmapJson = result["results"][0];
 		int beatmapId = (int)beatmapJson["id"];
-		DownloadAndExecuteOsz(BloodcatDownloadUrl + beatmapId);
+
+		// Copy URL for sharing to clipboard.
+		string downloadLink = BloodcatDownloadUrl + beatmapId;
+		Clipboard.SetText(downloadLink);
+
+		requestedBeatmaps
+		.Where(x => (DateTime.Now - x.Value).TotalSeconds >= 2)
+		.Select(x => x.Key).ToList()
+		.ForEach(x => requestedBeatmaps.Remove(x));
+
+		// Download if already exists or double clicked.
+		if (OsuHelper.IsTakenBeatmap(beatmapId) == false ||
+			requestedBeatmaps.ContainsKey(beatmapId))
+		{
+			DownloadAndExecuteOsz(downloadLink);
+		}
+		else
+		{
+			requestedBeatmaps[beatmapId] = DateTime.Now;
+		}
 	}
 
 	private void DownloadAndExecuteOsz(string url)

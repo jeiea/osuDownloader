@@ -5,18 +5,26 @@ using System.Text;
 using System.IO;
 using System.Windows;
 using Microsoft.Win32;
+using System.Diagnostics;
 
 namespace OsuDownloader
 {
 static class OsuHelper
 {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	/// <summary>   Gets osu path from registry. </summary>
+	/// <summary>   Gets osu path from registry and suspected location. </summary>
 	///
 	/// <returns>   The osu!.exe path. </returns>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	public static string GetOsuPath()
 	{
+		// Find from existing processes.
+		var osuProcs = Process.GetProcessesByName("osu!");
+		if (osuProcs.Count() >= 1)
+		{
+			return osuProcs[0].MainModule.FileName;
+		}
+
 		// Find from settings.
 		string savedPath = Properties.Settings.Default.OsuPath;
 		if (savedPath != null && File.Exists(savedPath))
