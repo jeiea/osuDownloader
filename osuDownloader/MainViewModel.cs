@@ -42,6 +42,9 @@ public interface IOsuInjectee
 	void DisableHook();
 
 	[OperationContract(IsOneWay = true)]
+	void ToggleHook(bool request);
+
+	[OperationContract(IsOneWay = true)]
 	void OptionChanged(BloodcatDownloadOption option);
 
 	[OperationContract]
@@ -63,6 +66,8 @@ public class MainViewModel : ICallback, INotifyPropertyChanged
 {
 	static int TargetPid;
 	static IOsuInjectee InjecteeProxy;
+
+	bool IsBossed;
 
 	#region Property declaration
 
@@ -185,6 +190,16 @@ public class MainViewModel : ICallback, INotifyPropertyChanged
 		if (AutoStart)
 		{
 			ToggleHook();
+		}
+	}
+
+	public void ToggleBoss()
+	{
+		IsBossed = !IsBossed;
+
+		if (InjecteeProxy != null)
+		{
+			InjecteeProxy.ToggleHook(IsBossed);
 		}
 	}
 

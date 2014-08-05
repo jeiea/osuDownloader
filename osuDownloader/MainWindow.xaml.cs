@@ -1,18 +1,12 @@
 ﻿using Hardcodet.Wpf.TaskbarNotification;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace OsuDownloader
 {
@@ -29,14 +23,16 @@ public partial class MainWindow : Window
 
 	MainViewModel Hooker = new MainViewModel();
 
+	HotKey BossKey;
+
 	public MainWindow()
 	{
 		InUseWindow = this;
 		Initialized += Window_Loaded;
 
-		this.DataContext = Hooker;
-
 		Hide();
+
+		DataContext = Hooker;
 		InitializeComponent();
 
 		#region Tray registration routine
@@ -76,6 +72,19 @@ public partial class MainWindow : Window
 			Show();
 			Activate();
 		}
+		try
+		{
+			BossKey = new HotKey(ModifierKeys.Control, System.Windows.Forms.Keys.L, this);
+			BossKey.HotKeyPressed += BossKey_HotKeyPressed;
+		}
+		catch
+		{
+		}
+	}
+
+	void BossKey_HotKeyPressed(HotKey obj)
+	{
+		Hooker.ToggleBoss();
 	}
 
 	protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)

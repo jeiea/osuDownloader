@@ -15,25 +15,29 @@ using System.Runtime.Serialization.Formatters;
 using System.ServiceModel;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
+using System.Windows.Media.Imaging;
+using System.Windows.Media;
 
 namespace OsuDownloader
 {
 
 [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
-public class OsuInjectee : OsuDownloader.IOsuInjectee, EasyHook.IEntryPoint
+public class OsuInjectee : IOsuInjectee, EasyHook.IEntryPoint
 {
 	static string DownloadDir = "C:\\";
 
 	/// <summary>   ShellExecuteEx hook. Intercept url opens. </summary>
-	static LocalHook ShellExecuteExHook;
+	LocalHook ShellExecuteExHook;
 	/// <summary>   ShowWindow function hook. This is necessary during fullscreen mode. </summary>
 	LocalHook ShowWindowHook;
+	/// <summary>   CreateFile function hook for boss mode. </summary>
+	LocalHook CreateFileHook;
 
 	Queue<string> Queue = new Queue<string>();
 	ManualResetEvent QueueAppended;
 
 	ServiceHost InjecteeHost;
-	List<OsuDownloader.ICallback> Callbacks = new List<OsuDownloader.ICallback>();
+	List<ICallback> Callbacks = new List<ICallback>();
 
 	BloodcatDownloadOption BloodcatOption = new BloodcatDownloadOption();
 
@@ -41,13 +45,33 @@ public class OsuInjectee : OsuDownloader.IOsuInjectee, EasyHook.IEntryPoint
 	bool LastConnectionFaulted;
 
 	/// <summary>   Identifier for the hooking thread. </summary>
-	static int HookingThreadId;
+	int HookingThreadId;
+
+	/// <summary>   The alternative background image path for boss mode. </summary>
+	static string AlternativeImage;
+	/// <summary>   The alternative storyboard file path for boss mode. </summary>
+	static string AlternativeStoryboard;
+	static string AlternativeVideo;
+
+	static Regex SkinNames;
+
+	static OsuInjectee()
+	{
+		var sb = new StringBuilder();
+		sb.Append(@"^(");
+		sb.Append(@"approachcircle|button-|comboburst|count\d|cursor|default-\d|followpoint|");
+		sb.Append(@"fruit-|go|hit|inputoverlay|mania-|particle|pause-|pippidon|ranking-|");
+		sb.Append(@"ready|reversearrow|score-|scorebar-|section-|slider|spinner-|star|taiko-|");
+		sb.Append(@"taikobigcircle|taikohitciecle");
+		sb.Append(@").*$");
+
+		SkinNames = new Regex(sb.ToString(), RegexOptions.IgnoreCase);
+	}
 
 	public OsuInjectee(RemoteHooking.IContext context)
 	{
 		InjecteeHost = new ServiceHost(this, new Uri[] { new Uri("net.pipe://localhost") });
-		InjecteeHost.AddServiceEndpoint(typeof(OsuDownloader.IOsuInjectee),
-										new NetNamedPipeBinding(), "osuBeatmapHooker");
+		InjecteeHost.AddServiceEndpoint(typeof(IOsuInjectee), new NetNamedPipeBinding(), "osuBeatmapHooker");
 		InjecteeHost.Open();
 	}
 
@@ -61,7 +85,7 @@ public class OsuInjectee : OsuDownloader.IOsuInjectee, EasyHook.IEntryPoint
 		}
 		catch (Exception extInfo)
 		{
-			OsuDownloader.MainViewModel.LogException(extInfo);
+			MainViewModel.LogException(extInfo);
 		}
 
 		RemoteHooking.WakeUpProcess();
@@ -96,7 +120,7 @@ public class OsuInjectee : OsuDownloader.IOsuInjectee, EasyHook.IEntryPoint
 						}
 						catch (Exception e)
 						{
-							OsuDownloader.MainViewModel.LogException(e);
+							MainViewModel.LogException(e);
 						}
 					}
 				}
@@ -104,7 +128,7 @@ public class OsuInjectee : OsuDownloader.IOsuInjectee, EasyHook.IEntryPoint
 		}
 		catch (Exception e)
 		{
-			OsuDownloader.MainViewModel.LogException(e);
+			MainViewModel.LogException(e);
 		}
 		finally
 		{
@@ -114,16 +138,11 @@ public class OsuInjectee : OsuDownloader.IOsuInjectee, EasyHook.IEntryPoint
 		}
 	}
 
-	void watcher_Changed(object sender, FileSystemEventArgs e)
-	{
-		Properties.Settings.Default.Reload();
-	}
-
 	#region WCF Implementation
 
 	public void Subscribe()
 	{
-		var callback = OperationContext.Current.GetCallbackChannel<OsuDownloader.ICallback>();
+		var callback = OperationContext.Current.GetCallbackChannel<ICallback>();
 		callback.Installed();
 		(callback as ICommunicationObject).Faulted += ClientFaulted;
 
@@ -148,7 +167,7 @@ public class OsuInjectee : OsuDownloader.IOsuInjectee, EasyHook.IEntryPoint
 
 	public void Unsubscribe()
 	{
-		var callback = OperationContext.Current.GetCallbackChannel<OsuDownloader.ICallback>();
+		var callback = OperationContext.Current.GetCallbackChannel<ICallback>();
 		Callbacks.Remove(callback);
 
 		if (Callbacks.Count <= 0)
@@ -189,12 +208,7 @@ public class OsuInjectee : OsuDownloader.IOsuInjectee, EasyHook.IEntryPoint
 							 LocalHook.GetProcAddress("user32.dll", "ShowWindow"),
 							 new DShowWindow(ShowWindow_Hooked), this);
 
-		var threadList = new List<int>();
-		foreach (ProcessThread thread in Process.GetCurrentProcess().Threads)
-		{
-			threadList.Add(thread.Id);
-		}
-		threadList.Remove(HookingThreadId);
+		var threadList = GetOsuThreads();
 
 		ShellExecuteExHook.ThreadACL.SetInclusiveACL(threadList.ToArray());
 		ShowWindowHook.ThreadACL.SetExclusiveACL(new int[] { HookingThreadId });
@@ -202,7 +216,74 @@ public class OsuInjectee : OsuDownloader.IOsuInjectee, EasyHook.IEntryPoint
 		NotifyHookSwitch();
 	}
 
-	public void OptionChanged(OsuDownloader.BloodcatDownloadOption option)
+	private List<int> GetOsuThreads()
+	{
+		var threadList = new List<int>();
+		foreach (ProcessThread thread in Process.GetCurrentProcess().Threads)
+		{
+			threadList.Add(thread.Id);
+		}
+		threadList.Remove(HookingThreadId);
+		return threadList;
+	}
+
+	// 이름으로 기능 추측 방지
+	public void ToggleHook(bool request)
+	{
+		if (request)
+		{
+			#region Bitmap creation
+
+			DrawingVisual drawingvisual = new DrawingVisual();
+			using(DrawingContext context = drawingvisual.RenderOpen())
+			{
+				context.DrawRectangle(new SolidColorBrush(BloodcatOption.BackgroundColor),
+									  null, new System.Windows.Rect(0, 0, 2, 2));
+				context.Close();
+			}
+
+			RenderTargetBitmap result = new RenderTargetBitmap(2, 2, 96, 96, PixelFormats.Pbgra32);
+			result.Render(drawingvisual);
+
+			var encoder = new PngBitmapEncoder();
+			encoder.Frames.Add(BitmapFrame.Create(result));
+
+			AlternativeImage = Path.GetTempFileName();
+			using(var tempImage = File.OpenWrite(AlternativeImage))
+			{
+				encoder.Save(tempImage);
+			}
+
+			#endregion
+
+			AlternativeStoryboard = Path.GetTempFileName();
+			File.AppendAllText(AlternativeStoryboard, "[Events]");
+
+			AlternativeVideo = Path.GetTempFileName();
+			File.WriteAllBytes(AlternativeVideo, Properties.Resources.Black2x2);
+
+			CreateFileHook = LocalHook.Create(
+								 LocalHook.GetProcAddress("kernel32.dll", "CreateFileW"),
+								 new DCreateFile(CreateFile_Hooked),
+								 this);
+
+			// BG reading is not thread specific. Newly created thread also included.
+			CreateFileHook.ThreadACL.SetExclusiveACL(new int[] { HookingThreadId });
+		}
+		else if (CreateFileHook != null)
+		{
+			CreateFileHook.Dispose();
+			CreateFileHook = null;
+
+			File.Delete(AlternativeImage);
+			AlternativeImage = null;
+
+			File.Delete(AlternativeStoryboard);
+			AlternativeStoryboard = null;
+		}
+	}
+
+	public void OptionChanged(BloodcatDownloadOption option)
 	{
 		BloodcatOption = option;
 	}
@@ -224,6 +305,8 @@ public class OsuInjectee : OsuDownloader.IOsuInjectee, EasyHook.IEntryPoint
 	}
 
 	#endregion
+
+	#region Download routine
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>   Download from bloodcat mirror. </summary>
@@ -384,6 +467,8 @@ public class OsuInjectee : OsuDownloader.IOsuInjectee, EasyHook.IEntryPoint
 	{
 		return string.Concat(name.Except(System.IO.Path.GetInvalidFileNameChars()));
 	}
+
+	#endregion
 
 	[DllImport("kernel32.dll")]
 	static extern uint GetCurrentThreadId();
@@ -559,11 +644,83 @@ public class OsuInjectee : OsuDownloader.IOsuInjectee, EasyHook.IEntryPoint
 		}
 		catch (Exception e)
 		{
-			OsuDownloader.MainViewModel.LogException(e);
+			MainViewModel.LogException(e);
 		}
 
 		//call original API...
 		return ShellExecuteEx(ref lpExecInfo);
+	}
+
+	#endregion
+
+	#region CreateFile pinvoke
+
+	[UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
+	delegate IntPtr DCreateFile(
+		[MarshalAs(UnmanagedType.LPWStr)] string filename,
+		[MarshalAs(UnmanagedType.U4)] FileAccess access,
+		[MarshalAs(UnmanagedType.U4)] FileShare share,
+		IntPtr securityAttributes, // optional SECURITY_ATTRIBUTES struct or IntPtr.Zero
+		[MarshalAs(UnmanagedType.U4)] FileMode creationDisposition,
+		[MarshalAs(UnmanagedType.U4)] FileAttributes flagsAndAttributes,
+		IntPtr templateFile);
+
+	// just use a P-Invoke implementation to get native API access from C# (this step is not necessary for C++.NET)
+	[DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true, CallingConvention = CallingConvention.StdCall)]
+	public static extern IntPtr CreateFile(
+		[MarshalAs(UnmanagedType.LPWStr)] string filename,
+		[MarshalAs(UnmanagedType.U4)] FileAccess access,
+		[MarshalAs(UnmanagedType.U4)] FileShare share,
+		IntPtr securityAttributes, // optional SECURITY_ATTRIBUTES struct or IntPtr.Zero
+		[MarshalAs(UnmanagedType.U4)] FileMode creationDisposition,
+		[MarshalAs(UnmanagedType.U4)] FileAttributes flagsAndAttributes,
+		IntPtr templateFile);
+
+	// this is where we are intercepting all file accesses!
+	static IntPtr CreateFile_Hooked(
+		[MarshalAs(UnmanagedType.LPWStr)] string filename,
+		[MarshalAs(UnmanagedType.U4)] FileAccess access,
+		[MarshalAs(UnmanagedType.U4)] FileShare share,
+		IntPtr securityAttributes, // optional SECURITY_ATTRIBUTES struct or IntPtr.Zero
+		[MarshalAs(UnmanagedType.U4)] FileMode creationDisposition,
+		[MarshalAs(UnmanagedType.U4)] FileAttributes flagsAndAttributes,
+		IntPtr templateFile)
+	{
+		try
+		{
+			filename = filename.ToLower();
+			// Frequency order.
+			if (!filename.EndsWith(".exe") &&
+				filename.IndexOf("\\osu!\\data\\") == -1 &&
+				!filename.EndsWith(".osu") &&
+				!filename.EndsWith(".mp3") &&
+				!filename.EndsWith(".wav"))
+			{
+				if (filename.EndsWith(".osb"))
+				{
+					filename = AlternativeStoryboard;
+				}
+				else if (filename.EndsWith(".avi") ||
+						 filename.EndsWith(".mkv") ||
+						 filename.EndsWith(".mp4") ||
+						 filename.EndsWith(".flv"))
+				{
+					filename = AlternativeVideo;
+				}
+				else if (SkinNames.IsMatch(Path.GetFileName(filename)) == false)
+				{
+					filename = AlternativeImage;
+				}
+			}
+		}
+		catch (Exception e)
+		{
+			MainViewModel.LogException(e);
+		}
+
+		// call original API...
+		return CreateFile(filename, access, share, securityAttributes,
+						  creationDisposition, flagsAndAttributes, templateFile);
 	}
 
 	#endregion

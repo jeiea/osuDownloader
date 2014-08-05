@@ -59,5 +59,15 @@ namespace OsuDownloader.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] Black2x2 {
+            get {
+                object obj = ResourceManager.GetObject("Black2x2", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
     }
 }
