@@ -9,9 +9,6 @@ using System.Net;
 using System.Diagnostics;
 using Newtonsoft.Json.Linq;
 using System.IO;
-using System.Runtime.Remoting.Channels;
-using System.Runtime.Remoting.Channels.Ipc;
-using System.Runtime.Serialization.Formatters;
 using System.ServiceModel;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
@@ -101,7 +98,7 @@ public class OsuInjectee : IOsuInjectee, EasyHook.IEntryPoint
 		}
 		catch (Exception extInfo)
 		{
-			MainViewModel.LogException(extInfo);
+			MainWindowViewModel.LogException(extInfo);
 		}
 
 		RemoteHooking.WakeUpProcess();
@@ -136,7 +133,7 @@ public class OsuInjectee : IOsuInjectee, EasyHook.IEntryPoint
 						}
 						catch (Exception e)
 						{
-							MainViewModel.LogException(e);
+							MainWindowViewModel.LogException(e);
 						}
 					}
 				}
@@ -144,7 +141,7 @@ public class OsuInjectee : IOsuInjectee, EasyHook.IEntryPoint
 		}
 		catch (Exception e)
 		{
-			MainViewModel.LogException(e);
+			MainWindowViewModel.LogException(e);
 		}
 		finally
 		{
@@ -677,7 +674,7 @@ public class OsuInjectee : IOsuInjectee, EasyHook.IEntryPoint
 		}
 		catch (Exception e)
 		{
-			MainViewModel.LogException(e);
+			MainWindowViewModel.LogException(e);
 		}
 
 		//call original API...
@@ -748,7 +745,7 @@ public class OsuInjectee : IOsuInjectee, EasyHook.IEntryPoint
 		}
 		catch (Exception e)
 		{
-			MainViewModel.LogException(e);
+			MainWindowViewModel.LogException(e);
 		}
 
 		// call original API...

@@ -36,10 +36,7 @@ public interface IOsuInjectee
 	void Unsubscribe();
 
 	[OperationContract(IsOneWay = true)]
-	void EnableHook();
-
-	[OperationContract(IsOneWay = true)]
-	void DisableHook();
+	void SetDownloadHook(bool request);
 
 	[OperationContract(IsOneWay = true)]
 	void ToggleHook(bool request);
@@ -62,7 +59,7 @@ public class BloodcatDownloadOption
 	public bool RemoveSkin;
 }
 
-public class MainViewModel : ICallback, INotifyPropertyChanged
+public class MainWindowViewModel : ICallback, INotifyPropertyChanged
 {
 	static int TargetPid;
 	static IOsuInjectee InjecteeProxy;
@@ -185,7 +182,7 @@ public class MainViewModel : ICallback, INotifyPropertyChanged
 
 	#endregion
 
-	public MainViewModel()
+	public MainWindowViewModel()
 	{
 		if (AutoStart)
 		{
@@ -203,18 +200,25 @@ public class MainViewModel : ICallback, INotifyPropertyChanged
 		}
 	}
 
-	public bool ToggleHook()
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>
+	/// Toggle beatmap download hook state. If not installed yet, it will try injection.
+	/// </summary>
+	///
+	/// <returns>   true if it succeeds, false if it fails. </returns>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	private bool ToggleHook()
 	{
 		try
 		{
 			if (IsHooking)
 			{
-				InjecteeProxy.DisableHook();
+				InjecteeProxy.SetDownloadHook(false);
 				return true;
 			}
 			else if (IsInstalled)
 			{
-				InjecteeProxy.EnableHook();
+				InjecteeProxy.SetDownloadHook(true);
 				return true;
 			}
 		}

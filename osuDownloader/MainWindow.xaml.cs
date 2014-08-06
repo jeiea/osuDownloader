@@ -21,7 +21,7 @@ public partial class MainWindow : Window
 	Hardcodet.Wpf.TaskbarNotification.TaskbarIcon Tray;
 	MenuItem ToggleHookItem;
 
-	MainViewModel Hooker = new MainViewModel();
+	MainWindowViewModel Hooker = new MainWindowViewModel();
 
 	HotKey BossKey;
 
@@ -145,7 +145,7 @@ public partial class MainWindow : Window
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	private void ToggleHooking(object sender, RoutedEventArgs e)
 	{
-		Hooker.ToggleHook();
+		Hooker.IsHooking = !Hooker.IsHooking;
 	}
 
 	private void CloseButton_Click(object sender, RoutedEventArgs e)

@@ -36,10 +36,10 @@
     <SkipMethod type="OsuDownloader.IOsuInjectee" rx=".*" />
 
     <!-- Xaml binding properties. -->
-    <SkipProperty type="OsuDownloader.MainViewModel" rx=".*" />
+    <SkipProperty type="OsuDownloader.MainWindowViewModel" rx=".*" />
 
     <!-- Easyhook entrypoint. -->
-    <SkipMethod type="OsuDownloader.OsuInjectee" rx="Run" />
+    <SkipMethod type="OsuDownloader.Injectee.HookManager" rx="Run" />
 
     <SkipMethod type="Newtonsoft.Json.Linq.JObject" rx="TryGetValue" />
   </Module>
