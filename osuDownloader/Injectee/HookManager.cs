@@ -152,7 +152,7 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 		return Downloader != null;
 	}
 
-	public void OptionChanged(BloodcatDownloadOption option)
+	public void OptionChanged()
 	{
 		Properties.Settings.Default.Reload();
 	}

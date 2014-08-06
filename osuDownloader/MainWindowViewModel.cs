@@ -42,7 +42,7 @@ public interface IOsuInjectee
 	void ToggleHook(bool request);
 
 	[OperationContract(IsOneWay = true)]
-	void OptionChanged(BloodcatDownloadOption option);
+	void OptionChanged();
 
 	[OperationContract]
 	bool IsHookEnabled();
@@ -140,7 +140,7 @@ public class MainWindowViewModel : ICallback, INotifyPropertyChanged
 			OnPropertyChanged("BloodcatOption");
 			if (InjecteeProxy != null)
 			{
-				InjecteeProxy.OptionChanged(Properties.Settings.Default.BloodcatOption);
+				InjecteeProxy.OptionChanged();
 			}
 		}
 	}

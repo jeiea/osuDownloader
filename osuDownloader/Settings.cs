@@ -1,4 +1,7 @@
-﻿using System.Configuration;
+﻿using System;
+using System.Configuration;
+using System.IO;
+using System.Reflection;
 
 namespace OsuDownloader.Properties
 {
@@ -8,9 +11,10 @@ namespace OsuDownloader.Properties
 //  The PropertyChanged event is raised after a setting's value is changed.
 //  The SettingsLoaded event is raised after the setting values are loaded.
 //  The SettingsSaving event is raised before the setting values are saved.
-[SettingsProvider(typeof(OsuDownloader.PortableSettingsProvider))]
 internal sealed partial class Settings
 {
+	FileSystemWatcher Watcher;
+	DateTime LastSelfModified;
 
 	public Settings()
 	{
@@ -20,12 +24,28 @@ internal sealed partial class Settings
 		//
 		// this.SettingsSaving += this.SettingsSavingEventHandler;
 		//
+
+		//  Setting changed event handler registration
+		string executable = Assembly.GetAssembly(GetType()).Location;
+		Watcher = new FileSystemWatcher(Path.GetDirectoryName(executable));
+		Watcher.Filter = Path.GetFileNameWithoutExtension(executable) + ".settings";
+		Watcher.Changed += Watcher_Changed;
+		Watcher.EnableRaisingEvents = true;
+
 		PropertyChanged += Settings_PropertyChanged;
+	}
+
+	void Watcher_Changed(object sender, FileSystemEventArgs e)
+	{
+		if ((DateTime.Now - LastSelfModified).TotalSeconds > 1)
+			Reload();
 	}
 
 	void Settings_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
 	{
+		LastSelfModified = DateTime.Now;
 		Save();
 	}
+
 }
 }
