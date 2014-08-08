@@ -259,7 +259,9 @@ public class MainWindowViewModel : ICallback, INotifyPropertyChanged
 				}
 
 				// CreateAndInject doesn't work. I don't know reason.
-				TargetPid = Process.Start(osuPath).Id;
+				Process osu =  Process.Start(osuPath);
+				TargetPid = osu.Id;
+				osu.WaitForInputIdle();
 			}
 
 			RemoteHooking.Inject(TargetPid, InjectionOptions.DoNotRequireStrongName, "osuDownloader.exe", injectee);

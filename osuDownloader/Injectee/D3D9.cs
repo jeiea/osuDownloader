@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
 
-namespace Capture.Hook
+namespace OsuDownloader.Injectee
 {
 /// <summary>   The full list of IDirect3DDevice9 functions with the correct index. </summary>
 public enum Direct3DDevice9FunctionOrdinals : short

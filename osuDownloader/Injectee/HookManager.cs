@@ -28,6 +28,7 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 
 	FileNameHooker Blinder;
 	InvokeUrlHooker Downloader;
+	D3D9Hooker Overlayer;
 
 	/// <summary>   Thread termination event. </summary>
 	ManualResetEvent QuitEvent;
@@ -39,7 +40,6 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 		InjecteeHost.Open();
 	}
 
-	[STAThread]
 	public void Run(RemoteHooking.IContext context)
 	{
 		AppDomain currentDomain = AppDomain.CurrentDomain;

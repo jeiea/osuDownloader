@@ -1,31 +1,61 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-//using SlimDX.Direct3D9;
-using EasyHook;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Drawing;
+﻿using EasyHook;
+using SharpDX;
 using SharpDX.Direct3D9;
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
-namespace Capture.Hook
+namespace OsuDownloader.Injectee
 {
-internal class DXHookD3D9: BaseDXHook
-{
-	LocalHook Direct3DDevice_EndSceneHook    = null;
-	LocalHook Direct3DDevice_ResetHook       = null;
-	LocalHook Direct3DDevice_PresentHook     = null;
-	LocalHook Direct3DDeviceEx_PresentExHook = null;
-	object _lockRenderTarget = new object();
-	Surface _renderTarget;
 
-	List<IntPtr> id3dDeviceFunctionAddresses = new List<IntPtr>();
+internal class ProgressEntry
+{
+	public DateTime Added;
+	public long Downloaded;
+	public long Total;
+	public string Title;
+	public string Path;
+}
+
+internal class D3D9Hooker: BaseDXHook, IHookerBase
+{
+	public DateTime Timer;
+	public Dictionary<object, ProgressEntry> DownloadQueue = new Dictionary<object, ProgressEntry>();
+
+	Font MainFont;
+	int ScreenWidth = 1024;
+	int ScreenHeight = 768;
+
+	//LocalHook Direct3DDevice_EndSceneHook    = null;
+	LocalHook Direct3DDevice_ResetHook         = null;
+	LocalHook Direct3DDevice_PresentHook       = null;
+	LocalHook Direct3DDeviceEx_PresentExHook   = null;
+
+	List<IntPtr> id3dDeviceFunctionAddresses     = new List<IntPtr>();
 	//List<IntPtr> id3dDeviceExFunctionAddresses = new List<IntPtr>();
-	const int D3D9_DEVICE_METHOD_COUNT  = 119;
-	const int D3D9Ex_DEVICE_METHOD_COUNT = 15;
-	bool _supportsDirect3D9Ex = false;
+	const int D3D9_DEVICE_METHOD_COUNT           = 119;
+	const int D3D9Ex_DEVICE_METHOD_COUNT         = 15;
+	bool _supportsDirect3D9Ex                    = false;
+
+	public bool IsHooking
+	{
+		get
+		{
+			return this.Direct3DDevice_ResetHook != null;
+		}
+	}
+
+	public void SetHookState(bool request)
+	{
+		if (request)
+		{
+			Hook();
+		}
+		else
+		{
+			Dispose();
+		}
+	}
 
 	public override void Hook()
 	{
@@ -72,14 +102,15 @@ internal class DXHookD3D9: BaseDXHook
 		// We want to hook each method of the IDirect3DDevice9 interface that we are interested in
 
 		// 42 - EndScene (we will retrieve the back buffer here)
-		Direct3DDevice_EndSceneHook = LocalHook.Create(
-										  id3dDeviceFunctionAddresses[(int)Direct3DDevice9FunctionOrdinals.EndScene],
-										  // On Windows 7 64-bit w/ 32-bit app and d3d9 dll version 6.1.7600.16385, the address is equiv to:
-										  // (IntPtr)(GetModuleHandle("d3d9").ToInt32() + 0x1ce09),
-										  // A 64-bit app would use 0xff18
-										  // Note: GetD3D9DeviceFunctionAddress will output these addresses to a log file
-										  new Direct3D9Device_EndSceneDelegate(EndSceneHook),
-										  this);
+		/// It's not used.
+		//Direct3DDevice_EndSceneHook = LocalHook.Create(
+		//                                  id3dDeviceFunctionAddresses[(int)Direct3DDevice9FunctionOrdinals.EndScene],
+		//                                  // On Windows 7 64-bit w/ 32-bit app and d3d9 dll version 6.1.7600.16385, the address is equiv to:
+		//                                  // (IntPtr)(GetModuleHandle("d3d9").ToInt32() + 0x1ce09),
+		//                                  // A 64-bit app would use 0xff18
+		//                                  // Note: GetD3D9DeviceFunctionAddress will output these addresses to a log file
+		//                                  new Direct3D9Device_EndSceneDelegate(EndSceneHook),
+		//                                  this);
 
 		unsafe
 		{
@@ -102,8 +133,8 @@ internal class DXHookD3D9: BaseDXHook
 		// 16 - Reset (called on resolution change or windowed/fullscreen change - we will reset some things as well)
 		Direct3DDevice_ResetHook = LocalHook.Create(
 									   id3dDeviceFunctionAddresses[(int)Direct3DDevice9FunctionOrdinals.Reset],
-									   // On Windows 7 64-bit w/ 32-bit app and d3d9 dll version 6.1.7600.16385, the address is equiv to:
-									   //(IntPtr)(GetModuleHandle("d3d9").ToInt32() + 0x58dda),
+									   // On Windows 7 64-bit w/ 32-bit app and d3d9 dll version 6.1.7600.16385,
+									   // the address is equiv to: (IntPtr)(GetModuleHandle("d3d9").ToInt32() + 0x58dda),
 									   // A 64-bit app would use 0x3b3a0
 									   // Note: GetD3D9DeviceFunctionAddress will output these addresses to a log file
 									   new Direct3D9Device_ResetDelegate(ResetHook),
@@ -114,8 +145,9 @@ internal class DXHookD3D9: BaseDXHook
 		 * The following ensures that all threads are intercepted:
 		 * Note: you must do this for each hook.
 		 */
-		Direct3DDevice_EndSceneHook.ThreadACL.SetExclusiveACL(new Int32[1]);
-		Hooks.Add(Direct3DDevice_EndSceneHook);
+		//Direct3DDevice_EndSceneHook.ThreadACL.SetExclusiveACL(new Int32[1]);
+		//Direct3DDevice_EndSceneHook.ThreadACL.SetInclusiveACL(new int[] {});
+		//Hooks.Add(Direct3DDevice_EndSceneHook);
 
 		Direct3DDevice_PresentHook.ThreadACL.SetExclusiveACL(new Int32[1]);
 		Hooks.Add(Direct3DDevice_PresentHook);
@@ -137,44 +169,12 @@ internal class DXHookD3D9: BaseDXHook
 
 	protected override void Dispose(bool disposing)
 	{
-		if (true)
-		{
-			try
-			{
-				lock (_lockRenderTarget)
-				{
-					if (_renderTarget != null)
-					{
-						_renderTarget.Dispose();
-						_renderTarget = null;
-					}
-				}
-			}
-			catch
-			{
-			}
-		}
 		base.Dispose(disposing);
 	}
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	/// <summary>   The IDirect3DDevice9.EndScene function definition. </summary>
-	///
-	/// <param name="device">   . </param>
-	///
-	/// <returns>   An int. </returns>
-	////////////////////////////////////////////////////////////////////////////////////////////////////
 	[UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
 	delegate int Direct3D9Device_EndSceneDelegate(IntPtr device);
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	/// <summary>   The IDirect3DDevice9.Reset function definition. </summary>
-	///
-	/// <param name="device">               . </param>
-	/// <param name="presentParameters">    [in,out]. </param>
-	///
-	/// <returns>   An int. </returns>
-	////////////////////////////////////////////////////////////////////////////////////////////////////
 	[UnmanagedFunctionPointer(CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
 	delegate int Direct3D9Device_ResetDelegate(IntPtr device, ref PresentParameters presentParameters);
 
@@ -200,15 +200,9 @@ internal class DXHookD3D9: BaseDXHook
 		Device device = (Device)devicePtr;
 		try
 		{
+			ScreenWidth = presentParameters.BackBufferWidth;
+			ScreenHeight = presentParameters.BackBufferHeight;
 
-			lock (_lockRenderTarget)
-			{
-				if (_renderTarget != null)
-				{
-					_renderTarget.Dispose();
-					_renderTarget = null;
-				}
-			}
 			// EasyHook has already repatched the original Reset so calling it here will
 			// not cause an endless recursion to this function
 			device.Reset(presentParameters);
@@ -262,19 +256,12 @@ internal class DXHookD3D9: BaseDXHook
 	unsafe int PresentHook(IntPtr devicePtr, SharpDX.Rectangle* pSourceRect, SharpDX.Rectangle* pDestRect,
 						   IntPtr hDestWindowOverride, IntPtr pDirtyRegion)
 	{
-		// Example of using delegate to original function pointer to call original method
-		//var original = (Direct3D9Device_PresentDelegate)(Object)Marshal.GetDelegateForFunctionPointer(id3dDeviceFunctionAddresses[(int)Direct3DDevice9FunctionOrdinals.Present], typeof(Direct3D9Device_PresentDelegate));
-		//try
-		//{
-		//    unsafe
-		//    {
-		//        return original(devicePtr, ref pSourceRect, ref pDestRect, hDestWindowOverride, pDirtyRegion);
-		//    }
-		//}
-		//catch { }
 		_isUsingPresent = true;
 
 		Device device = (Device)devicePtr;
+
+		//ScreenWidth = pDestRect->Width;
+		//ScreenHeight = pDestRect->Height;
 
 		DoCaptureRenderTarget(device, "PresentHook");
 
@@ -314,6 +301,7 @@ internal class DXHookD3D9: BaseDXHook
 		return SharpDX.Result.Ok.Code;
 	}
 
+	int count;
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>
 	/// Implementation of capturing from the render target of the Direct3D9 Device (or DeviceEx)
@@ -324,44 +312,103 @@ internal class DXHookD3D9: BaseDXHook
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	void DoCaptureRenderTarget(Device device, string hook)
 	{
+		count++;
+		if (count % 200 == 0)
+		{
+			string[] lorem = new string[]
+			{
+				"일본어 나오진 않겠지?",
+				"C# foreach improvements? - Programmers - Stack Exchange",
+				"13973 Beniiro Litmus - Rin to Shite Saku Hana no Gotoku (Full Ver)",
+				"16600 Hatsune Miku, Megurine Luka - World's End Dancehall",
+			};
+			var rand = new Random();
+
+			DownloadQueue.Add(new object(), new ProgressEntry()
+			{
+				Title = lorem[rand.Next(0, lorem.Length - 1)],
+				Added = DateTime.Now,
+				Total = rand.NextLong(1000 * 1000, 20 * 1000 * 1000),
+			});
+		}
 		try
 		{
-			#region Draw frame rate
-
-			// TODO: font needs to be created and then reused, not created each frame!
-			using(var font = new SharpDX.Direct3D9.Font(device, new FontDescription()
+			List<object> arbi = new List<object>();
+			foreach (var item in DownloadQueue.Keys)
 			{
-				Height = 16,
-				FaceName = "Arial",
-				Italic = false,
-				Width = 0,
-				MipLevels = 1,
-				CharacterSet = FontCharacterSet.Default,
-				OutputPrecision = FontPrecision.Default,
-				Quality = FontQuality.Antialiased,
-				PitchAndFamily = FontPitchAndFamily.Default | FontPitchAndFamily.DontCare,
-				Weight = FontWeight.Bold
-			}))
+				if (item is System.Net.WebClient == false)
+				{
+					arbi.Add(item);
+				}
+			}
+			foreach (var key in arbi)
 			{
-				//if (this.TextDisplay != null && this.TextDisplay.Display)
-				//{
-				//    font.DrawText(null, this.TextDisplay.Text, 5, 25, new SharpDX.ColorBGRA(255, 0, 0, (byte)Math.Round((Math.Abs(1.0f - TextDisplay.Remaining) * 255f))));
-				//}
+				var item = DownloadQueue[key];
+				if (item.Downloaded >= item.Total)
+				{
+					DownloadQueue.Remove(key);
+				}
+				else
+				{
+					item.Downloaded += 1000000 / 60;
+				}
 			}
 
-			#endregion
+			if (MainFont != null && MainFont.Device != device)
+			{
+				MainFont.Dispose();
+				MainFont = null;
+			}
+			if (MainFont == null)
+			{
+				MainFont = new Font(device, new FontDescription()
+				{
+					Height = 18,
+					FaceName = "맑은 고딕",
+					Italic = false,
+					Width = 0,
+					CharacterSet = FontCharacterSet.Default,
+					OutputPrecision = FontPrecision.Default,
+					Quality = FontQuality.ClearType,
+					PitchAndFamily = FontPitchAndFamily.Default | FontPitchAndFamily.DontCare,
+					Weight = FontWeight.Regular
+				});
+			}
+			var background = new ColorBGRA(255, 255, 255, 128);
+			var foreground = new ColorBGRA(32, 255, 32, 255);
+			var fontColor = new ColorBGRA(0, 0, 0, 255);
+			using(Line line = new Line(device) { Width = 20 })
+			{
+				int i = 0;
+				line.Begin();
+				foreach (var item in DownloadQueue.Values)
+				{
+					string progress = string.Format("[{0,5:F1}MB /{1,5:F1}MB] {2}",
+													item.Downloaded / 1000000F, item.Total / 1000000F, item.Title);
+					Rectangle rect = MainFont.MeasureText(null, progress, FontDrawFlags.SingleLine);
+
+					line.Draw(new Vector2[]
+					{
+						new Vector2(20,  i * 30 + 20),
+						new Vector2(24 + rect.Right, i * 30 + 20)
+					}, background);
+					line.Draw(new Vector2[]
+					{
+						new Vector2(20,  i * 30 + 20),
+						new Vector2(24 + rect.Right * item.Downloaded / item.Total, i * 30 + 20)
+					}, foreground);
+
+					MainFont.DrawText(null, progress, 20, i * 30 + 12, fontColor);
+					i++;
+				}
+				line.End();
+				line.Dispose();
+			}
 		}
 		catch (Exception e)
 		{
 			OsuDownloader.MainWindowViewModel.LogException(e);
 		}
-	}
-
-	/// <summary>   Used to hold the parameters to be passed to RetrieveImageData. </summary>
-	struct RetrieveImageDataParams
-	{
-		internal Stream Stream;
-		internal Guid RequestId;
 	}
 
 }

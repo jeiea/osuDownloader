@@ -93,7 +93,7 @@
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'netfx4.5-Debug' Or '$(Configuration)' == 'netfx4.5-Release'">
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'netfx3.5-Debug'">
     <DefineConstants>DEBUG;TRACE;NET35</DefineConstants>
@@ -108,10 +108,10 @@
     <DefineConstants>TRACE;NET40</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'netfx4.5-Debug'">
-    <DefineConstants>DEBUG;TRACE;NET40</DefineConstants>
+    <DefineConstants>DEBUG;TRACE;NET45</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'netfx4.5-Release'">
-    <DefineConstants>TRACE;NET40</DefineConstants>
+    <DefineConstants>TRACE;NET45</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition="'$(Configuration)' != 'netfx3.5-Debug' And '$(Configuration)' != 'netfx3.5-Release'">
     <Reference Include="Microsoft.CSharp" />
@@ -150,8 +150,7 @@
     </ApplicationDefinition>
     <Compile Include="Injectee\BaseDXHook.cs" />
     <Compile Include="Injectee\D3D9.cs" />
-    <Compile Include="Injectee\DX9Hooker.cs" />
-    <Compile Include="Injectee\DXHookD3D9.cs" />
+    <Compile Include="Injectee\D3D9Hooker.cs" />
     <Compile Include="Injectee\FileNameHooker.cs" />
     <Compile Include="Injectee\HookerBase.cs" />
     <Compile Include="Injectee\HookManager.cs" />

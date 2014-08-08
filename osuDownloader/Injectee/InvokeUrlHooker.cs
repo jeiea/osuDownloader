@@ -34,6 +34,8 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 	/// <summary>   ShowWindow function hook. This is necessary during fullscreen mode. </summary>
 	LocalHook ShowWindowHook;
 
+	static D3D9Hooker Overlayer;
+
 	/// <summary>   true if disposed. </summary>
 	private bool Disposed;
 
@@ -60,6 +62,9 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 								 LocalHook.GetProcAddress("user32.dll", "ShowWindow"),
 								 new DShowWindow(ShowWindow_Hooked), this);
 
+			Overlayer = new D3D9Hooker();
+			Overlayer.SetHookState(true);
+
 			ResetHookAcl(HookManager.HookingThreadIds.ToArray());
 		}
 		else
@@ -73,6 +78,11 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 			{
 				ShowWindowHook.Dispose();
 				ShowWindowHook = null;
+			}
+			if (Overlayer != null)
+			{
+				Overlayer.Dispose();
+				Overlayer = null;
 			}
 		}
 	}
@@ -140,27 +150,27 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 		const string BloodcatDownloadUrl = "http://bloodcat.com/osu/m/";
 
 		Uri uri = new Uri(request);
-		StringBuilder query = new StringBuilder("http://bloodcat.com/osu/?mod=json&m=");
+
+		WebClient client = new WebClient() { Encoding = Encoding.UTF8 };
+		var query = client.QueryString;
+		query.Add("mod", "json");
 
 		if (uri.Host == "osu.ppy.sh" && "b/d/s/".Contains(uri.Segments[1]))
 		{
 			// b = each diffibulty id, s = beatmap id, d = beatmap id as download link.
-			query.Append(uri.Segments[1][0] == 'b' ? 'b' : 's');
-
-			query.Append("&q=");
-			query.Append(uri.Segments[2]);
+			query.Add("m", uri.Segments[1][0] == 'b' ? "b" : "s");
+			query.Add("q", uri.Segments[2]);
 		}
 		else if (uri.Host == "bloodcat.com" && uri.AbsolutePath.StartsWith("/osu/m/"))
 		{
 			// Id extracted from bloodcat.com link
-			query.Append("s&q=");
-			query.Append(uri.Segments[3]);
+			query.Add("m", "s");
+			query.Add("q", uri.Segments[3]);
 		}
 
 		// Query to bloodcat.com whether the beatmap exists.
 
-		WebClient client = new WebClient() { Encoding = Encoding.UTF8 };
-		string json = client.DownloadString(new Uri(query.ToString()));
+		string json = client.DownloadString("http://bloodcat.com/osu/");
 		JObject result = JObject.Parse(json);
 
 		int count = (int)result["resultCount"];
@@ -204,35 +214,73 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 
 	static void DownloadAndExecuteOsz(string url)
 	{
-		HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+		string tempFile = Path.GetTempFileName();
 
-		ApplyBloodcatOption(request);
+		string cookie = ApplyBloodcatOption().ToString();
 
-		HttpWebResponse res = (HttpWebResponse)request.GetResponse();
+		WebClient client = new WebClient();
+		client.DownloadProgressChanged += new DownloadProgressChangedEventHandler(client_DownloadProgressChanged);
+		client.DownloadFileCompleted += new AsyncCompletedEventHandler(client_DownloadFileCompleted);
 
-		// TODO: It must be SID Artist - Title format for avoiding duplication.
-		string disposition = res.Headers["Content-Disposition"] != null ?
-							 Regex.Match(res.Headers["Content-Disposition"], "filename\\s*=\\s*\"(.*?)\"").Groups[1].ToString() :
-							 res.Headers["Location"] != null ? Path.GetFileName(res.Headers["Location"]) :
-							 Path.GetFileName(url).Contains('?') || Path.GetFileName(url).Contains('=') ?
-							 Path.GetFileName(res.ResponseUri.ToString()) : url.GetHashCode() + ".osz";
-
-		string downloadPath = DownloadDir + disposition;
-
-		// If user clicks several times, ignore.
-		if (File.Exists(downloadPath))
+		Overlayer.DownloadQueue.Add(client, new ProgressEntry()
 		{
+			Added = DateTime.Now,
+			Title = Path.GetFileName(url),
+			Total = int.MaxValue,
+			Path = tempFile
+		});
+
+		client.DownloadFileAsync(new Uri(url), tempFile, client);
+	}
+
+	static void client_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
+	{
+		ProgressEntry entry = Overlayer.DownloadQueue[e.UserState];
+		if (entry.Total == int.MaxValue)
+		{
+			try
+			{
+				WebClient client = (WebClient)e.UserState;
+
+				string disposition = client.ResponseHeaders["Content-Disposition"];
+				entry.Title = Regex.Match(disposition, "filename\\s*=\\s*\"(.*?)\"").Groups[1].ToString();
+
+				if (File.Exists(Path.Combine("C:\\", entry.Title)))
+				{
+					client.CancelAsync();
+					return;
+				}
+
+				entry.Total = e.TotalBytesToReceive;
+			}
+			catch (Exception ex)
+			{
+				MainWindowViewModel.LogException(ex);
+			}
+		}
+		entry.Downloaded = e.BytesReceived;
+	}
+
+	static void client_DownloadFileCompleted(object sender, AsyncCompletedEventArgs e)
+	{
+		if (e.Cancelled)
+		{
+			MainWindowViewModel.LogException(e.Error);
 			return;
 		}
 
-		using(Stream rstream = res.GetResponseStream())
+		WebClient client = (WebClient)e.UserState;
+
+		string downloadPath = Path.Combine(DownloadDir, Overlayer.DownloadQueue[client].Title);
+		try
 		{
-			using(var destStream = File.Create(downloadPath))
-			{
-				rstream.CopyTo(destStream);
-			}
+			File.Move(Overlayer.DownloadQueue[client].Path, downloadPath);
 		}
-		res.Close();
+		catch (Exception ex)
+		{
+			MainWindowViewModel.LogException(ex);
+			downloadPath = Overlayer.DownloadQueue[client].Path;
+		}
 
 		string osuExePath = Process.GetCurrentProcess().MainModule.FileName;
 		ProcessStartInfo psi = new ProcessStartInfo()
@@ -242,12 +290,14 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 			Arguments = downloadPath,
 		};
 
+		Overlayer.DownloadQueue.Remove(client);
+
 		try
 		{
 			Process.Start(psi);
 		}
 		// TODO: IDropTarget으로 강제 갱신하는 방법 있음
-		catch (Win32Exception e)
+		catch (Win32Exception ex)
 		{
 			string[] pathElements = new string[]
 			{
@@ -266,7 +316,7 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 	///
 	/// <param name="request">  WebRequest to use. </param>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	static void ApplyBloodcatOption(HttpWebRequest request)
+	static Cookie ApplyBloodcatOption()
 	{
 		var option = Properties.Settings.Default.BloodcatOption;
 
@@ -290,9 +340,7 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 		cookieJson.Append(option.RemoveSkin ? "true" : "false");
 		cookieJson.Append('}');
 
-		var downloadOption = new Cookie("DLOPT", Uri.EscapeDataString(cookieJson.ToString()), "/", "bloodcat.com");
-		request.CookieContainer = new CookieContainer();
-		request.CookieContainer.Add(downloadOption);
+		return new Cookie("DLOPT", Uri.EscapeDataString(cookieJson.ToString()), "/", "bloodcat.com");
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////

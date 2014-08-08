@@ -147,12 +147,13 @@ static class OsuHelper
 		{
 			string osuPath = Path.GetDirectoryName(GetOsuPath());
 			string songsPath = Path.Combine(osuPath, "Songs");
+
 #if NET20 || NET35
 			int count = Directory.GetDirectories(songsPath)
 #else
 			int count = Directory.EnumerateDirectories(songsPath)
 #endif
-						.Where((s) => s.StartsWith(sid + " "))
+						.Where((s) => Path.GetFileName(s).StartsWith(sid + " "))
 						.Count();
 			return count > 0;
 		}
