@@ -433,23 +433,16 @@ internal class D3D9Hooker: BaseDXHook, IHookerBase
 						orderby pair.Value.Begin
 						select pair;
 
-			float leftMargin = ScreenWidth * 0.01F;
-			float topMargin = ScreenHeight * 0.03F;
-			float spaceBetweenLines = MainFont.Description.Height * 1.5F;
+			float screenCenter = ScreenWidth * 0.5F;
+			float topMargin = ScreenHeight * 0.725F;
+			float spaceBetweenLines = MainFont.Description.Height * 1.4F;
 			int fontMarginX = (int)(MainFont.Description.Height * 0.2F);
 			int fontCorrectionY = (int)(MainFont.Description.Height * 0.5F);
-
-			//float screenCenter = ScreenWidth * 0.5F;
-			//float topMargin = ScreenHeight * 0.7F;
-			//float spaceBetweenLines = MainFont.Description.Height * 1.4F;
-			//int fontMarginX = (int)(MainFont.Description.Height * 0.2F);
-			//int fontCorrectionY = (int)(MainFont.Description.Height * 0.5F);
 
 			BackLine.Begin();
 			foreach (var pair in items.ToArray())
 			{
 				var entry = pair.Value;
-				Vector2 lineStart = new Vector2(leftMargin, i * spaceBetweenLines + topMargin);
 
 				if (entry is ProgressEntry)
 				{
@@ -459,6 +452,11 @@ internal class D3D9Hooker: BaseDXHook, IHookerBase
 					Rectangle rect = MainFont.MeasureText(null, progress, FontDrawFlags.SingleLine);
 
 					float lineLength = rect.Right + fontMarginX * 2;
+					Vector2 lineStart = new Vector2()
+					{
+						X = screenCenter - lineLength * 0.5F,
+						Y = i * spaceBetweenLines + topMargin
+					};
 					float midPoint = lineStart.X + lineLength * item.Downloaded / item.Total;
 					Vector2[] line = new Vector2[]
 					{
@@ -494,10 +492,16 @@ internal class D3D9Hooker: BaseDXHook, IHookerBase
 					var noticeColor = new ColorBGRA(255, 255, 32, alpha);
 					var noticeFontColor = new ColorBGRA(0, 0, 0, alpha);
 
+					float lineLength = rect.Right + 2 * fontMarginX;
+					Vector2 lineStart = new Vector2()
+					{
+						X = screenCenter - lineLength * 0.5F,
+						Y = i * spaceBetweenLines + topMargin
+					};
 					BackLine.Draw(new Vector2[]
 					{
 						lineStart,
-						new Vector2(lineStart.X + rect.Right + fontMarginX, lineStart.Y)
+						new Vector2(lineStart.X + lineLength, lineStart.Y)
 					}, noticeColor);
 
 					MainFont.DrawText(null, item.Message,
