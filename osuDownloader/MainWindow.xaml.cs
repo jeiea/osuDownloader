@@ -40,7 +40,7 @@ public partial class MainWindow : Window
 		// Xaml seems to have problem with project settings.
 		Tray = new TaskbarIcon()
 		{
-			IconSource = new BitmapImage(new Uri("pack://application:,,,/Pic/osuIcon.ico")),
+			IconSource = new BitmapImage(new Uri("pack://application:,,,/icon2.ico")),
 			ToolTipText = "Osu Beatmap Downloader v1.0",
 		};
 		Tray.TrayMouseDoubleClick += ShowWindow_Handler;
