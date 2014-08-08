@@ -62,7 +62,7 @@ internal class D3D9Hooker: BaseDXHook, IHookerBase
 	{
 		get
 		{
-			return this.Direct3DDevice_ResetHook != null;
+			return Direct3DDevice_ResetHook != null;
 		}
 	}
 
@@ -75,6 +75,9 @@ internal class D3D9Hooker: BaseDXHook, IHookerBase
 		else
 		{
 			Dispose();
+			Direct3DDevice_PresentHook = null;
+			Direct3DDevice_ResetHook = null;
+			Direct3DDeviceEx_PresentExHook = null;
 		}
 	}
 
@@ -341,7 +344,6 @@ internal class D3D9Hooker: BaseDXHook, IHookerBase
 		return SharpDX.Result.Ok.Code;
 	}
 
-	int count;
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>
 	/// Implementation of capturing from the render target of the Direct3D9 Device (or DeviceEx)
@@ -352,45 +354,15 @@ internal class D3D9Hooker: BaseDXHook, IHookerBase
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	void DoCaptureRenderTarget(Device device, string hook)
 	{
-		count++;
-		if (count % 200 == 0)
+		// Auto hook disable.
+		if (MessageQueue.Count == 0)
 		{
-			string[] lorem = new string[]
-			{
-				"일본어 나오진 않겠지?",
-				"C# foreach improvements? - Programmers - Stack Exchange",
-				"13973 Beniiro Litmus - Rin to Shite Saku Hana no Gotoku (Full Ver)",
-				"16600 Hatsune Miku, Megurine Luka - World's End Dancehall",
-			};
-			var rand = new Random();
-
-			MessageQueue.Add(new object(), new ProgressEntry()
-			{
-				Title = lorem[rand.Next(0, lorem.Length - 1)],
-				Begin = DateTime.Now,
-				Total = rand.NextLong(1000 * 1000, 20 * 1000 * 1000),
-			});
+			SetHookState(false);
+			return;
 		}
+
 		try
 		{
-			foreach (var key in MessageQueue.Keys.ToArray())
-			{
-				if (key is System.Net.WebClient == false)
-				{
-					var item = MessageQueue[key] as ProgressEntry;
-					if (item == null)
-						continue;
-					if (item.Downloaded >= item.Total)
-					{
-						MessageQueue.Remove(key);
-					}
-					else
-					{
-						item.Downloaded += 1000000 / 60;
-					}
-				}
-			}
-
 			if (MainFont != null && MainFont.Device.NativePointer != device.NativePointer)
 			{
 				MainFont.Dispose();
@@ -447,8 +419,13 @@ internal class D3D9Hooker: BaseDXHook, IHookerBase
 				if (entry is ProgressEntry)
 				{
 					ProgressEntry item = (ProgressEntry)entry;
-					string progress = string.Format("[{0,5:F1}MB /{1,5:F1}MB] {2}",
-													item.Downloaded / 1000000F, item.Total / 1000000F, item.Title);
+					string format = item.Total == int.MaxValue
+									? "[     요청 중    ] {2}"
+									: "[{0,5:F1}MB /{1,5:F1}MB] {2}";
+					string progress = string.Format(format,
+													item.Downloaded / 1000000F,
+													item.Total / 1000000F,
+													item.Title);
 					Rectangle rect = MainFont.MeasureText(null, progress, FontDrawFlags.SingleLine);
 
 					float lineLength = rect.Right + fontMarginX * 2;
@@ -484,11 +461,16 @@ internal class D3D9Hooker: BaseDXHook, IHookerBase
 
 					var endTime = item.Begin + item.Duration;
 					var remainingTime = endTime - DateTime.Now;
-					if (remainingTime.TotalSeconds < 0)
+					byte alpha;
+					if (remainingTime.TotalMilliseconds < 0)
 					{
 						MessageQueue.Remove(pair.Key);
+						alpha = 0;
 					}
-					byte alpha = (byte)Math.Min(remainingTime.TotalMilliseconds * 0.5, 255);
+					else
+					{
+						alpha = (byte)Math.Min(remainingTime.TotalMilliseconds * 0.5, 255);
+					}
 					var noticeColor = new ColorBGRA(255, 255, 32, alpha);
 					var noticeFontColor = new ColorBGRA(0, 0, 0, alpha);
 
@@ -518,6 +500,5 @@ internal class D3D9Hooker: BaseDXHook, IHookerBase
 			MainWindowViewModel.LogException(e);
 		}
 	}
-
 }
 }

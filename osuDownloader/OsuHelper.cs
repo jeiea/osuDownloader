@@ -99,7 +99,6 @@ static class OsuHelper
 		}
 
 		// Not found. Ask to user.
-
 		Window tempWindow = new Window()
 		{
 			Width = 0,

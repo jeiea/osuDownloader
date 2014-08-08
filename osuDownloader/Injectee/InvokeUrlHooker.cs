@@ -204,6 +204,7 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 			requestedBeatmaps.ContainsKey(beatmapId))
 		{
 			DownloadAndExecuteOsz(downloadLink);
+			requestedBeatmaps.Remove(beatmapId);
 		}
 		else
 		{

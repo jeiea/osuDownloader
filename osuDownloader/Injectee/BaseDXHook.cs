@@ -92,7 +92,8 @@ internal abstract class BaseDXHook: IDXHook
 				// Uninstall Hooks
 				if (Hooks.Count > 0)
 				{
-					// First disable the hook (by excluding all threads) and wait long enough to ensure that all hooks are not active
+					// First disable the hook (by excluding all threads) and wait long enough
+					// to ensure that all hooks are not active
 					foreach (var hook in Hooks)
 					{
 						// Lets ensure that no threads will be intercepted again
