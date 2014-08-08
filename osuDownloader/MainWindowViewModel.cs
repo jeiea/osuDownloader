@@ -236,7 +236,6 @@ public class MainWindowViewModel : ICallback, INotifyPropertyChanged
 		try
 		{
 			string thisFile = new Uri(System.Reflection.Assembly.GetExecutingAssembly().Location).LocalPath;
-			string injectee = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "RemoteDown.dll");
 
 			var osuCandidates = from proc in Process.GetProcesses()
 								where proc.ProcessName == "osu!"
@@ -264,19 +263,11 @@ public class MainWindowViewModel : ICallback, INotifyPropertyChanged
 				osu.WaitForInputIdle();
 			}
 
-			RemoteHooking.Inject(TargetPid, InjectionOptions.DoNotRequireStrongName, "osuDownloader.exe", injectee);
+			RemoteHooking.Inject(TargetPid, InjectionOptions.DoNotRequireStrongName, thisFile, thisFile);
 		}
 		catch (Exception extInfo)
 		{
-			// Unless creating new thread, MessageBox will disappear immediately
-			// when invoked from tray icon without window.
-			new Thread(new ThreadStart(() =>
-			{
-				MessageBox.Show("DLL파일이 있는지, 관리자 권한이 있는지 확인해주세요.", "후킹 실패");
-			})).Start();
-
 			LogException(extInfo);
-			return false;
 		}
 
 		try
@@ -287,16 +278,25 @@ public class MainWindowViewModel : ICallback, INotifyPropertyChanged
 
 			ThreadPool.QueueUserWorkItem(new WaitCallback(obj =>
 			{
-				InjecteeProxy = pipeFactory.CreateChannel();
+				try
+				{
+					InjecteeProxy = pipeFactory.CreateChannel();
 
-				InjecteeProxy.Subscribe();
+					InjecteeProxy.Subscribe();
 
-				(InjecteeProxy as ICommunicationObject).Faulted += ChannelFaulted;
+					(InjecteeProxy as ICommunicationObject).Faulted += ChannelFaulted;
+				}
+				catch (Exception e)
+				{
+					MessageBox.Show("DLL파일이 있는지, 관리자 권한이 있는지 확인해주세요.", "후킹 실패");
+					LogException(e);
+				}
 			}));
 		}
 		catch (Exception e)
 		{
 			LogException(e);
+			return false;
 		}
 
 		return true;

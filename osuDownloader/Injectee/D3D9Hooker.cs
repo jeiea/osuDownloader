@@ -2,29 +2,50 @@
 using SharpDX;
 using SharpDX.Direct3D9;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace OsuDownloader.Injectee
 {
 
-internal class ProgressEntry
+internal class EntryBase
 {
-	public DateTime Added;
+	/// <summary>   The time when message appears. This is also used to ordering message. </summary>
+	public DateTime Begin;
+}
+
+internal class NoticeEntry : EntryBase
+{
+	/// <summary>   The duration message shown. </summary>
+	public TimeSpan Duration;
+	/// <summary>   The message. </summary>
+	public string Message;
+}
+
+internal class ProgressEntry : EntryBase
+{
+	/// <summary>   Downloaded bytes. </summary>
 	public long Downloaded;
+	/// <summary>   Total bytes. </summary>
 	public long Total;
+	/// <summary>   The title. </summary>
 	public string Title;
+	/// <summary>   File path for download complete handler. </summary>
 	public string Path;
 }
 
 internal class D3D9Hooker: BaseDXHook, IHookerBase
 {
-	public DateTime Timer;
-	public Dictionary<object, ProgressEntry> DownloadQueue = new Dictionary<object, ProgressEntry>();
+	public Dictionary<object, EntryBase> MessageQueue = new Dictionary<object, EntryBase>();
 
 	Font MainFont;
+	Line BackLine;
 	int ScreenWidth = 1024;
 	int ScreenHeight = 768;
+	ColorBGRA background = new ColorBGRA(255, 255, 255, 192);
+	ColorBGRA foreground = new ColorBGRA(128, 255, 128, 192);
 
 	//LocalHook Direct3DDevice_EndSceneHook    = null;
 	LocalHook Direct3DDevice_ResetHook         = null;
@@ -55,6 +76,28 @@ internal class D3D9Hooker: BaseDXHook, IHookerBase
 		{
 			Dispose();
 		}
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>   Add message. It also enables hook if it was disabled. </summary>
+	///
+	/// <param name="key">      The key. </param>
+	/// <param name="entry">    The entry. </param>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	public void AddMessage(object key, EntryBase entry)
+	{
+		if (IsHooking == false)
+		{
+			// If remove it, progress event of first download request won't firing.
+			ThreadPool.QueueUserWorkItem(state =>
+			{
+				if (IsHooking == false)
+				{
+					SetHookState(true);
+				}
+			});
+		}
+		MessageQueue.Add(key, entry);
 	}
 
 	public override void Hook()
@@ -260,9 +303,6 @@ internal class D3D9Hooker: BaseDXHook, IHookerBase
 
 		Device device = (Device)devicePtr;
 
-		//ScreenWidth = pDestRect->Width;
-		//ScreenHeight = pDestRect->Height;
-
 		DoCaptureRenderTarget(device, "PresentHook");
 
 		if (pSourceRect == null || *pSourceRect == SharpDX.Rectangle.Empty)
@@ -324,90 +364,154 @@ internal class D3D9Hooker: BaseDXHook, IHookerBase
 			};
 			var rand = new Random();
 
-			DownloadQueue.Add(new object(), new ProgressEntry()
+			MessageQueue.Add(new object(), new ProgressEntry()
 			{
 				Title = lorem[rand.Next(0, lorem.Length - 1)],
-				Added = DateTime.Now,
+				Begin = DateTime.Now,
 				Total = rand.NextLong(1000 * 1000, 20 * 1000 * 1000),
 			});
 		}
 		try
 		{
-			List<object> arbi = new List<object>();
-			foreach (var item in DownloadQueue.Keys)
+			foreach (var key in MessageQueue.Keys.ToArray())
 			{
-				if (item is System.Net.WebClient == false)
+				if (key is System.Net.WebClient == false)
 				{
-					arbi.Add(item);
-				}
-			}
-			foreach (var key in arbi)
-			{
-				var item = DownloadQueue[key];
-				if (item.Downloaded >= item.Total)
-				{
-					DownloadQueue.Remove(key);
-				}
-				else
-				{
-					item.Downloaded += 1000000 / 60;
+					var item = MessageQueue[key] as ProgressEntry;
+					if (item == null)
+						continue;
+					if (item.Downloaded >= item.Total)
+					{
+						MessageQueue.Remove(key);
+					}
+					else
+					{
+						item.Downloaded += 1000000 / 60;
+					}
 				}
 			}
 
-			if (MainFont != null && MainFont.Device != device)
+			if (MainFont != null && MainFont.Device.NativePointer != device.NativePointer)
 			{
 				MainFont.Dispose();
 				MainFont = null;
 			}
 			if (MainFont == null)
 			{
+				// Measure screen size after device creation.
+				using(var renderTarget = device.GetRenderTarget(0))
+				{
+					ScreenWidth  = renderTarget.Description.Width;
+					ScreenHeight = renderTarget.Description.Height;
+				}
+
 				MainFont = new Font(device, new FontDescription()
 				{
-					Height = 18,
+					Height = (int)(Math.Min(ScreenWidth, ScreenHeight) * 0.03),
 					FaceName = "맑은 고딕",
-					Italic = false,
-					Width = 0,
 					CharacterSet = FontCharacterSet.Default,
-					OutputPrecision = FontPrecision.Default,
-					Quality = FontQuality.ClearType,
-					PitchAndFamily = FontPitchAndFamily.Default | FontPitchAndFamily.DontCare,
+					OutputPrecision = FontPrecision.ScreenOutline,
+					Quality = FontQuality.ClearTypeNatural,
+					PitchAndFamily = FontPitchAndFamily.Default,
 					Weight = FontWeight.Regular
 				});
 			}
-			var background = new ColorBGRA(255, 255, 255, 128);
-			var foreground = new ColorBGRA(32, 255, 32, 255);
-			var fontColor = new ColorBGRA(0, 0, 0, 255);
-			using(Line line = new Line(device) { Width = 20 })
+			if (BackLine != null && BackLine.Device.NativePointer != device.NativePointer)
 			{
-				int i = 0;
-				line.Begin();
-				foreach (var item in DownloadQueue.Values)
+				BackLine.Dispose();
+				BackLine = null;
+			}
+			if (BackLine == null)
+			{
+				BackLine = new Line(device) { Width = MainFont.Description.Height + 2 };
+			}
+
+			var fontColor  = new ColorBGRA(0, 0, 0, 255);
+
+			int i = 0;
+			var items = from pair in MessageQueue
+						orderby pair.Value.Begin
+						select pair;
+
+			float leftMargin = ScreenWidth * 0.01F;
+			float topMargin = ScreenHeight * 0.03F;
+			float spaceBetweenLines = MainFont.Description.Height * 1.5F;
+			int fontMarginX = (int)(MainFont.Description.Height * 0.2F);
+			int fontCorrectionY = (int)(MainFont.Description.Height * 0.5F);
+
+			//float screenCenter = ScreenWidth * 0.5F;
+			//float topMargin = ScreenHeight * 0.7F;
+			//float spaceBetweenLines = MainFont.Description.Height * 1.4F;
+			//int fontMarginX = (int)(MainFont.Description.Height * 0.2F);
+			//int fontCorrectionY = (int)(MainFont.Description.Height * 0.5F);
+
+			BackLine.Begin();
+			foreach (var pair in items.ToArray())
+			{
+				var entry = pair.Value;
+				Vector2 lineStart = new Vector2(leftMargin, i * spaceBetweenLines + topMargin);
+
+				if (entry is ProgressEntry)
 				{
+					ProgressEntry item = (ProgressEntry)entry;
 					string progress = string.Format("[{0,5:F1}MB /{1,5:F1}MB] {2}",
 													item.Downloaded / 1000000F, item.Total / 1000000F, item.Title);
 					Rectangle rect = MainFont.MeasureText(null, progress, FontDrawFlags.SingleLine);
 
-					line.Draw(new Vector2[]
+					float lineLength = rect.Right + fontMarginX * 2;
+					float midPoint = lineStart.X + lineLength * item.Downloaded / item.Total;
+					Vector2[] line = new Vector2[]
 					{
-						new Vector2(20,  i * 30 + 20),
-						new Vector2(24 + rect.Right, i * 30 + 20)
-					}, background);
-					line.Draw(new Vector2[]
-					{
-						new Vector2(20,  i * 30 + 20),
-						new Vector2(24 + rect.Right * item.Downloaded / item.Total, i * 30 + 20)
-					}, foreground);
+						lineStart,
+						new Vector2(midPoint, lineStart.Y)
+					};
+					new Vector2(lineStart.X + lineLength, lineStart.Y);
+					BackLine.Draw(line, foreground);
 
-					MainFont.DrawText(null, progress, 20, i * 30 + 12, fontColor);
+					// Reduce length by multiplying download rate.
+					line[0] = line[1];
+					line[1] = new Vector2(lineStart.X + lineLength, lineStart.Y);
+					BackLine.Draw(line, background);
+
+					MainFont.DrawText(null, progress,
+									  (int)lineStart.X + fontMarginX,
+									  (int)lineStart.Y - fontCorrectionY,
+									  fontColor);
 					i++;
 				}
-				line.End();
-				line.Dispose();
+				else if (entry is NoticeEntry)
+				{
+					NoticeEntry item = (NoticeEntry)entry;
+					Rectangle rect = MainFont.MeasureText(null, item.Message, FontDrawFlags.SingleLine);
+
+					var endTime = item.Begin + item.Duration;
+					var remainingTime = endTime - DateTime.Now;
+					if (remainingTime.TotalSeconds < 0)
+					{
+						MessageQueue.Remove(pair.Key);
+					}
+					byte alpha = (byte)Math.Min(remainingTime.TotalMilliseconds * 0.5, 255);
+					var noticeColor = new ColorBGRA(255, 255, 32, alpha);
+					var noticeFontColor = new ColorBGRA(0, 0, 0, alpha);
+
+					BackLine.Draw(new Vector2[]
+					{
+						lineStart,
+						new Vector2(lineStart.X + rect.Right + fontMarginX, lineStart.Y)
+					}, noticeColor);
+
+					MainFont.DrawText(null, item.Message,
+									  (int)lineStart.X + fontMarginX,
+									  (int)lineStart.Y - fontCorrectionY,
+									  noticeFontColor);
+					i++;
+				}
 			}
+			BackLine.End();
 		}
 		catch (Exception e)
 		{
-			OsuDownloader.MainWindowViewModel.LogException(e);
+			MainWindowViewModel.LogException(e);
 		}
 	}
 

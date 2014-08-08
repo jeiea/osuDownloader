@@ -63,7 +63,6 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 								 new DShowWindow(ShowWindow_Hooked), this);
 
 			Overlayer = new D3D9Hooker();
-			Overlayer.SetHookState(true);
 
 			ResetHookAcl(HookManager.HookingThreadIds.ToArray());
 		}
@@ -196,7 +195,7 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 		Clipboard.SetText(downloadLink);
 
 		requestedBeatmaps
-		.Where(x => (DateTime.Now - x.Value).TotalSeconds >= 2)
+		.Where(x => (DateTime.Now - x.Value).TotalSeconds >= 1)
 		.Select(x => x.Key).ToList()
 		.ForEach(x => requestedBeatmaps.Remove(x));
 
@@ -208,6 +207,12 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 		}
 		else
 		{
+			Overlayer.AddMessage(new object(), new NoticeEntry()
+			{
+				Begin = DateTime.Now,
+				Duration = TimeSpan.FromSeconds(2),
+				Message = "이미 있는 비트맵입니다. URL이 클립보드로 복사되었습니다. 받으시려면 더블클릭 해 주세요."
+			});
 			requestedBeatmaps[beatmapId] = DateTime.Now;
 		}
 	}
@@ -218,16 +223,16 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 
 		string cookie = ApplyBloodcatOption().ToString();
 
-		WebClient client = new WebClient();
+		WebClient client = new WebClient() { Encoding = Encoding.UTF8 };
 		client.DownloadProgressChanged += new DownloadProgressChangedEventHandler(client_DownloadProgressChanged);
 		client.DownloadFileCompleted += new AsyncCompletedEventHandler(client_DownloadFileCompleted);
 
-		Overlayer.DownloadQueue.Add(client, new ProgressEntry()
+		Overlayer.AddMessage(client, new ProgressEntry()
 		{
-			Added = DateTime.Now,
+			Begin = DateTime.Now,
 			Title = Path.GetFileName(url),
 			Total = int.MaxValue,
-			Path = tempFile
+			Path  = tempFile
 		});
 
 		client.DownloadFileAsync(new Uri(url), tempFile, client);
@@ -235,7 +240,7 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 
 	static void client_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
 	{
-		ProgressEntry entry = Overlayer.DownloadQueue[e.UserState];
+		ProgressEntry entry = (ProgressEntry)Overlayer.MessageQueue[e.UserState];
 		if (entry.Total == int.MaxValue)
 		{
 			try
@@ -271,33 +276,28 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 
 		WebClient client = (WebClient)e.UserState;
 
-		string downloadPath = Path.Combine(DownloadDir, Overlayer.DownloadQueue[client].Title);
+		var progressVisual = (ProgressEntry)Overlayer.MessageQueue[client];
+		string downloadPath = Path.Combine(DownloadDir, progressVisual.Title);
 		try
 		{
-			File.Move(Overlayer.DownloadQueue[client].Path, downloadPath);
+			File.Move(progressVisual.Path, downloadPath);
 		}
 		catch (Exception ex)
 		{
 			MainWindowViewModel.LogException(ex);
-			downloadPath = Overlayer.DownloadQueue[client].Path;
+			downloadPath = progressVisual.Path;
 		}
 
 		string osuExePath = Process.GetCurrentProcess().MainModule.FileName;
-		ProcessStartInfo psi = new ProcessStartInfo()
-		{
-			Verb = "open",
-			FileName = osuExePath,
-			Arguments = downloadPath,
-		};
 
-		Overlayer.DownloadQueue.Remove(client);
+		Overlayer.MessageQueue.Remove(client);
 
 		try
 		{
-			Process.Start(psi);
+			Process.Start(osuExePath, downloadPath);
 		}
 		// TODO: IDropTarget으로 강제 갱신하는 방법 있음
-		catch (Win32Exception ex)
+		catch (Win32Exception)
 		{
 			string[] pathElements = new string[]
 			{
