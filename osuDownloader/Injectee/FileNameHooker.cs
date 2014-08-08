@@ -7,7 +7,6 @@ using EasyHook;
 using System.Runtime.InteropServices;
 using System.Net;
 using System.Diagnostics;
-using Newtonsoft.Json.Linq;
 using System.IO;
 using System.ServiceModel;
 using System.ComponentModel;

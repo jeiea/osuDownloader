@@ -68,16 +68,23 @@ internal class D3D9Hooker: BaseDXHook, IHookerBase
 
 	public void SetHookState(bool request)
 	{
-		if (request)
+		try
 		{
-			Hook();
+			if (request)
+			{
+				Hook();
+			}
+			else
+			{
+				Dispose();
+				Direct3DDevice_PresentHook = null;
+				Direct3DDevice_ResetHook = null;
+				Direct3DDeviceEx_PresentExHook = null;
+			}
 		}
-		else
+		catch (Exception e)
 		{
-			Dispose();
-			Direct3DDevice_PresentHook = null;
-			Direct3DDevice_ResetHook = null;
-			Direct3DDeviceEx_PresentExHook = null;
+			MainWindowViewModel.LogException(e);
 		}
 	}
 

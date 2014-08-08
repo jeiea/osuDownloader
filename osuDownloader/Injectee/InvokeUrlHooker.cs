@@ -1,13 +1,15 @@
 ﻿using EasyHook;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -16,6 +18,27 @@ using System.Windows;
 
 namespace OsuDownloader.Injectee
 {
+
+[DataContract]
+internal class BloodcatResult
+{
+	[DataMember]
+	public int id;
+	[DataMember]
+	public string artist;
+	[DataMember]
+	public string title;
+}
+
+[DataContract]
+internal class BloodcatContainer
+{
+	[DataMember]
+	public int resultCount;
+
+	[DataMember]
+	public BloodcatResult[] results;
+}
 
 class InvokeUrlHooker : IHookerBase, IDisposable
 {
@@ -170,10 +193,14 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 		// Query to bloodcat.com whether the beatmap exists.
 
 		string json = client.DownloadString("http://bloodcat.com/osu/");
-		JObject result = JObject.Parse(json);
+		var jsonStream = new MemoryStream(Encoding.UTF8.GetBytes(json));
+		var jsonParser = new DataContractJsonSerializer(typeof(BloodcatContainer));
+		var container = (BloodcatContainer)jsonParser.ReadObject(jsonStream);
 
-		int count = (int)result["resultCount"];
-		if (count != 1)
+		// If we use CsQuery, then below is possible.
+		//dynamic result = JSON.ParseJSON(json);
+
+		if (container.resultCount != 1)
 		{
 			// If not found or undecidable, open official page.
 			SHELLEXECUTEINFO exInfo = new SHELLEXECUTEINFO()
@@ -187,8 +214,7 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 			return;
 		}
 
-		var beatmapJson = result["results"][0];
-		int beatmapId = (int)beatmapJson["id"];
+		int beatmapId = container.results[0].id;
 
 		// Copy URL for sharing to clipboard.
 		string downloadLink = BloodcatDownloadUrl + beatmapId;
@@ -444,7 +470,6 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 		}
 		catch (Exception e)
 		{
-			MainWindowViewModel.LogException(e);
 		}
 
 		//call original API...
