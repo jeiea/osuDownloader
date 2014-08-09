@@ -49,6 +49,9 @@ class FileNameHooker : IHookerBase, IDisposable
 	/// <summary>   CreateFile function hook for boss mode. </summary>
 	LocalHook CreateFileHook;
 
+	/// <summary>   The songs dir. For hook function it should be lowered.</summary>
+	static string SongsDir;
+
 	static FileNameHooker()
 	{
 		var sb = new StringBuilder();
@@ -60,6 +63,9 @@ class FileNameHooker : IHookerBase, IDisposable
 		sb.Append(@").*$");
 
 		SkinNames = new Regex(sb.ToString(), RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+
+		var OsuDir = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+		SongsDir = Path.Combine(OsuDir, "Songs").ToLower();
 	}
 
 	private static void AssignAlternativeImage()
@@ -223,8 +229,10 @@ class FileNameHooker : IHookerBase, IDisposable
 			filename = filename.ToLower();
 			// Frequency order.
 			if (!filename.EndsWith(".exe") &&
-				filename.IndexOf("\\osu!\\data\\") == -1 &&
+				filename.StartsWith(SongsDir) && // also block Data directory
 				!filename.EndsWith(".osu") &&
+				!filename.EndsWith(".osz") &&
+				!filename.EndsWith(".osk") &&
 				!filename.EndsWith(".mp3") &&
 				!filename.EndsWith(".wav"))
 			{

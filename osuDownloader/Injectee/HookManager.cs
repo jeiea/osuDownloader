@@ -105,9 +105,19 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 
 				// d3d9.dll load always. so tests with opengl32.dll.
 				if (GetModuleHandle("opengl32.dll") == IntPtr.Zero)
-					Overlayer = new D3D9Hooker();
+				{
+					var hooker = new D3D9Hooker();
+
+					// If hook failed, pass to window notifier by exception.
+					hooker.SetHookState(true);
+
+					// Accepts D3 hook if test passes.
+					Overlayer = hooker;
+				}
 				else
-					throw new ApplicationException("오버레이 창 띄우기 개시.");
+				{
+					throw new ApplicationException("DirectX9 hook seems unavailable.");
+				}
 			}
 			catch
 			{
@@ -119,7 +129,7 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 				Overlayer.AddMessage(new object(), new NoticeEntry()
 				{
 					Begin = DateTime.Now,
-					Duration = TimeSpan.FromSeconds(8),
+					Duration = TimeSpan.FromSeconds(5),
 					Message = "비트맵 다운로더가 동작합니다."
 				});
 			}

@@ -16,6 +16,10 @@
     <SkipEvent type="OsuDownloader.MainViewModel" rx=".*" /> -->
   <!--<SkipNamespace name="OsuDownloader" /> -->
 
+    <!-- WCF DataContract use reflection. -->
+    <SkipField type="OsuDownloader.Injectee.BloodcatResult" rx=".*" />
+    <SkipField type="OsuDownloader.Injectee.BloodcatContainer" rx=".*" />
+
     <!-- Exported as xml serialized settings file. -->
     <SkipType name="OsuDownloader.BloodcatDownloadOption" />
     <SkipField type="OsuDownloader.BloodcatDownloadOption" rx=".*" />

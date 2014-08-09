@@ -1,0 +1,1 @@
+This program is powered by Easyhook which follows LGPL v2.1.

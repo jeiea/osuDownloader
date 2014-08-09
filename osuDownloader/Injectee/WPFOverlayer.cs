@@ -132,7 +132,7 @@ internal class ProgressWindow : Window
 			}
 
 			Refresher = new DispatcherTimer();
-			Refresher.Interval = TimeSpan.FromMilliseconds(100);
+			Refresher.Interval = TimeSpan.FromMilliseconds(50);
 			Refresher.IsEnabled = true;
 			Refresher.Tick += Refresher_Tick;
 			Refresher.Start();
@@ -224,6 +224,7 @@ internal class ProgressWindow : Window
 			}
 			else if (entry is NoticeEntry)
 			{
+				var item = (NoticeEntry)entry;
 				if (Progresses.ContainsKey(pair.Key))
 				{
 					MainPanel.Children.Remove(Progresses[pair.Key]);
@@ -231,6 +232,8 @@ internal class ProgressWindow : Window
 				}
 
 				tb.Background = NoticeBackground;
+				var remaining = (item.Begin + item.Duration) - DateTime.Now;
+				tb.Opacity = Math.Min(Math.Max(remaining.TotalMilliseconds * 0.002D, 0), 1);
 			}
 		}
 	}

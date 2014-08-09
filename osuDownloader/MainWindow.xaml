@@ -103,7 +103,7 @@
             </TextBlock.Effect>
         </TextBlock>
         <TextBlock HorizontalAlignment="Left" Margin="458,213,0,0" TextWrapping="Wrap"
-                   VerticalAlignment="Top" FontSize="14" Text=".140808" Foreground="White">
+                   VerticalAlignment="Top" FontSize="14" Text=".140809" Foreground="White">
             <TextBlock.Effect>
                 <DropShadowEffect BlurRadius="4" ShadowDepth="2"/>
             </TextBlock.Effect>
