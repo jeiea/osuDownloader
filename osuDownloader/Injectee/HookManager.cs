@@ -17,6 +17,50 @@ using System.Windows;
 
 namespace OsuDownloader.Injectee
 {
+
+internal class EntryBase
+{
+	/// <summary>   The time when message appears. This is also used to ordering message. </summary>
+	public DateTime Begin;
+
+	public virtual string Message { get; set; }
+}
+
+internal class NoticeEntry : EntryBase
+{
+	/// <summary>   The duration message shown. </summary>
+	public TimeSpan Duration;
+}
+
+internal class ProgressEntry : EntryBase
+{
+	/// <summary>   Downloaded bytes. </summary>
+	public long Downloaded;
+	/// <summary>   Total bytes. </summary>
+	public long Total;
+	/// <summary>   The title. </summary>
+	public string Title;
+
+	public override string Message
+	{
+		get
+		{
+			string format = (Total == int.MaxValue)
+							? "[     요청 중    ] {2}"
+							: "[{0,5:F1}MB /{1,5:F1}MB] {2}";
+			return string.Format(format, Downloaded / 1000000F, Total / 1000000F, Title);
+		}
+		set { }
+	}
+}
+
+internal interface IOverlayer
+{
+	Dictionary<object, EntryBase> GetMessageQueue();
+
+	void AddMessage(object key, EntryBase entry);
+}
+
 [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
 public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 {
@@ -27,7 +71,7 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 
 	FileNameHooker Blinder;
 	InvokeUrlHooker Downloader;
-	D3D9Hooker Overlayer;
+	IOverlayer Overlayer;
 
 	/// <summary>   Thread termination event. </summary>
 	ManualResetEvent QuitEvent;
@@ -51,6 +95,35 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 
 		try
 		{
+			try
+			{
+				// opengl32.dll loaded lazily. wait it.
+				while (Process.GetCurrentProcess().MainWindowHandle == IntPtr.Zero)
+				{
+					Thread.Sleep(100);
+				}
+
+				// d3d9.dll load always. so tests with opengl32.dll.
+				if (GetModuleHandle("opengl32.dll") == IntPtr.Zero)
+					Overlayer = new D3D9Hooker();
+				else
+					throw new ApplicationException("오버레이 창 띄우기 개시.");
+			}
+			catch
+			{
+				Overlayer = new WPFOverlayer();
+			}
+			if (Overlayer != null)
+			{
+				InvokeUrlHooker.Overlayer = Overlayer;
+				Overlayer.AddMessage(new object(), new NoticeEntry()
+				{
+					Begin = DateTime.Now,
+					Duration = TimeSpan.FromSeconds(8),
+					Message = "비트맵 다운로더가 동작합니다."
+				});
+			}
+
 			Downloader = new InvokeUrlHooker();
 			Downloader.SetHookState(true);
 		}
@@ -176,6 +249,9 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 
 	[DllImport("kernel32.dll")]
 	static extern uint GetCurrentThreadId();
+
+	[DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+	public static extern IntPtr GetModuleHandle(string lpModuleName);
 
 }
 }

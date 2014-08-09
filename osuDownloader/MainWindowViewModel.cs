@@ -272,19 +272,11 @@ public class MainWindowViewModel : ICallback, INotifyPropertyChanged
 
 		try
 		{
-			var pipeFactory = new DuplexChannelFactory<IOsuInjectee>(
-				this, new NetNamedPipeBinding(),
-				new EndpointAddress("net.pipe://localhost/osuBeatmapHooker"));
-
 			ThreadPool.QueueUserWorkItem(new WaitCallback(obj =>
 			{
 				try
 				{
-					InjecteeProxy = pipeFactory.CreateChannel();
-
-					InjecteeProxy.Subscribe();
-
-					(InjecteeProxy as ICommunicationObject).Faulted += ChannelFaulted;
+					ConnectToInjectee();
 				}
 				catch (Exception e)
 				{
@@ -302,23 +294,44 @@ public class MainWindowViewModel : ICallback, INotifyPropertyChanged
 		return true;
 	}
 
+	private void ConnectToInjectee()
+	{
+		var pipeFactory = new DuplexChannelFactory<IOsuInjectee>(
+			this, new NetNamedPipeBinding(),
+			new EndpointAddress("net.pipe://localhost/osuBeatmapHooker"));
+
+		InjecteeProxy = pipeFactory.CreateChannel();
+
+		InjecteeProxy.Subscribe();
+
+		(InjecteeProxy as ICommunicationObject).Faulted += ChannelFaulted;
+	}
+
 	void ChannelFaulted(object sender, EventArgs e)
 	{
 		InjecteeProxy = null;
 
-		if (AutoTerminate)
+		try
 		{
-			// BeginInvokeShutdown doesn't care OnExit() and the others.
-			Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-			{
-				Application.Current.Shutdown();
-			}));
+			ConnectToInjectee();
 		}
 
-		_IsHooking = false;
-		_IsInstalled = false;
-		OnPropertyChanged("IsInstalled");
-		OnPropertyChanged("IsHooking");
+		catch
+		{
+			if (AutoTerminate)
+			{
+				// BeginInvokeShutdown doesn't care OnExit() and the others.
+				Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+				{
+					Application.Current.Shutdown();
+				}));
+			}
+
+			_IsHooking = false;
+			_IsInstalled = false;
+			OnPropertyChanged("IsInstalled");
+			OnPropertyChanged("IsHooking");
+		}
 	}
 
 	public static void LogException(Exception extInfo)

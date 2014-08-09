@@ -10,33 +10,7 @@ using System.Threading;
 namespace OsuDownloader.Injectee
 {
 
-internal class EntryBase
-{
-	/// <summary>   The time when message appears. This is also used to ordering message. </summary>
-	public DateTime Begin;
-}
-
-internal class NoticeEntry : EntryBase
-{
-	/// <summary>   The duration message shown. </summary>
-	public TimeSpan Duration;
-	/// <summary>   The message. </summary>
-	public string Message;
-}
-
-internal class ProgressEntry : EntryBase
-{
-	/// <summary>   Downloaded bytes. </summary>
-	public long Downloaded;
-	/// <summary>   Total bytes. </summary>
-	public long Total;
-	/// <summary>   The title. </summary>
-	public string Title;
-	/// <summary>   File path for download complete handler. </summary>
-	public string Path;
-}
-
-internal class D3D9Hooker: BaseDXHook, IHookerBase
+internal class D3D9Hooker: BaseDXHook, IOverlayer, IHookerBase
 {
 	public Dictionary<object, EntryBase> MessageQueue = new Dictionary<object, EntryBase>();
 
@@ -108,6 +82,11 @@ internal class D3D9Hooker: BaseDXHook, IHookerBase
 			});
 		}
 		MessageQueue.Add(key, entry);
+	}
+
+	public Dictionary<object, EntryBase> GetMessageQueue()
+	{
+		return MessageQueue;
 	}
 
 	public override void Hook()
@@ -409,6 +388,7 @@ internal class D3D9Hooker: BaseDXHook, IHookerBase
 
 			int i = 0;
 			var items = from pair in MessageQueue
+						where pair.Value.Begin < DateTime.Now
 						orderby pair.Value.Begin
 						select pair;
 
@@ -426,14 +406,7 @@ internal class D3D9Hooker: BaseDXHook, IHookerBase
 				if (entry is ProgressEntry)
 				{
 					ProgressEntry item = (ProgressEntry)entry;
-					string format = item.Total == int.MaxValue
-									? "[     요청 중    ] {2}"
-									: "[{0,5:F1}MB /{1,5:F1}MB] {2}";
-					string progress = string.Format(format,
-													item.Downloaded / 1000000F,
-													item.Total / 1000000F,
-													item.Title);
-					Rectangle rect = MainFont.MeasureText(null, progress, FontDrawFlags.SingleLine);
+					Rectangle rect = MainFont.MeasureText(null, item.Message, FontDrawFlags.SingleLine);
 
 					float lineLength = rect.Right + fontMarginX * 2;
 					Vector2 lineStart = new Vector2()
@@ -455,7 +428,7 @@ internal class D3D9Hooker: BaseDXHook, IHookerBase
 					line[1] = new Vector2(lineStart.X + lineLength, lineStart.Y);
 					BackLine.Draw(line, background);
 
-					MainFont.DrawText(null, progress,
+					MainFont.DrawText(null, item.Message,
 									  (int)lineStart.X + fontMarginX,
 									  (int)lineStart.Y - fontCorrectionY,
 									  fontColor);

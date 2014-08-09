@@ -168,6 +168,7 @@
     <Compile Include="Hotkey.cs" />
     <Compile Include="IncompleteSettingsProvider.cs" />
     <Compile Include="Injectee\InvokeUrlHooker.cs" />
+    <Compile Include="Injectee\WPFOverlayer.cs" />
     <Compile Include="Settings.cs" />
     <Page Include="Pic\BloodCat.xaml">
       <SubType>Designer</SubType>

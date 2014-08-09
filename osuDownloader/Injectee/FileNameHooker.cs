@@ -56,10 +56,10 @@ class FileNameHooker : IHookerBase, IDisposable
 		sb.Append(@"approachcircle|button-|comboburst|count\d|cursor|default-\d|followpoint|");
 		sb.Append(@"fruit-|go|hit|inputoverlay|mania-|particle|pause-|pippidon|ranking-|");
 		sb.Append(@"ready|reversearrow|score-|scorebar-|section-|slider|spinner-|star|taiko-|");
-		sb.Append(@"taikobigcircle|taikohitciecle");
+		sb.Append(@"taikobigcircle|taikohitcircle");
 		sb.Append(@").*$");
 
-		SkinNames = new Regex(sb.ToString(), RegexOptions.IgnoreCase | RegexOptions.Compiled);
+		SkinNames = new Regex(sb.ToString(), RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 	}
 
 	private static void AssignAlternativeImage()

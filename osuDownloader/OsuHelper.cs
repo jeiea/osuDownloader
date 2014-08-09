@@ -6,6 +6,7 @@ using System.IO;
 using System.Windows;
 using Microsoft.Win32;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace OsuDownloader
 {
@@ -161,5 +162,64 @@ static class OsuHelper
 			return false;
 		}
 	}
+
+	public static Rect GetOsuWindowClient()
+	{
+		var osuProcs = Process.GetProcessesByName("osu!");
+
+		IntPtr mainHwnd = IntPtr.Zero;
+		foreach (var proc in osuProcs)
+		{
+			if (proc.MainWindowHandle != IntPtr.Zero)
+			{
+				mainHwnd = proc.MainWindowHandle;
+				break;
+			}
+		}
+
+		if (mainHwnd == IntPtr.Zero)
+			return Rect.Empty;
+
+		//WINDOWPLACEMENT placement = new WINDOWPLACEMENT();
+		//placement.length = Marshal.SizeOf(placement);
+		//GetWindowPlacement(mainHwnd, ref placement);
+
+		//var rect = placement.rcNormalPosition;
+
+		var rt = new System.Drawing.Rectangle();
+		GetClientRect(mainHwnd, out rt);
+
+		if (rt.IsEmpty)
+		{
+			return Rect.Empty;
+		}
+
+		var lt = new System.Drawing.Point(rt.Left, rt.Top);
+		ClientToScreen(mainHwnd, ref lt);
+		var rb = new System.Drawing.Point(rt.Right, rt.Bottom);
+		ClientToScreen(mainHwnd, ref rb);
+
+		return new Rect(lt.X, lt.Y, rb.X - lt.X, rb.Y - lt.Y);
+	}
+
+	[DllImport("user32.dll")]
+	[return: MarshalAs(UnmanagedType.Bool)]
+	static extern bool GetWindowPlacement(IntPtr hWnd, ref WINDOWPLACEMENT lpwndpl);
+
+	private struct WINDOWPLACEMENT
+	{
+		public int length;
+		public int flags;
+		public Injectee.ShowWindowCommands showCmd;
+		public System.Drawing.Point ptMinPosition;
+		public System.Drawing.Point ptMaxPosition;
+		public System.Drawing.Rectangle rcNormalPosition;
+	}
+
+	[DllImport("user32.dll", SetLastError = true)]
+	static extern bool GetClientRect(IntPtr hwnd, out System.Drawing.Rectangle lpRect);
+
+	[DllImport("user32.dll")]
+	static extern bool ClientToScreen(IntPtr hWnd, ref System.Drawing.Point lpPoint);
 }
 }

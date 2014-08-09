@@ -52,12 +52,12 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 		}
 	}
 
+	public static IOverlayer Overlayer;
+
 	/// <summary>   ShellExecuteEx hook. Intercept url opens. </summary>
 	LocalHook ShellExecuteExHook;
 	/// <summary>   ShowWindow function hook. This is necessary during fullscreen mode. </summary>
 	LocalHook ShowWindowHook;
-
-	static D3D9Hooker Overlayer;
 
 	/// <summary>   true if disposed. </summary>
 	private bool Disposed;
@@ -68,7 +68,10 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 	/// download.
 	/// </summary>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	static Dictionary<int, DateTime> requestedBeatmaps = new Dictionary<int, DateTime>();
+	static Dictionary<int, DateTime> RequestedBeatmaps = new Dictionary<int, DateTime>();
+
+	/// <summary>   Full pathname of the downloading file. </summary>
+	static Dictionary<WebClient, string> DownloadPath = new Dictionary<WebClient, string>();
 
 	public void SetHookState(bool request)
 	{
@@ -85,8 +88,6 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 								 LocalHook.GetProcAddress("user32.dll", "ShowWindow"),
 								 new DShowWindow(ShowWindow_Hooked), this);
 
-			Overlayer = new D3D9Hooker();
-
 			ResetHookAcl(HookManager.HookingThreadIds.ToArray());
 		}
 		else
@@ -100,11 +101,6 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 			{
 				ShowWindowHook.Dispose();
 				ShowWindowHook = null;
-			}
-			if (Overlayer != null)
-			{
-				Overlayer.Dispose();
-				Overlayer = null;
 			}
 		}
 	}
@@ -220,27 +216,42 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 		string downloadLink = BloodcatDownloadUrl + beatmapId;
 		Clipboard.SetText(downloadLink);
 
-		requestedBeatmaps
+		RequestedBeatmaps
 		.Where(x => (DateTime.Now - x.Value).TotalSeconds >= 1)
 		.Select(x => x.Key).ToList()
-		.ForEach(x => requestedBeatmaps.Remove(x));
+		.ForEach(x => RequestedBeatmaps.Remove(x));
 
 		// Download if already exists or double clicked.
 		if (OsuHelper.IsTakenBeatmap(beatmapId) == false ||
-			requestedBeatmaps.ContainsKey(beatmapId))
+			RequestedBeatmaps.ContainsKey(beatmapId))
 		{
 			DownloadAndExecuteOsz(downloadLink);
-			requestedBeatmaps.Remove(beatmapId);
+			RequestedBeatmaps.Remove(beatmapId);
 		}
 		else
 		{
-			Overlayer.AddMessage(new object(), new NoticeEntry()
+			Message(new object(), new NoticeEntry()
 			{
 				Begin = DateTime.Now,
 				Duration = TimeSpan.FromSeconds(2),
 				Message = "이미 있는 비트맵입니다. URL이 클립보드로 복사되었습니다. 받으시려면 더블클릭 해 주세요."
 			});
-			requestedBeatmaps[beatmapId] = DateTime.Now;
+			RequestedBeatmaps[beatmapId] = DateTime.Now;
+		}
+	}
+
+	static void Message(object key, EntryBase entry)
+	{
+		try
+		{
+			if (Overlayer != null)
+			{
+				Overlayer.AddMessage(key, entry);
+			}
+		}
+		catch (Exception e)
+		{
+			MainWindowViewModel.LogException(e);
 		}
 	}
 
@@ -254,12 +265,13 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 		client.DownloadProgressChanged += new DownloadProgressChangedEventHandler(client_DownloadProgressChanged);
 		client.DownloadFileCompleted += new AsyncCompletedEventHandler(client_DownloadFileCompleted);
 
-		Overlayer.AddMessage(client, new ProgressEntry()
+		DownloadPath.Add(client, tempFile);
+
+		Message(client, new ProgressEntry()
 		{
 			Begin = DateTime.Now,
 			Title = Path.GetFileName(url),
 			Total = int.MaxValue,
-			Path  = tempFile
 		});
 
 		client.DownloadFileAsync(new Uri(url), tempFile, client);
@@ -267,15 +279,17 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 
 	static void client_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
 	{
-		ProgressEntry entry = (ProgressEntry)Overlayer.MessageQueue[e.UserState];
+		if (Overlayer == null)
+			return;
+
+		ProgressEntry entry = (ProgressEntry)Overlayer.GetMessageQueue()[e.UserState];
 		if (entry.Total == int.MaxValue)
 		{
 			try
 			{
 				WebClient client = (WebClient)e.UserState;
 
-				string disposition = client.ResponseHeaders["Content-Disposition"];
-				entry.Title = Regex.Match(disposition, "filename\\s*=\\s*\"(.*?)\"").Groups[1].ToString();
+				entry.Title = GetDisposition(client);
 
 				if (File.Exists(Path.Combine("C:\\", entry.Title)))
 				{
@@ -293,6 +307,12 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 		entry.Downloaded = e.BytesReceived;
 	}
 
+	static string GetDisposition(WebClient client)
+	{
+		string disposition = client.ResponseHeaders["Content-Disposition"];
+		return Regex.Match(disposition, "filename\\s*=\\s*\"(.*?)\"").Groups[1].ToString();
+	}
+
 	static void client_DownloadFileCompleted(object sender, AsyncCompletedEventArgs e)
 	{
 		if (e.Cancelled)
@@ -303,25 +323,27 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 
 		WebClient client = (WebClient)e.UserState;
 
-		var progressVisual = (ProgressEntry)Overlayer.MessageQueue[client];
-		string downloadPath = Path.Combine(DownloadDir, progressVisual.Title);
+		if (Overlayer != null)
+		{
+			Overlayer.GetMessageQueue().Remove(client);
+		}
+
+		string finalPath = Path.Combine(DownloadDir, GetDisposition(client));
 		try
 		{
-			File.Move(progressVisual.Path, downloadPath);
+			File.Move(DownloadPath[client], finalPath);
 		}
 		catch (Exception ex)
 		{
 			MainWindowViewModel.LogException(ex);
-			downloadPath = progressVisual.Path;
+			return;
 		}
 
 		string osuExePath = Process.GetCurrentProcess().MainModule.FileName;
 
-		Overlayer.MessageQueue.Remove(client);
-
 		try
 		{
-			Process.Start(osuExePath, downloadPath);
+			Process.Start(osuExePath, finalPath);
 		}
 		// TODO: IDropTarget으로 강제 갱신하는 방법 있음
 		catch (Win32Exception)
@@ -330,11 +352,11 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 			{
 				Path.GetDirectoryName(osuExePath),
 				"Songs",
-				Path.GetFileName(downloadPath),
+				Path.GetFileName(finalPath),
 			};
 			// For .NET 3.5
 			string destPath = pathElements.Aggregate(Path.Combine);
-			File.Move(downloadPath, destPath);
+			File.Move(finalPath, destPath);
 		}
 	}
 
