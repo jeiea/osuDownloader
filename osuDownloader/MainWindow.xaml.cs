@@ -41,7 +41,7 @@ public partial class MainWindow : Window
 		Tray = new TaskbarIcon()
 		{
 			IconSource = new BitmapImage(new Uri("pack://application:,,,/icon2.ico")),
-			ToolTipText = "Osu Beatmap Downloader v1.0",
+			ToolTipText = "Osu Beatmap Downloader v2",
 		};
 		Tray.TrayMouseDoubleClick += ShowWindow_Handler;
 

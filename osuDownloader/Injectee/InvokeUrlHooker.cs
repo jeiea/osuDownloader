@@ -328,9 +328,10 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 			Overlayer.GetMessageQueue().Remove(client);
 		}
 
+		string finalPath;
 		try
 		{
-			string finalPath = Path.Combine(DownloadDir, GetDisposition(client));
+			finalPath = Path.Combine(DownloadDir, GetDisposition(client));
 			File.Move(DownloadPath[client], finalPath);
 		}
 		catch (Exception ex)
