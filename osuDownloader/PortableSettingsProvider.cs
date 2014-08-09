@@ -27,15 +27,18 @@ public class PortableSettingsProvider : SettingsProvider
 	{
 		get
 		{
-			if (Application.ProductName.Trim().Length > 0)
-			{
-				return Application.ProductName;
-			}
-			else
-			{
-				FileInfo fi = new FileInfo(Application.ExecutablePath);
-				return fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
-			}
+			// Converted only dll path used.
+			return Path.GetFileNameWithoutExtension(System.Reflection.Assembly.GetAssembly(GetType()).Location);
+
+			//if (Application.ProductName.Trim().Length > 0)
+			//{
+			//    return Application.ProductName;
+			//}
+			//else
+			//{
+			//    FileInfo fi = new FileInfo(Application.ExecutablePath);
+			//    return fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
+			//}
 		}
 		set { }
 		//Do nothing
@@ -49,8 +52,9 @@ public class PortableSettingsProvider : SettingsProvider
 	public virtual string GetAppSettingsPath()
 	{
 		// Used to determine where to store the settings
-		System.IO.FileInfo fi = new System.IO.FileInfo(Application.ExecutablePath);
-		return fi.DirectoryName;
+		//System.IO.FileInfo fi = new System.IO.FileInfo(Application.ExecutablePath);
+		//return fi.DirectoryName;
+		return Path.GetDirectoryName(System.Reflection.Assembly.GetAssembly(GetType()).Location);
 	}
 
 	public virtual string GetAppSettingsFilename()

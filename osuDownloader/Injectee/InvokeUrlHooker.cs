@@ -259,11 +259,12 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 	{
 		string tempFile = Path.GetTempFileName();
 
-		string cookie = ApplyBloodcatOption().ToString();
-
 		WebClient client = new WebClient() { Encoding = Encoding.UTF8 };
 		client.DownloadProgressChanged += new DownloadProgressChangedEventHandler(client_DownloadProgressChanged);
 		client.DownloadFileCompleted += new AsyncCompletedEventHandler(client_DownloadFileCompleted);
+
+		string cookie = ApplyBloodcatOption().ToString();
+		client.Headers.Add(HttpRequestHeader.Cookie, cookie);
 
 		DownloadPath.Add(client, tempFile);
 
