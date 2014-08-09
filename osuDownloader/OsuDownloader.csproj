@@ -927,9 +927,11 @@
     <Exec Command="cd /D &quot;$(TargetDir)&quot; &amp;&#xD;&#xA;          &quot;$(SolutionDir)packages\Obfuscar.2.0.1-beta2\tools\Obfuscar.Console.exe&quot; &quot;$(SolutionDir)OsuDownloader\Obfuscar.xml&quot;" />
     <ItemGroup>
       <ObfuscatedResults Include="$(TargetDir)Obfuscar\*" />
+      <NeedlessResults Include="$(TargetDir)*.xml;$(TargetDir)*.pdb;$(TargetDir)*.lib;$(TargetDir)*.exp;$(TargetDir)*.config;$(TargetDir)Mapping.txt;" />
     </ItemGroup>
     <Exec Command="for %%A in (@(ObfuscatedResults)) do if exist &quot;$(TargetDir)%%~nxA&quot; move &quot;$(TargetDir)%%~nxA&quot; &quot;$(TargetDir)Original\%%~nxA&quot; &gt;nul" />
     <Copy SourceFiles="@(ObfuscatedResults)" DestinationFolder="$(TargetDir)" />
+    <Delete Files="@(NeedlessResults)" />
   </Target>
   <Import Project="..\packages\SharpDX.2.6.2\build\SharpDX.targets" Condition="Exists('..\packages\SharpDX.2.6.2\build\SharpDX.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
