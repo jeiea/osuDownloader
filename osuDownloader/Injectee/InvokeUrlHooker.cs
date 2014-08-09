@@ -380,6 +380,12 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 			break;
 		case BloodcatWallpaperOption.SolidColor:
 			cookieJson.Append("\"color\"");
+
+			var color = option.BackgroundColor;
+			byte[] rgb = new byte[] {color.R, color.G, color.B};
+			cookieJson.Append(",\"color\":\"#");
+			cookieJson.Append(BitConverter.ToString(rgb).Replace("-", string.Empty));
+			cookieJson.Append('"');
 			break;
 		default:
 			cookieJson.Append("false");

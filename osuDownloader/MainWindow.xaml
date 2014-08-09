@@ -96,14 +96,14 @@
         Programmed by 크빗
         </TextBlock>
         <TextBlock HorizontalAlignment="Left" Margin="291,168,0,0" TextWrapping="Wrap"
-                   VerticalAlignment="Top" FontSize="24" Text="Osu Beatmap Downloader v2"
+                   VerticalAlignment="Top" FontSize="24" Text="osu! Beatmap Downloader v2"
                    Foreground="White" Width="173">
             <TextBlock.Effect>
                 <DropShadowEffect BlurRadius="4" ShadowDepth="2"/>
             </TextBlock.Effect>
         </TextBlock>
-        <TextBlock HorizontalAlignment="Left" Margin="458,213,0,0" TextWrapping="Wrap"
-                   VerticalAlignment="Top" FontSize="14" Text=".140810.1" Foreground="White">
+        <TextBlock HorizontalAlignment="Left" Margin="458,212,0,0" TextWrapping="Wrap"
+                   VerticalAlignment="Top" FontSize="14" Text=".140810.2" Foreground="White">
             <TextBlock.Effect>
                 <DropShadowEffect BlurRadius="4" ShadowDepth="2"/>
             </TextBlock.Effect>
