@@ -57,7 +57,7 @@ class FileNameHooker : IHookerBase, IDisposable
 		var sb = new StringBuilder();
 		sb.Append(@"^(");
 		sb.Append(@"approachcircle|button-|comboburst|count\d|cursor|default-\d|followpoint|");
-		sb.Append(@"fruit-|go|hit|inputoverlay|mania-|particle|pause-|pippidon|ranking-|");
+		sb.Append(@"fruit-|go|hit|inputoverlay|mania-|particle|pause-|pippidon|play-|ranking-|");
 		sb.Append(@"ready|reversearrow|score-|scorebar-|section-|slider|spinner-|star|taiko-|");
 		sb.Append(@"taikobigcircle|taikohitcircle");
 		sb.Append(@").*$");
@@ -228,22 +228,17 @@ class FileNameHooker : IHookerBase, IDisposable
 		{
 			filename = filename.ToLower();
 			// Frequency order.
-			if (!filename.EndsWith(".exe") &&
-				filename.StartsWith(SongsDir) && // also block Data directory
-				!filename.EndsWith(".osu") &&
-				!filename.EndsWith(".osz") &&
-				!filename.EndsWith(".osk") &&
-				!filename.EndsWith(".mp3") &&
+			if (!filename.EndsWith(".exe") && filename.StartsWith(SongsDir) && // also block Data directory
+				!filename.EndsWith(".osu") && !filename.EndsWith(".osz") &&
+				!filename.EndsWith(".ogg") && !filename.EndsWith(".mp3") &&
 				!filename.EndsWith(".wav"))
 			{
 				if (filename.EndsWith(".osb"))
 				{
 					filename = AlternativeStoryboard;
 				}
-				else if (filename.EndsWith(".avi") ||
-						 filename.EndsWith(".mkv") ||
-						 filename.EndsWith(".mp4") ||
-						 filename.EndsWith(".flv"))
+				else if (filename.EndsWith(".avi") || filename.EndsWith(".mkv") ||
+						 filename.EndsWith(".mp4") || filename.EndsWith(".flv"))
 				{
 					filename = AlternativeVideo;
 				}

@@ -169,6 +169,12 @@ pippidonidle0.png
 pippidonidle1.png
 pippidonkiai0.png
 pippidonkiai1.png
+play-skip.png
+play-skip@2x.png
+play-unranked.png
+play-unranked@2x.png
+play-warningarrow.png
+play-warningarrow@2x.png
 ranking-A-small.png
 ranking-A-small@2x.png
 ranking-A.png
