@@ -3,26 +3,44 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
+using System.Windows.Input;
 
 namespace OsuDownloader.Injectee
 {
+// http://www.liensberger.it/web/blog/?p=207
 public sealed class KeyboardHook : IDisposable
 {
-	// Registers a hot key with Windows.
-	[DllImport("user32.dll")]
-	private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
 
-	// Unregisters the hot key with Windows.
-	[DllImport("user32.dll")]
-	private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+	[DllImport("user32.dll", SetLastError = true)]
+	[return: MarshalAs(UnmanagedType.Bool)]
+	static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
+	[DllImport("user32.dll", SetLastError = true)]
+	[return: MarshalAs(UnmanagedType.Bool)]
+	static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+
+	[DllImport("user32.dll", SetLastError = true)]
+	[return: MarshalAs(UnmanagedType.Bool)]
+	static extern bool PostMessage(HandleRef hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+
+	const int WM_USER = 0x0400;
+	const int WM_REGISTER_HOTKEY = WM_USER + 10;
+	const int WM_UNREGISTER_HOTKEY = WM_USER + 11;
+
+	public HandleWindow Window;
 
 	/// <summary>   Represents the window that is used internally to get the messages. </summary>
-	private class Window : NativeWindow, IDisposable
+	public class HandleWindow : NativeWindow, IDisposable
 	{
-		private static int WM_HOTKEY = 0x0312;
+		const int WM_HOTKEY = 0x0312;
 
-		public Window()
+		List<int> HotkeyIds = new List<int>();
+
+		int CurrentId;
+
+		public HandleWindow()
 		{
 			// create the handle for the window.
 			this.CreateHandle(new CreateParams());
@@ -38,8 +56,9 @@ public sealed class KeyboardHook : IDisposable
 			base.WndProc(ref m);
 
 			// check if we got a hot key pressed.
-			if (m.Msg == WM_HOTKEY)
+			switch (m.Msg)
 			{
+			case WM_HOTKEY:
 				// get the keys.
 				Keys key = (Keys)(((int)m.LParam >> 16) & 0xFFFF);
 				ModifierKeys modifier = (ModifierKeys)((int)m.LParam & 0xFFFF);
@@ -47,6 +66,19 @@ public sealed class KeyboardHook : IDisposable
 				// invoke the event to notify the parent.
 				if (KeyPressed != null)
 					KeyPressed(this, new KeyPressedEventArgs(modifier, key));
+				break;
+			case WM_REGISTER_HOTKEY:
+				if (RegisterHotKey(Handle, CurrentId, (uint)m.WParam, (uint)m.LParam))
+				{
+					HotkeyIds.Add(CurrentId++);
+				}
+				break;
+			case WM_UNREGISTER_HOTKEY:
+				foreach (var id in HotkeyIds)
+				{
+					UnregisterHotKey(Handle, id);
+				}
+				break;
 			}
 		}
 
@@ -62,13 +94,38 @@ public sealed class KeyboardHook : IDisposable
 		#endregion
 	}
 
-	private Window _window = new Window();
-	private int _currentId;
-
-	public KeyboardHook()
+	public KeyboardHook(bool createThread)
 	{
-		// register the event of the inner native window.
-		_window.KeyPressed += delegate(object sender, KeyPressedEventArgs args)
+		if (createThread)
+		{
+			var mre = new ManualResetEvent(false);
+
+			new Thread(() =>
+			{
+				// Failed...
+				// SynchronizationContext.SetSynchronizationContext(Context);
+
+				AssignWindow();
+
+				mre.Set();
+
+				Application.Run();
+			}).Start();
+
+			mre.WaitOne();
+		}
+		else
+		{
+			AssignWindow();
+		}
+	}
+
+	/// <summary>   register the event of the inner window. </summary>
+	private void AssignWindow()
+	{
+		Window = new HandleWindow();
+
+		Window.KeyPressed += delegate(object sender, KeyPressedEventArgs args)
 		{
 			if (KeyPressed != null)
 				KeyPressed(this, args);
@@ -84,14 +141,11 @@ public sealed class KeyboardHook : IDisposable
 	/// <param name="modifier"> The modifiers that are associated with the hot key. </param>
 	/// <param name="key">      The key itself that is associated with the hot key. </param>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	public void RegisterHotKey(ModifierKeys modifier, Keys key)
+	public void RegisterHotKey(ModifierKeys modifier, Keys key, bool noRepeat = false)
 	{
-		// increment the counter.
-		_currentId = _currentId + 1;
-
 		// register the hot key.
-		if (!RegisterHotKey(_window.Handle, _currentId, (uint)modifier, (uint)key))
-			throw new InvalidOperationException("Couldn't register the hot key.");
+		PostMessage(new HandleRef(Window, Window.Handle), (uint)WM_REGISTER_HOTKEY,
+					(IntPtr)((int)modifier | (noRepeat ? 0x4000 : 0)), (IntPtr)key);
 	}
 
 	/// <summary>   A hot key has been pressed. </summary>
@@ -102,13 +156,10 @@ public sealed class KeyboardHook : IDisposable
 	public void Dispose()
 	{
 		// unregister all the registered hot keys.
-		for (int i = _currentId; i > 0; i--)
-		{
-			UnregisterHotKey(_window.Handle, i);
-		}
+		PostMessage(new HandleRef(Window, Window.Handle), (uint)WM_UNREGISTER_HOTKEY, IntPtr.Zero, IntPtr.Zero);
 
 		// dispose the inner native window.
-		_window.Dispose();
+		Window.Dispose();
 	}
 
 	#endregion
@@ -134,15 +185,5 @@ public class KeyPressedEventArgs : EventArgs
 		get;
 		private set;
 	}
-}
-
-/// <summary>   The enumeration of possible modifiers. </summary>
-[Flags]
-public enum ModifierKeys : uint
-{
-	Alt     = 1,
-	Control = 2,
-	Shift   = 4,
-	Win     = 8
 }
 }

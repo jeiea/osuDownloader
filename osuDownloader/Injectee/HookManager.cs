@@ -96,6 +96,9 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 		Blinder.SetHookState(!Blinder.IsHooking);
 	}
 
+	[DllImport("user32.dll", CharSet = CharSet.Auto)]
+	static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr lParam);
+
 	public void Run(RemoteHooking.IContext context)
 	{
 		AppDomain currentDomain = AppDomain.CurrentDomain;
@@ -150,7 +153,7 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 			Downloader = new InvokeUrlHooker();
 			Downloader.SetHookState(true);
 
-			BossKey = new KeyboardHook();
+			BossKey = new KeyboardHook(true);
 			BossKey.RegisterHotKey(ModifierKeys.Control, System.Windows.Forms.Keys.L);
 			BossKey.KeyPressed += BossKey_KeyPressed;
 
@@ -169,7 +172,9 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 		// wait for host process termination...
 		try
 		{
-			QuitEvent.WaitOne();
+			while (QuitEvent.WaitOne(1000) == false)
+			{
+			}
 		}
 		catch (Exception e)
 		{
