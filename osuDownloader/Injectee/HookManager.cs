@@ -158,6 +158,7 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 			BossKey.KeyPressed += BossKey_KeyPressed;
 
 			Foregrounder = new WinEventHooker();
+			Foregrounder.OnForegroundChanged += Foregrounder_OnForegroundChanged;
 
 		}
 		catch (Exception extInfo)
@@ -172,8 +173,18 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 		// wait for host process termination...
 		try
 		{
-			while (QuitEvent.WaitOne(1000) == false)
+			NativeMessage msg = new NativeMessage();
+			while (QuitEvent.WaitOne(100) == false)
 			{
+				if (NativeMethods.PeekMessage(out msg, new HandleRef(), 0, 0, 1))
+				{
+					var mes = new System.Windows.Forms.Message();
+					mes.HWnd = msg.handle;
+					mes.Msg = (int)msg.msg;
+					mes.WParam = msg.wParam;
+					mes.LParam = msg.lParam;
+					NativeMethods.DispatchMessage(ref mes);
+				}
 			}
 		}
 		catch (Exception e)
@@ -194,6 +205,21 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 			}
 			InjecteeHost.Abort();
 			InjecteeHost = null;
+		}
+	}
+
+	void Foregrounder_OnForegroundChanged(string processName)
+	{
+		if (processName != "osu!" && BossKey != null)
+		{
+			BossKey.Dispose();
+			BossKey = null;
+		}
+		else if (processName == "osu!" && BossKey == null)
+		{
+			BossKey = new KeyboardHook(true);
+			BossKey.RegisterHotKey(ModifierKeys.Control, System.Windows.Forms.Keys.L);
+			BossKey.KeyPressed += BossKey_KeyPressed;
 		}
 	}
 

@@ -25,6 +25,9 @@ public sealed class KeyboardHook : IDisposable
 	[return: MarshalAs(UnmanagedType.Bool)]
 	static extern bool PostMessage(HandleRef hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
+	[DllImport("user32.dll", CharSet = CharSet.Auto)]
+	static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+
 	const int WM_USER = 0x0400;
 	const int WM_REGISTER_HOTKEY = WM_USER + 10;
 	const int WM_UNREGISTER_HOTKEY = WM_USER + 11;
@@ -156,7 +159,7 @@ public sealed class KeyboardHook : IDisposable
 	public void Dispose()
 	{
 		// unregister all the registered hot keys.
-		PostMessage(new HandleRef(Window, Window.Handle), (uint)WM_UNREGISTER_HOTKEY, IntPtr.Zero, IntPtr.Zero);
+		SendMessage(Window.Handle, (uint)WM_UNREGISTER_HOTKEY, IntPtr.Zero, IntPtr.Zero);
 
 		// dispose the inner native window.
 		Window.Dispose();

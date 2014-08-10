@@ -176,6 +176,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Injectee\WPFOverlayer.cs" />
+    <Compile Include="NativeMethods.cs" />
     <Compile Include="Settings.cs" />
     <Page Include="Pic\BloodCat.xaml">
       <SubType>Designer</SubType>
