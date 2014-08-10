@@ -25,6 +25,13 @@ class WinEventHooker
 		HHook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, IntPtr.Zero,
 								ForegroundChangeDele, 0, 0, WINEVENT_OUTOFCONTEXT);
 
+		if (HHook == IntPtr.Zero)
+		{
+			return;
+		}
+
+		Owner[HHook] = this;
+
 		Timer = new DispatcherTimer();
 		Timer.Interval = TimeSpan.FromMilliseconds(200);
 		Timer.Tick += timer_Tick;
@@ -32,7 +39,8 @@ class WinEventHooker
 
 	~WinEventHooker()
 	{
-		UnhookWinEvent(HHook);
+		if (HHook != IntPtr.Zero)
+			UnhookWinEvent(HHook);
 	}
 
 	delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject,
@@ -64,9 +72,9 @@ class WinEventHooker
 			if (hWnd != IntPtr.Zero)
 			{
 				uint pid;
-				GetWindowThreadProcessId(hWnd, out pid);
+				uint tid = GetWindowThreadProcessId(hWnd, out pid);
 
-				if (Marshal.GetLastWin32Error() != 0)
+				if (tid == 0 && Marshal.GetLastWin32Error() != 0)
 				{
 					throw new ApplicationException("GetWindowThreadProcessId failed.");
 				}

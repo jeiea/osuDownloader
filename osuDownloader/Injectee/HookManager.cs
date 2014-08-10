@@ -77,9 +77,6 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 
 	KeyboardHook BossKey;
 
-	/// <summary>   Thread termination event. </summary>
-	ManualResetEvent QuitEvent;
-
 	public HookManager(RemoteHooking.IContext context)
 	{
 		InjecteeHost = new ServiceHost(this, new Uri[] { new Uri("net.pipe://localhost") });
@@ -153,9 +150,7 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 			Downloader = new InvokeUrlHooker();
 			Downloader.SetHookState(true);
 
-			BossKey = new KeyboardHook(true);
-			BossKey.RegisterHotKey(ModifierKeys.Control, System.Windows.Forms.Keys.L);
-			BossKey.KeyPressed += BossKey_KeyPressed;
+			RegisterBossKey();
 
 			Foregrounder = new WinEventHooker();
 			Foregrounder.OnForegroundChanged += Foregrounder_OnForegroundChanged;
@@ -168,24 +163,10 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 
 		RemoteHooking.WakeUpProcess();
 
-		QuitEvent = new ManualResetEvent(false);
-
 		// wait for host process termination...
 		try
 		{
-			NativeMessage msg = new NativeMessage();
-			while (QuitEvent.WaitOne(100) == false)
-			{
-				if (NativeMethods.PeekMessage(out msg, new HandleRef(), 0, 0, 1))
-				{
-					var mes = new System.Windows.Forms.Message();
-					mes.HWnd = msg.handle;
-					mes.Msg = (int)msg.msg;
-					mes.WParam = msg.wParam;
-					mes.LParam = msg.lParam;
-					NativeMethods.DispatchMessage(ref mes);
-				}
-			}
+			new Application().Run();
 		}
 		catch (Exception e)
 		{
@@ -217,10 +198,15 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 		}
 		else if (processName == "osu!" && BossKey == null)
 		{
-			BossKey = new KeyboardHook(true);
-			BossKey.RegisterHotKey(ModifierKeys.Control, System.Windows.Forms.Keys.L);
-			BossKey.KeyPressed += BossKey_KeyPressed;
+			RegisterBossKey();
 		}
+	}
+
+	private void RegisterBossKey()
+	{
+		BossKey = new KeyboardHook();
+		BossKey.RegisterHotKey(ModifierKeys.Control, System.Windows.Forms.Keys.L);
+		BossKey.KeyPressed += BossKey_KeyPressed;
 	}
 
 	#region WCF Implementation
@@ -245,7 +231,7 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 		}
 		if (Callbacks.Count == 0)
 		{
-			QuitEvent.Set();
+			Application.Current.Shutdown();
 		}
 	}
 
@@ -256,7 +242,7 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 
 		if (Callbacks.Count <= 0)
 		{
-			QuitEvent.Set();
+			Application.Current.Shutdown();
 		}
 	}
 

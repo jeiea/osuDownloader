@@ -16,6 +16,16 @@ static class NativeMethods
 
 	[DllImport("user32.dll")]
 	public static extern IntPtr DispatchMessage([In] ref Message lpmsg);
+
+	[DllImport("user32.dll", SetLastError = true)]
+	[return: MarshalAs(UnmanagedType.Bool)]
+	public static extern bool PostMessage(HandleRef hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+
+	[DllImport("user32.dll", CharSet = CharSet.Auto)]
+	public static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+
+	[DllImport("user32.dll")]
+	public static extern sbyte GetMessage(out Message lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax);
 }
 
 [StructLayout(LayoutKind.Sequential)]
