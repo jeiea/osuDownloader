@@ -64,8 +64,6 @@ public class MainWindowViewModel : ICallback, INotifyPropertyChanged
 	static int TargetPid;
 	static IOsuInjectee InjecteeProxy;
 
-	bool IsBossed;
-
 	#region Property declaration
 
 	bool _IsInstalled;
@@ -187,16 +185,6 @@ public class MainWindowViewModel : ICallback, INotifyPropertyChanged
 		if (AutoStart)
 		{
 			ToggleHook();
-		}
-	}
-
-	public void ToggleBoss()
-	{
-		IsBossed = !IsBossed;
-
-		if (InjecteeProxy != null)
-		{
-			InjecteeProxy.ToggleHook(IsBossed);
 		}
 	}
 

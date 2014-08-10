@@ -68,7 +68,7 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 	/// download.
 	/// </summary>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	static Dictionary<int, DateTime> RequestedBeatmaps = new Dictionary<int, DateTime>();
+	static Dictionary<int, RequestHistory> RequestedBeatmaps = new Dictionary<int, RequestHistory>();
 
 	/// <summary>   Full pathname of the downloading file. </summary>
 	static Dictionary<WebClient, string> DownloadPath = new Dictionary<WebClient, string>();
@@ -212,21 +212,25 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 
 		int beatmapId = container.results[0].id;
 
+		if (RequestedBeatmaps.ContainsKey(beatmapId) == false)
+		{
+			RequestedBeatmaps[beatmapId] = new RequestHistory()
+			{
+				LastRequested = DateTime.MinValue,
+				Status = RequestResult.Operating,
+			};
+		}
+		RequestHistory history = RequestedBeatmaps[beatmapId];
+
 		// Copy URL for sharing to clipboard.
 		string downloadLink = BloodcatDownloadUrl + beatmapId;
 		Clipboard.SetText(downloadLink);
 
-		RequestedBeatmaps
-		.Where(x => (DateTime.Now - x.Value).TotalSeconds >= 1)
-		.Select(x => x.Key).ToList()
-		.ForEach(x => RequestedBeatmaps.Remove(x));
-
 		// Download if already exists or double clicked.
 		if (OsuHelper.IsTakenBeatmap(beatmapId) == false ||
-			RequestedBeatmaps.ContainsKey(beatmapId))
+			(DateTime.Now - history.LastRequested).TotalSeconds < 1)
 		{
 			DownloadAndExecuteOsz(downloadLink);
-			RequestedBeatmaps.Remove(beatmapId);
 		}
 		else
 		{
@@ -236,8 +240,10 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 				Duration = TimeSpan.FromSeconds(2),
 				Message = "이미 있는 비트맵입니다. URL이 클립보드로 복사되었습니다. 받으시려면 더블클릭 해 주세요."
 			});
-			RequestedBeatmaps[beatmapId] = DateTime.Now;
 		}
+
+		history.LastRequested = DateTime.Now;
+
 	}
 
 	static void Message(object key, EntryBase entry)
@@ -257,22 +263,37 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 
 	static void DownloadAndExecuteOsz(string url)
 	{
-		string tempFile = Path.GetTempFileName();
-
-		WebClient client = new WebClient() { Encoding = Encoding.UTF8 };
-		client.DownloadProgressChanged += new DownloadProgressChangedEventHandler(client_DownloadProgressChanged);
-		client.DownloadFileCompleted += new AsyncCompletedEventHandler(client_DownloadFileCompleted);
+		WebClientEx client = new WebClientEx() { Encoding = Encoding.UTF8 };
 
 		string cookie = ApplyBloodcatOption().ToString();
 		client.Headers.Add(HttpRequestHeader.Cookie, cookie);
 
+		client.Method = "HEAD";
+		client.DownloadString(url);
+		if (client.ResponseHeaders["Content-Type"].Contains("application/") == false)
+		{
+			Message(new object(), new NoticeEntry()
+			{
+				Begin = DateTime.Now,
+				Duration = TimeSpan.FromSeconds(2),
+				Message = "다운로드에 실패했습니다. 파일을 찾지 못했습니다."
+			});
+			throw new ApplicationException("Invalid Content-Type: " + client.ResponseHeaders["Content-Type"]);
+		}
+
+		client.Method = null;
+		client.DownloadProgressChanged += new DownloadProgressChangedEventHandler(client_DownloadProgressChanged);
+		client.DownloadFileCompleted += new AsyncCompletedEventHandler(client_DownloadFileCompleted);
+
+		string fileName = GetFileNameFromDisposition(client.ResponseHeaders["Content-Disposition"]);
+		string tempFile = Path.Combine(Path.GetTempPath(), fileName);
 		DownloadPath.Add(client, tempFile);
 
 		Message(client, new ProgressEntry()
 		{
 			Begin = DateTime.Now,
-			Title = Path.GetFileName(url),
-			Total = int.MaxValue,
+			Title = Path.GetFileNameWithoutExtension(fileName),
+			Total = int.Parse(client.ResponseHeaders["Content-Length"]),
 		});
 
 		client.DownloadFileAsync(new Uri(url), tempFile, client);
@@ -284,33 +305,11 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 			return;
 
 		ProgressEntry entry = (ProgressEntry)Overlayer.GetMessageQueue()[e.UserState];
-		if (entry.Total == int.MaxValue)
-		{
-			try
-			{
-				WebClient client = (WebClient)e.UserState;
-
-				entry.Title = GetDisposition(client);
-
-				if (File.Exists(Path.Combine("C:\\", entry.Title)))
-				{
-					client.CancelAsync();
-					return;
-				}
-
-				entry.Total = e.TotalBytesToReceive;
-			}
-			catch (Exception ex)
-			{
-				MainWindowViewModel.LogException(ex);
-			}
-		}
 		entry.Downloaded = e.BytesReceived;
 	}
 
-	static string GetDisposition(WebClient client)
+	static string GetFileNameFromDisposition(string disposition)
 	{
-		string disposition = client.ResponseHeaders["Content-Disposition"];
 		return Regex.Match(disposition, "filename\\s*=\\s*\"(.*?)\"").Groups[1].ToString();
 	}
 
@@ -329,23 +328,13 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 			Overlayer.GetMessageQueue().Remove(client);
 		}
 
-		string finalPath;
-		try
-		{
-			finalPath = Path.Combine(DownloadDir, GetDisposition(client));
-			File.Move(DownloadPath[client], finalPath);
-		}
-		catch (Exception ex)
-		{
-			MainWindowViewModel.LogException(ex);
-			return;
-		}
+		string downloadPath = DownloadPath[client];
 
 		string osuExePath = Process.GetCurrentProcess().MainModule.FileName;
 
 		try
 		{
-			Process.Start(osuExePath, finalPath);
+			Process.Start(osuExePath, downloadPath);
 		}
 		// TODO: IDropTarget으로 강제 갱신하는 방법 있음
 		catch (Win32Exception)
@@ -354,11 +343,11 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 			{
 				Path.GetDirectoryName(osuExePath),
 				"Songs",
-				Path.GetFileName(finalPath),
+				Path.GetFileName(downloadPath),
 			};
 			// For .NET 3.5
 			string destPath = pathElements.Aggregate(Path.Combine);
-			File.Move(finalPath, destPath);
+			File.Move(downloadPath, destPath);
 		}
 	}
 
@@ -398,6 +387,23 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 		cookieJson.Append('}');
 
 		return new Cookie("DLOPT", Uri.EscapeDataString(cookieJson.ToString()), "/", "bloodcat.com");
+	}
+
+	enum RequestResult
+	{
+		Queued,
+		Operating,
+		Downloaded,
+		/// <summary>   Represents this beatmap is not downloaded since exists. </summary>
+		PendedExisting,
+		BloodcatRejected,
+		OfficialLoginRequired,
+	}
+
+	class RequestHistory
+	{
+		public DateTime LastRequested;
+		public RequestResult Status;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -591,6 +597,25 @@ public enum ShowWindowCommands
 	/// </summary>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	ForceMinimize = 11
+}
+
+public class WebClientEx : WebClient
+{
+	public string Method
+	{
+		get;
+		set;
+	}
+
+	protected override WebRequest GetWebRequest(Uri address)
+	{
+		WebRequest webRequest = base.GetWebRequest(address);
+
+		if (!string.IsNullOrEmpty(Method))
+			webRequest.Method = Method;
+
+		return webRequest;
+	}
 }
 
 }

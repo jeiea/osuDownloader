@@ -1,19 +1,20 @@
-﻿using System;
+﻿using EasyHook;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using EasyHook;
-using System.Runtime.InteropServices;
-using System.Net;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Net;
+using System.Runtime.InteropServices;
 using System.ServiceModel;
-using System.ComponentModel;
+using System.Text;
 using System.Text.RegularExpressions;
-using System.Windows.Media.Imaging;
-using System.Windows.Media;
+using System.Threading;
 using System.Windows;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace OsuDownloader.Injectee
 {
@@ -71,7 +72,10 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 
 	FileNameHooker Blinder;
 	InvokeUrlHooker Downloader;
+	WinEventHooker Foregrounder;
 	IOverlayer Overlayer;
+
+	KeyboardHook BossKey;
 
 	/// <summary>   Thread termination event. </summary>
 	ManualResetEvent QuitEvent;
@@ -81,6 +85,15 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 		InjecteeHost = new ServiceHost(this, new Uri[] { new Uri("net.pipe://localhost") });
 		InjecteeHost.AddServiceEndpoint(typeof(IOsuInjectee), new NetNamedPipeBinding(), "osuBeatmapHooker");
 		InjecteeHost.Open();
+	}
+
+	void BossKey_KeyPressed(object sender, KeyPressedEventArgs e)
+	{
+		if (Blinder == null)
+		{
+			Blinder = new FileNameHooker();
+		}
+		Blinder.SetHookState(!Blinder.IsHooking);
 	}
 
 	public void Run(RemoteHooking.IContext context)
@@ -136,6 +149,13 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 
 			Downloader = new InvokeUrlHooker();
 			Downloader.SetHookState(true);
+
+			BossKey = new KeyboardHook();
+			BossKey.RegisterHotKey(ModifierKeys.Control, System.Windows.Forms.Keys.L);
+			BossKey.KeyPressed += BossKey_KeyPressed;
+
+			Foregrounder = new WinEventHooker();
+
 		}
 		catch (Exception extInfo)
 		{

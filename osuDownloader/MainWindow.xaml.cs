@@ -18,12 +18,10 @@ public partial class MainWindow : Window
 	/// <summary>   The timer which check hooking is enabled. </summary>
 	public static MainWindow InUseWindow;
 
-	Hardcodet.Wpf.TaskbarNotification.TaskbarIcon Tray;
+	TaskbarIcon Tray;
 	MenuItem ToggleHookItem;
 
 	MainWindowViewModel Hooker = new MainWindowViewModel();
-
-	HotKey BossKey;
 
 	public MainWindow()
 	{
@@ -63,6 +61,7 @@ public partial class MainWindow : Window
 		ToggleHookItem = (MenuItem)contextMenu.Items[1];
 
 		#endregion
+
 	}
 
 	void Window_Loaded(object sender, EventArgs e)
@@ -72,19 +71,6 @@ public partial class MainWindow : Window
 			Show();
 			Activate();
 		}
-		try
-		{
-			BossKey = new HotKey(ModifierKeys.Control, System.Windows.Forms.Keys.L, this);
-			BossKey.HotKeyPressed += BossKey_HotKeyPressed;
-		}
-		catch
-		{
-		}
-	}
-
-	void BossKey_HotKeyPressed(HotKey obj)
-	{
-		Hooker.ToggleBoss();
 	}
 
 	protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)

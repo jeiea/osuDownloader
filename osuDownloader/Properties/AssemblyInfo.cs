@@ -7,7 +7,7 @@ using System.Windows.Markup;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("osuDownloader")]
-[assembly: AssemblyDescription("osu! Beatmap Downloader v1.0")]
+[assembly: AssemblyDescription("osu! Beatmap Downloader v2")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("osuDownloader")]
@@ -54,5 +54,5 @@ using System.Windows.Markup;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("2.0.0.*")]
+[assembly: AssemblyFileVersion("2.0.0.*")]
