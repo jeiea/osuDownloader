@@ -75,13 +75,16 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 	WinEventHooker Foregrounder;
 	IOverlayer Overlayer;
 
-	KeyboardHook BossKey;
+	WinFormHotKey BossKey;
 
 	public HookManager(RemoteHooking.IContext context)
 	{
-		InjecteeHost = new ServiceHost(this, new Uri[] { new Uri("net.pipe://localhost") });
-		InjecteeHost.AddServiceEndpoint(typeof(IOsuInjectee), new NetNamedPipeBinding(), "osuBeatmapHooker");
-		InjecteeHost.Open();
+		if (Process.GetCurrentProcess().ProcessName != "iexplore")
+		{
+			InjecteeHost = new ServiceHost(this, new Uri[] { new Uri("net.pipe://localhost") });
+			InjecteeHost.AddServiceEndpoint(typeof(IOsuInjectee), new NetNamedPipeBinding(), "osuBeatmapHooker");
+			InjecteeHost.Open();
+		}
 	}
 
 	void BossKey_KeyPressed(object sender, KeyPressedEventArgs e)
@@ -93,8 +96,9 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 		Blinder.SetHookState(!Blinder.IsHooking);
 	}
 
-	[DllImport("user32.dll", CharSet = CharSet.Auto)]
-	static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr lParam);
+	[DllImport("wininet.dll", CharSet = CharSet.Auto, SetLastError = true)]
+	static extern bool InternetGetCookieEx(string pchURL, string pchCookieName, StringBuilder pchCookieData,
+										   ref uint pcchCookieData, int dwFlags, IntPtr lpReserved);
 
 	public void Run(RemoteHooking.IContext context)
 	{
@@ -105,6 +109,46 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 		};
 
 		HookingThreadIds.Add((int)GetCurrentThreadId());
+
+		Config.DependencyPath = Path.GetDirectoryName(GetType().Assembly.Location);
+
+		var s = new WinFormHotKey();
+		s.KeyPressed += (sender, e) =>
+		{
+			var proc = Process.Start("iexplore");
+			proc.WaitForInputIdle();
+
+			var ies = Process.GetProcessesByName("iexplore");
+			proc = ies.First(x => RemoteHooking.IsX64Process(x.Id) == false);
+
+			var downloader = GetType().Assembly.Location;
+			var downloader64 = Path.Combine(Path.GetDirectoryName(downloader), "osuDownloader64.exe");
+
+			try
+			{
+				RemoteHooking.Inject(proc.Id, InjectionOptions.DoNotRequireStrongName, downloader, downloader64);
+			}
+			catch (Exception exc)
+			{
+				bool l = true;
+			}
+		};
+		s.RegisterHotKey(ModifierKeys.Control, System.Windows.Forms.Keys.M);
+
+		string cookie;
+		if (Process.GetCurrentProcess().ProcessName == "iexplore")
+		{
+			const int INTERNET_COOKIE_HTTPONLY = 0x2000;
+			int flag = INTERNET_COOKIE_HTTPONLY;
+
+			uint size = 0;
+			InternetGetCookieEx("http://osu.ppy.sh/", null, null, ref size, flag, IntPtr.Zero);
+
+			var buffer = new StringBuilder((int)size);
+			InternetGetCookieEx("http://osu.ppy.sh/", null, buffer, ref size, flag, IntPtr.Zero);
+
+			cookie = buffer.ToString();
+		}
 
 		try
 		{
@@ -204,7 +248,7 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 
 	private void RegisterBossKey()
 	{
-		BossKey = new KeyboardHook();
+		BossKey = new WinFormHotKey();
 		BossKey.RegisterHotKey(ModifierKeys.Control, System.Windows.Forms.Keys.L);
 		BossKey.KeyPressed += BossKey_KeyPressed;
 	}

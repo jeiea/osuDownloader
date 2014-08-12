@@ -1,4 +1,10 @@
-﻿using System;
+﻿////////////////////////////////////////////////////////////////////////////////////////////////////
+// file:    Injectee\WinFormHotKey.cs
+//
+// summary: Implements the Winform hot key class
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -10,7 +16,7 @@ using System.Windows.Input;
 namespace OsuDownloader.Injectee
 {
 // http://www.liensberger.it/web/blog/?p=207
-public sealed class KeyboardHook : IDisposable
+public sealed class WinFormHotKey : IDisposable
 {
 
 	[DllImport("user32.dll", SetLastError = true)]
@@ -21,10 +27,6 @@ public sealed class KeyboardHook : IDisposable
 	[return: MarshalAs(UnmanagedType.Bool)]
 	static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
-	const int WM_USER = 0x0400;
-	const int WM_REGISTER_HOTKEY = WM_USER + 10;
-	const int WM_UNREGISTER_HOTKEY = WM_USER + 11;
-
 	HandleWindow Window = new HandleWindow();
 
 	int CurrentId;
@@ -33,10 +35,6 @@ public sealed class KeyboardHook : IDisposable
 	public class HandleWindow : NativeWindow, IDisposable
 	{
 		const int WM_HOTKEY = 0x0312;
-
-		List<int> HotkeyIds = new List<int>();
-
-		int CurrentId;
 
 		public HandleWindow()
 		{
@@ -78,21 +76,9 @@ public sealed class KeyboardHook : IDisposable
 		#endregion
 	}
 
-	public KeyboardHook()
+	public WinFormHotKey()
 	{
 		// register the event of the inner native window.
-		Window.KeyPressed += delegate(object sender, KeyPressedEventArgs args)
-		{
-			if (KeyPressed != null)
-				KeyPressed(this, args);
-		};
-	}
-
-	/// <summary>   register the event of the inner window. </summary>
-	private void AssignWindow()
-	{
-		Window = new HandleWindow();
-
 		Window.KeyPressed += delegate(object sender, KeyPressedEventArgs args)
 		{
 			if (KeyPressed != null)

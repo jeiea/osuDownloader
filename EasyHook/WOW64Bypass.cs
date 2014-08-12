@@ -1,6 +1,6 @@
 ﻿/*
     EasyHook - The reinvention of Windows API hooking
- 
+
     Copyright (C) 2009 Christoph Husse
 
     This library is free software; you can redistribute it and/or
@@ -29,76 +29,77 @@ using System.IO;
 
 namespace EasyHook
 {
-    internal class WOW64Bypass
-    {
-        private static Mutex m_TermMutex = null;
-        private static HelperServiceInterface m_Interface = null;
-        private static Object ThreadSafe = new Object();
+internal class WOW64Bypass
+{
+	private static Mutex m_TermMutex = null;
+	private static HelperServiceInterface m_Interface = null;
+	private static Object ThreadSafe = new Object();
 
-        private static void Install()
-        {
-            lock (ThreadSafe)
-            {
-                if (m_Interface == null)
-                {
-                    String ChannelName = RemoteHooking.GenerateName();
-                    String SvcExecutablePath = (Config.DependencyPath.Length > 0 ? Config.DependencyPath : Config.GetProcessPath()) + Config.GetWOW64BypassExecutableName();
+	private static void Install()
+	{
+		lock (ThreadSafe)
+		{
+			if (m_Interface == null)
+			{
+				String ChannelName = RemoteHooking.GenerateName();
+				String SvcExecutablePath = (Config.DependencyPath.Length > 0 ? Config.DependencyPath : Config.GetProcessPath()) + Config.GetWOW64BypassExecutableName();
 
-                    Process Proc = new Process();
-                    ProcessStartInfo StartInfo = new ProcessStartInfo(
-                            SvcExecutablePath, "\"" + ChannelName + "\"");
+				Process Proc = new Process();
+				ProcessStartInfo StartInfo = new ProcessStartInfo(
+					SvcExecutablePath, "\"" + ChannelName + "\"");
 
-                    // create sync objects
-                    EventWaitHandle Listening = new EventWaitHandle(
-                        false,
-                        EventResetMode.ManualReset,
-                        "Global\\Event_" + ChannelName);
+				// create sync objects
+				EventWaitHandle Listening = new EventWaitHandle(
+					false,
+					EventResetMode.ManualReset,
+					"Global\\Event_" + ChannelName);
 
-                    m_TermMutex = new Mutex(true, "Global\\Mutex_" + ChannelName);
+				m_TermMutex = new Mutex(true, "Global\\Mutex_" + ChannelName);
 
-                    // start and connect program
-                    StartInfo.CreateNoWindow = true;
-                    StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+				// start and connect program
+				StartInfo.CreateNoWindow = true;
+				StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+				StartInfo.UseShellExecute = false;
 
-                    Proc.StartInfo = StartInfo;
+				Proc.StartInfo = StartInfo;
 
-                    Proc.Start();
+				Proc.Start();
 
-                    if (!Listening.WaitOne(5000, true))
-                        throw new ApplicationException("Unable to wait for service application due to timeout.");
+				if (!Listening.WaitOne(5000, true))
+					throw new ApplicationException("Unable to wait for service application due to timeout.");
 
-                    HelperServiceInterface Interface = RemoteHooking.IpcConnectClient<HelperServiceInterface>(ChannelName);
+				HelperServiceInterface Interface = RemoteHooking.IpcConnectClient<HelperServiceInterface>(ChannelName);
 
-                    Interface.Ping();
+				Interface.Ping();
 
-                    m_Interface = Interface;
-                }
-            }
-        }
+				m_Interface = Interface;
+			}
+		}
+	}
 
-        public static void Inject(
-            Int32 InHostPID,
-            Int32 InTargetPID,
-            Int32 InWakeUpTID,
-            Int32 InNativeOptions,
-            String InLibraryPath_x86,
-            String InLibraryPath_x64,
-            Boolean InRequireStrongName,
-            params Object[] InPassThruArgs)
-        {
-            Install();
+	public static void Inject(
+		Int32 InHostPID,
+		Int32 InTargetPID,
+		Int32 InWakeUpTID,
+		Int32 InNativeOptions,
+		String InLibraryPath_x86,
+		String InLibraryPath_x64,
+		Boolean InRequireStrongName,
+		params Object[] InPassThruArgs)
+	{
+		Install();
 
-            m_Interface.InjectEx(
-                InHostPID,
-                InTargetPID, 
-                InWakeUpTID,
-                InNativeOptions,
-                InLibraryPath_x86, 
-                InLibraryPath_x64, 
-                false,
-                true,
-                InRequireStrongName,
-                InPassThruArgs);
-        }
-    }
+		m_Interface.InjectEx(
+			InHostPID,
+			InTargetPID,
+			InWakeUpTID,
+			InNativeOptions,
+			InLibraryPath_x86,
+			InLibraryPath_x64,
+			false,
+			true,
+			InRequireStrongName,
+			InPassThruArgs);
+	}
+}
 }

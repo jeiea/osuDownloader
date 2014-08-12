@@ -168,9 +168,9 @@
     <Compile Include="Injectee\FileNameHooker.cs" />
     <Compile Include="Injectee\HookerBase.cs" />
     <Compile Include="Injectee\HookManager.cs" />
-    <Compile Include="Hotkey.cs" />
+    <Compile Include="WpfHotkey.cs" />
     <Compile Include="IncompleteSettingsProvider.cs" />
-    <Compile Include="Injectee\KeyboardHook.cs" />
+    <Compile Include="Injectee\WinFormHotKey.cs" />
     <Compile Include="Injectee\WinEventHooker.cs" />
     <Compile Include="Injectee\InvokeUrlHooker.cs">
       <SubType>Component</SubType>
@@ -261,6 +261,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'netfx4.0-Debug|x86'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'netfx4.5-Debug|x86'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

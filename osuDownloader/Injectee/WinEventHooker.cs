@@ -69,16 +69,9 @@ class WinEventHooker
 	{
 		try
 		{
-			if (hWnd != IntPtr.Zero)
+			uint pid;
+			if (hWnd != IntPtr.Zero && GetWindowThreadProcessId(hWnd, out pid) != 0)
 			{
-				uint pid;
-				uint tid = GetWindowThreadProcessId(hWnd, out pid);
-
-				if (tid == 0 && Marshal.GetLastWin32Error() != 0)
-				{
-					throw new ApplicationException("GetWindowThreadProcessId failed.");
-				}
-
 				var fgProc = System.Diagnostics.Process.GetProcessById((int)pid);
 				var instance = Owner[hWinEventHook];
 				instance.OnForegroundChanged(fgProc.ProcessName);
@@ -90,6 +83,11 @@ class WinEventHooker
 					{
 						instance.Timer.Start();
 					}
+				}
+
+				while (false)
+				{
+					//InternetGetCookieEx("http://osu.ppy.sh/", null, )
 				}
 			}
 		}
@@ -117,15 +115,20 @@ class WinEventHooker
 		string longestCookie = string.Empty;
 		foreach (SHDocVw.WebBrowser wb in shellWindows)
 		{
-			var url = new Uri(wb.LocationURL);
-			if (url.Host == "osu.ppy.sh")
+			try
 			{
-				mshtml.IHTMLDocument2 doc2 = (mshtml.IHTMLDocument2)wb.Document;
-				if (longestCookie.Length < doc2.cookie.Length)
+				var url = new Uri(wb.LocationURL);
+				if (url.Host == "osu.ppy.sh")
 				{
-					longestCookie = doc2.cookie;
+					mshtml.IHTMLDocument2 doc2 = (mshtml.IHTMLDocument2)wb.Document;
+					mshtml.IHTMLDocument3 doc3 = (mshtml.IHTMLDocument3)wb.Document;
+					if (longestCookie.Length < doc2.cookie.Length)
+					{
+						longestCookie = doc2.cookie;
+					}
 				}
 			}
+			catch { }
 		}
 
 		if (longestCookie == string.Empty)
@@ -142,7 +145,11 @@ class WinEventHooker
 		{
 			setting.OfficialSession = longestCookie;
 		}
+
 	}
 
+	[DllImport("wininet.dll", CharSet = CharSet.Auto, SetLastError = true)]
+	static extern bool InternetGetCookieEx(string pchURL, string pchCookieName, StringBuilder pchCookieData,
+										   ref uint pcchCookieData, int dwFlags, IntPtr lpReserved);
 }
 }
