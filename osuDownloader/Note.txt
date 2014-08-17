@@ -3,9 +3,7 @@
 cd /d "D:\Jeiea\Code\Projects\2014-07\osuDownloader\build\netfx4.0-Release" & copy /y .\Original\* . & "D:\Jeiea\Code\Projects\2014-07\osuDownloader\packages\Obfuscar.2.0.1-beta2\tools\Obfuscar.Console.exe" "D:\Jeiea\Code\Projects\2014-07\osuDownloader\OsuDownloader\Obfuscar.xml" & copy /Y .\Obfuscar\* .
 
 추가할 점
-오스 종료 시 같이 종료 옵션 추가
+
 
 개발 도중 이슈
-Config.Register를 쓰면 인젝션된 모듈에서도 Properties.Settings를 쓸 수 있지만, GAC에 등록해야만 하는 점이 걸린다.
-일단은 쓰지 않기로 했다.
-
+osuDownloader프로젝트 AssemblyName속성이 잘 지정되지 않는다. 열 때마다 IDE에서 수동으로 지정하는 상황이다.
