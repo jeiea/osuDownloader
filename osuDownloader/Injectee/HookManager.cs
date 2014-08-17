@@ -62,55 +62,15 @@ internal interface IOverlayer
 	void AddMessage(object key, EntryBase entry);
 }
 
-[Serializable]
-public class AppDomainHost : EasyHook.IEntryPoint
-{
-	[NonSerialized]
-	AppDomain Domain;
-
-	public AppDomainHost(RemoteHooking.IContext context)
-	{
-		RegisterAssemblyToDomain();
-
-		var setup = new AppDomainSetup();
-		setup.ApplicationBase = Path.GetDirectoryName(GetType().Assembly.Location);
-		setup.DisallowBindingRedirects = false;
-		setup.DisallowCodeDownload = true;
-		Domain = AppDomain.CreateDomain("Subdomain " + context.GetHashCode(), null, setup);
-		Domain.DoCallBack(() => { new HookManager(null); });
-	}
-
-	public void Run(RemoteHooking.IContext context)
-	{
-		Domain.DoCallBack(() => { HookManager.Instance.Run(null); });
-		//AppDomain.Unload(Domain);
-	}
-
-	/// <summary>   Registers the assembly to app domain. </summary>
-	public static void RegisterAssemblyToDomain()
-	{
-		AppDomain currentDomain = AppDomain.CurrentDomain;
-		currentDomain.AssemblyResolve += (sender, args) =>
-		{
-			return typeof(AppDomainHost).Assembly.FullName == args.Name ? typeof(AppDomainHost).Assembly : null;
-		};
-		currentDomain.ReflectionOnlyAssemblyResolve += (sender, args) =>
-		{
-			return typeof(AppDomainHost).Assembly.FullName == args.Name ? typeof(AppDomainHost).Assembly : null;
-		};
-	}
-}
-
 [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
-public class HookManager :  IOsuInjectee//, EasyHook.IEntryPoint
+public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 {
 	public static List<int> HookingThreadIds = new List<int>();
 
-	/// <summary>   Singleton is best... -_- </summary>
-	public static HookManager Instance;
-
 	ServiceHost InjecteeHost;
 	List<ICallback> Callbacks = new List<ICallback>();
+
+	System.Windows.Threading.Dispatcher MainDispatcher;
 
 	// Hookers. Blinder remove background image, Downloader downloads osz, Detector detects
 	// foreground window change and IE navigation, Overlayer overlays display.
@@ -130,7 +90,6 @@ public class HookManager :  IOsuInjectee//, EasyHook.IEntryPoint
 			InjecteeHost.AddServiceEndpoint(typeof(IOsuInjectee), new NetNamedPipeBinding(), "osuBeatmapHooker");
 			InjecteeHost.Open();
 		}
-		Instance = this;
 	}
 
 	[DllImport("wininet.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -140,7 +99,7 @@ public class HookManager :  IOsuInjectee//, EasyHook.IEntryPoint
 	public void Run(RemoteHooking.IContext context)
 	{
 
-		AppDomainHost.RegisterAssemblyToDomain();
+		RegisterAssemblyToDomain();
 
 		Config.DependencyPath = Path.GetDirectoryName(GetType().Assembly.Location);
 
@@ -173,12 +132,8 @@ public class HookManager :  IOsuInjectee//, EasyHook.IEntryPoint
 		// wait for host process termination...
 		try
 		{
-			// WPF Application is hard to manage initial dispatcher thread.
-			//System.Windows.Forms.Application.Run();
-			var app = Application.Current;
-			if (app == null)
-				app = new Application();
-			app.Run();
+			MainDispatcher = System.Windows.Threading.Dispatcher.CurrentDispatcher;
+			System.Windows.Threading.Dispatcher.Run();
 		}
 		catch (Exception e)
 		{
@@ -207,6 +162,20 @@ public class HookManager :  IOsuInjectee//, EasyHook.IEntryPoint
 				InjecteeHost = null;
 			}
 		}
+	}
+
+	/// <summary>   Registers the assembly to app domain. </summary>
+	static void RegisterAssemblyToDomain()
+	{
+		AppDomain currentDomain = AppDomain.CurrentDomain;
+		currentDomain.AssemblyResolve += (sender, args) =>
+		{
+			return typeof(HookManager).Assembly.FullName == args.Name ? typeof(HookManager).Assembly : null;
+		};
+		currentDomain.ReflectionOnlyAssemblyResolve += (sender, args) =>
+		{
+			return typeof(HookManager).Assembly.FullName == args.Name ? typeof(HookManager).Assembly : null;
+		};
 	}
 
 	private void InitializeOsuHookers()
@@ -313,8 +282,7 @@ public class HookManager :  IOsuInjectee//, EasyHook.IEntryPoint
 		}
 		if (Callbacks.Count == 0)
 		{
-			Application.Current.Dispatcher.InvokeShutdown();
-			//System.Windows.Forms.Application.Exit();
+			MainDispatcher.InvokeShutdown();
 		}
 	}
 
@@ -325,8 +293,7 @@ public class HookManager :  IOsuInjectee//, EasyHook.IEntryPoint
 
 		if (Callbacks.Count <= 0)
 		{
-			Application.Current.Dispatcher.InvokeShutdown();
-			//System.Windows.Forms.Application.Exit();
+			MainDispatcher.InvokeShutdown();
 		}
 	}
 

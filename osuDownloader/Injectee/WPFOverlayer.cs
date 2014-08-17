@@ -40,14 +40,14 @@ class WPFOverlayer : IOverlayer
 
 		var uiThread = new Thread(() =>
 		{
-			var app = new Application();
+			//var app = new Application();
 			Overlay = new ProgressWindow(this);
 
 			// For window preparation.
 			mre.Set();
 
 			// ShowDialog isn't enough. It can't serve BeginInvoke request.
-			app.Run(Overlay);
+			System.Windows.Threading.Dispatcher.Run();
 		});
 		uiThread.SetApartmentState(ApartmentState.STA);
 		uiThread.Start();
