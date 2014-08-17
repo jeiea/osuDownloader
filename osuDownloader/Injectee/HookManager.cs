@@ -62,17 +62,62 @@ internal interface IOverlayer
 	void AddMessage(object key, EntryBase entry);
 }
 
+[Serializable]
+public class AppDomainHost : EasyHook.IEntryPoint
+{
+	[NonSerialized]
+	AppDomain Domain;
+
+	public AppDomainHost(RemoteHooking.IContext context)
+	{
+		RegisterAssemblyToDomain();
+
+		var setup = new AppDomainSetup();
+		setup.ApplicationBase = Path.GetDirectoryName(GetType().Assembly.Location);
+		setup.DisallowBindingRedirects = false;
+		setup.DisallowCodeDownload = true;
+		Domain = AppDomain.CreateDomain("Subdomain " + context.GetHashCode(), null, setup);
+		Domain.DoCallBack(() => { new HookManager(null); });
+	}
+
+	public void Run(RemoteHooking.IContext context)
+	{
+		Domain.DoCallBack(() => { HookManager.Instance.Run(null); });
+		//AppDomain.Unload(Domain);
+	}
+
+	/// <summary>   Registers the assembly to app domain. </summary>
+	public static void RegisterAssemblyToDomain()
+	{
+		AppDomain currentDomain = AppDomain.CurrentDomain;
+		currentDomain.AssemblyResolve += (sender, args) =>
+		{
+			return typeof(AppDomainHost).Assembly.FullName == args.Name ? typeof(AppDomainHost).Assembly : null;
+		};
+		currentDomain.ReflectionOnlyAssemblyResolve += (sender, args) =>
+		{
+			return typeof(AppDomainHost).Assembly.FullName == args.Name ? typeof(AppDomainHost).Assembly : null;
+		};
+	}
+}
+
 [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
-public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
+public class HookManager :  IOsuInjectee//, EasyHook.IEntryPoint
 {
 	public static List<int> HookingThreadIds = new List<int>();
+
+	/// <summary>   Singleton is best... -_- </summary>
+	public static HookManager Instance;
 
 	ServiceHost InjecteeHost;
 	List<ICallback> Callbacks = new List<ICallback>();
 
+	// Hookers. Blinder remove background image, Downloader downloads osz, Detector detects
+	// foreground window change and IE navigation, Overlayer overlays display.
+
 	FileNameHooker Blinder;
 	InvokeUrlHooker Downloader;
-	WinEventHooker Foregrounder;
+	ForegroundHooker Detector;
 	IOverlayer Overlayer;
 
 	WinFormHotKey BossKey;
@@ -85,15 +130,7 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 			InjecteeHost.AddServiceEndpoint(typeof(IOsuInjectee), new NetNamedPipeBinding(), "osuBeatmapHooker");
 			InjecteeHost.Open();
 		}
-	}
-
-	void BossKey_KeyPressed(object sender, KeyPressedEventArgs e)
-	{
-		if (Blinder == null)
-		{
-			Blinder = new FileNameHooker();
-		}
-		Blinder.SetHookState(!Blinder.IsHooking);
+		Instance = this;
 	}
 
 	[DllImport("wininet.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -102,103 +139,29 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 
 	public void Run(RemoteHooking.IContext context)
 	{
-		AppDomain currentDomain = AppDomain.CurrentDomain;
-		currentDomain.AssemblyResolve += (sender, args) =>
-		{
-			return this.GetType().Assembly.FullName == args.Name ? this.GetType().Assembly : null;
-		};
 
-		HookingThreadIds.Add((int)GetCurrentThreadId());
+		AppDomainHost.RegisterAssemblyToDomain();
 
 		Config.DependencyPath = Path.GetDirectoryName(GetType().Assembly.Location);
 
-		var s = new WinFormHotKey();
-		s.KeyPressed += (sender, e) =>
-		{
-			var proc = Process.Start("iexplore");
-			proc.WaitForInputIdle();
-
-			var ies = Process.GetProcessesByName("iexplore");
-			proc = ies.First(x => RemoteHooking.IsX64Process(x.Id) == false);
-
-			var downloader = GetType().Assembly.Location;
-			var downloader64 = Path.Combine(Path.GetDirectoryName(downloader), "osuDownloader64.exe");
-
-			try
-			{
-				RemoteHooking.Inject(proc.Id, InjectionOptions.DoNotRequireStrongName, downloader, downloader64);
-			}
-			catch (Exception exc)
-			{
-				bool l = true;
-			}
-		};
-		s.RegisterHotKey(ModifierKeys.Control, System.Windows.Forms.Keys.M);
-
-		string cookie;
-		if (Process.GetCurrentProcess().ProcessName == "iexplore")
-		{
-			const int INTERNET_COOKIE_HTTPONLY = 0x2000;
-			int flag = INTERNET_COOKIE_HTTPONLY;
-
-			uint size = 0;
-			InternetGetCookieEx("http://osu.ppy.sh/", null, null, ref size, flag, IntPtr.Zero);
-
-			var buffer = new StringBuilder((int)size);
-			InternetGetCookieEx("http://osu.ppy.sh/", null, buffer, ref size, flag, IntPtr.Zero);
-
-			cookie = buffer.ToString();
-		}
+		HookingThreadIds.Add((int)GetCurrentThreadId());
 
 		try
 		{
-			try
+			// Hooker initialization. IE or osu.
+			var currentProc = Process.GetCurrentProcess();
+			if (currentProc.ProcessName == "iexplore")
 			{
-				// opengl32.dll loaded lazily. wait it.
-				while (Process.GetCurrentProcess().MainWindowHandle == IntPtr.Zero)
-				{
-					Thread.Sleep(100);
-				}
+				var pid = currentProc.Id;
+				var mutex = new Mutex(true, "osu! Beatmap Downloader IE login mutex id_" + pid);
 
-				// d3d9.dll load always. so tests with opengl32.dll.
-				if (GetModuleHandle("opengl32.dll") == IntPtr.Zero)
-				{
-					var hooker = new D3D9Hooker();
-
-					// If hook failed, pass to window notifier by exception.
-					hooker.SetHookState(true);
-
-					// Accepts D3 hook if test passes.
-					Overlayer = hooker;
-				}
-				else
-				{
-					throw new ApplicationException("DirectX9 hook seems unavailable.");
-				}
+				Detector = new ForegroundHooker();
+				Detector.MonitorIE(new Process[] {currentProc});
 			}
-			catch
+			else
 			{
-				Overlayer = new WPFOverlayer();
+				InitializeOsuHookers();
 			}
-			if (Overlayer != null)
-			{
-				InvokeUrlHooker.Overlayer = Overlayer;
-				Overlayer.AddMessage(new object(), new NoticeEntry()
-				{
-					Begin = DateTime.Now,
-					Duration = TimeSpan.FromSeconds(5),
-					Message = "비트맵 다운로더가 동작합니다."
-				});
-			}
-
-			Downloader = new InvokeUrlHooker();
-			Downloader.SetHookState(true);
-
-			RegisterBossKey();
-
-			Foregrounder = new WinEventHooker();
-			Foregrounder.OnForegroundChanged += Foregrounder_OnForegroundChanged;
-
 		}
 		catch (Exception extInfo)
 		{
@@ -210,7 +173,12 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 		// wait for host process termination...
 		try
 		{
-			new Application().Run();
+			// WPF Application is hard to manage initial dispatcher thread.
+			//System.Windows.Forms.Application.Run();
+			var app = Application.Current;
+			if (app == null)
+				app = new Application();
+			app.Run();
 		}
 		catch (Exception e)
 		{
@@ -218,29 +186,90 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 		}
 		finally
 		{
-			if (Downloader != null)
-			{
-				Downloader.Dispose();
-				Downloader = null;
-			}
 			if (Blinder != null)
 			{
 				Blinder.Dispose();
 				Blinder = null;
 			}
-			InjecteeHost.Abort();
-			InjecteeHost = null;
+			if (Downloader != null)
+			{
+				Downloader.Dispose();
+				Downloader = null;
+			}
+			if (Detector != null)
+			{
+				Detector.Dispose();
+				Detector = null;
+			}
+			if (InjecteeHost != null)
+			{
+				InjecteeHost.Abort();
+				InjecteeHost = null;
+			}
 		}
 	}
 
-	void Foregrounder_OnForegroundChanged(string processName)
+	private void InitializeOsuHookers()
 	{
-		if (processName != "osu!" && BossKey != null)
+		try
+		{
+			// opengl32.dll loaded lazily. wait it.
+			while (Process.GetCurrentProcess().MainWindowHandle == IntPtr.Zero)
+			{
+				Thread.Sleep(100);
+			}
+
+			// d3d9.dll load always. so tests with opengl32.dll.
+			if (GetModuleHandle("opengl32.dll") == IntPtr.Zero)
+			{
+				var hooker = new D3D9Hooker();
+
+				// If hook failed, pass to window notifier by exception.
+				hooker.SetHookState(true);
+
+				// Accepts D3 hook if test passes.
+				Overlayer = hooker;
+			}
+			else
+			{
+				throw new ApplicationException("DirectX9 hook seems unavailable.");
+			}
+		}
+		catch
+		{
+			Overlayer = new WPFOverlayer();
+		}
+
+		if (Overlayer != null)
+		{
+			InvokeUrlHooker.Overlayer = Overlayer;
+			Overlayer.AddMessage(new object(), new NoticeEntry()
+			{
+				Begin = DateTime.Now,
+				Duration = TimeSpan.FromSeconds(5),
+				Message = "비트맵 다운로더가 동작합니다."
+			});
+		}
+
+		Downloader = new InvokeUrlHooker();
+		Downloader.SetHookState(true);
+
+		RegisterBossKey();
+
+		Detector = new ForegroundHooker();
+		Detector.OnForegroundChanged += Foregrounder_OnForegroundChanged;
+		Detector.SetHookState(true);
+		Detector.MonitorIE();
+	}
+
+	void Foregrounder_OnForegroundChanged(Process proc)
+	{
+		if (proc.ProcessName != "osu!" && BossKey != null)
 		{
 			BossKey.Dispose();
 			BossKey = null;
 		}
-		else if (processName == "osu!" && BossKey == null)
+		else if (proc.ProcessName == "osu!" && BossKey == null)
 		{
 			RegisterBossKey();
 		}
@@ -251,6 +280,15 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 		BossKey = new WinFormHotKey();
 		BossKey.RegisterHotKey(ModifierKeys.Control, System.Windows.Forms.Keys.L);
 		BossKey.KeyPressed += BossKey_KeyPressed;
+	}
+
+	void BossKey_KeyPressed(object sender, KeyPressedEventArgs e)
+	{
+		if (Blinder == null)
+		{
+			Blinder = new FileNameHooker();
+		}
+		Blinder.SetHookState(!Blinder.IsHooking);
 	}
 
 	#region WCF Implementation
@@ -275,7 +313,8 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 		}
 		if (Callbacks.Count == 0)
 		{
-			Application.Current.Shutdown();
+			Application.Current.Dispatcher.InvokeShutdown();
+			//System.Windows.Forms.Application.Exit();
 		}
 	}
 
@@ -286,7 +325,8 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 
 		if (Callbacks.Count <= 0)
 		{
-			Application.Current.Shutdown();
+			Application.Current.Dispatcher.InvokeShutdown();
+			//System.Windows.Forms.Application.Exit();
 		}
 	}
 

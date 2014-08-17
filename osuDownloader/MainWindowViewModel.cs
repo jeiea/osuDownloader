@@ -1,16 +1,16 @@
-﻿using System;
+﻿using EasyHook;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Runtime.Remoting;
-using EasyHook;
-using System.Windows;
-using System.Net;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Threading;
+using System.Linq;
+using System.Net;
+using System.Runtime.Remoting;
 using System.ServiceModel;
-using System.ComponentModel;
+using System.Text;
+using System.Threading;
+using System.Windows;
 using System.Xml;
 
 namespace OsuDownloader
@@ -197,30 +197,16 @@ public class MainWindowViewModel : ICallback, INotifyPropertyChanged
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	private bool ToggleHook()
 	{
+		// If connection fails, then try injection.
 		try
 		{
-			if (IsHooking)
-			{
-				InjecteeProxy.SetDownloadHook(false);
-				return true;
-			}
-			else if (IsInstalled)
-			{
-				InjecteeProxy.SetDownloadHook(true);
-				return true;
-			}
+			ConnectToInjectee();
+			InjecteeProxy.SetDownloadHook(!IsHooking);
+			return true;
 		}
-		catch (Exception)
-		{
-			// Case of host terminated.
-			var proxy = InjecteeProxy as ICommunicationObject;
-			if (proxy != null)
-			{
-				proxy.Close();
-				InjecteeProxy = null;
-			}
-		}
+		catch { }
 
+		// injection.
 		try
 		{
 			string thisFile = new Uri(System.Reflection.Assembly.GetExecutingAssembly().Location).LocalPath;
@@ -282,8 +268,27 @@ public class MainWindowViewModel : ICallback, INotifyPropertyChanged
 		return true;
 	}
 
+	/// <summary>   Connects to injectee. If already connected, it does nothing. </summary>
 	private void ConnectToInjectee()
 	{
+		try
+		{
+			var proxy = InjecteeProxy as ICommunicationObject;
+			if (proxy != null)
+			{
+				if (proxy.State != CommunicationState.Opened)
+				{
+					proxy.Abort();
+					InjecteeProxy = null;
+				}
+				else
+				{
+					return;
+				}
+			}
+		}
+		catch { }
+
 		var pipeFactory = new DuplexChannelFactory<IOsuInjectee>(
 			this, new NetNamedPipeBinding(),
 			new EndpointAddress("net.pipe://localhost/osuBeatmapHooker"));

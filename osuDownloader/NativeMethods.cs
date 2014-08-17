@@ -26,6 +26,13 @@ static class NativeMethods
 
 	[DllImport("user32.dll")]
 	public static extern sbyte GetMessage(out Message lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax);
+
+	[DllImport("user32.dll", SetLastError = true)]
+	public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+	[DllImport("wininet.dll", CharSet = CharSet.Auto, SetLastError = true)]
+	public static extern bool InternetGetCookieEx(string pchURL, string pchCookieName,
+			StringBuilder pchCookieData, ref uint pcchCookieData, int dwFlags, IntPtr lpReserved);
 }
 
 [StructLayout(LayoutKind.Sequential)]

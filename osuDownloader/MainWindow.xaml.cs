@@ -23,6 +23,8 @@ public partial class MainWindow : Window
 
 	MainWindowViewModel Hooker = new MainWindowViewModel();
 
+	WpfHotkey IeKey;
+
 	public MainWindow()
 	{
 		InUseWindow = this;

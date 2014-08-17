@@ -17,9 +17,9 @@ using System.Windows.Interop;
 
 namespace OsuDownloader
 {
-public sealed class HotKey : IDisposable
+public sealed class WpfHotkey : IDisposable
 {
-	public event Action<HotKey> HotKeyPressed;
+	public event Action<WpfHotkey> HotKeyPressed;
 
 	public Keys Key { get; private set; }
 
@@ -29,17 +29,17 @@ public sealed class HotKey : IDisposable
 	private bool IsKeyRegistered;
 	readonly IntPtr Handle;
 
-	public HotKey(ModifierKeys modifierKeys, Keys key, Window window)
+	public WpfHotkey(ModifierKeys modifierKeys, Keys key, Window window)
 	: this(modifierKeys, key, new WindowInteropHelper(window))
 	{
 	}
 
-	public HotKey(ModifierKeys modifierKeys, Keys key, WindowInteropHelper window)
+	public WpfHotkey(ModifierKeys modifierKeys, Keys key, WindowInteropHelper window)
 	: this(modifierKeys, key, window.Handle)
 	{
 	}
 
-	public HotKey(ModifierKeys modifierKeys, Keys key, IntPtr windowHandle)
+	public WpfHotkey(ModifierKeys modifierKeys, Keys key, IntPtr windowHandle)
 	{
 		Contract.Requires(modifierKeys != ModifierKeys.None || key != Keys.None);
 		Contract.Requires(windowHandle != IntPtr.Zero);
@@ -52,7 +52,7 @@ public sealed class HotKey : IDisposable
 		ComponentDispatcher.ThreadPreprocessMessage += ThreadPreprocessMessageMethod;
 	}
 
-	~HotKey()
+	~WpfHotkey()
 	{
 		Dispose();
 	}

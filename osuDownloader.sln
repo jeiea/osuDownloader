@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30626.0
+VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OsuDownloader", "osuDownloader\OsuDownloader.csproj", "{797F3CEB-F87A-46D3-979D-D041979F47C8}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -83,6 +83,7 @@ Global
 		{797F3CEB-F87A-46D3-979D-D041979F47C8}.netfx4.0-Debug|Mixed Platforms.ActiveCfg = netfx4.0-Debug|Any CPU
 		{797F3CEB-F87A-46D3-979D-D041979F47C8}.netfx4.0-Debug|Mixed Platforms.Build.0 = netfx4.0-Debug|Any CPU
 		{797F3CEB-F87A-46D3-979D-D041979F47C8}.netfx4.0-Debug|x64.ActiveCfg = netfx4.0-Debug|Any CPU
+		{797F3CEB-F87A-46D3-979D-D041979F47C8}.netfx4.0-Debug|x64.Build.0 = netfx4.0-Debug|Any CPU
 		{797F3CEB-F87A-46D3-979D-D041979F47C8}.netfx4.0-Debug|x86.ActiveCfg = netfx4.0-Debug|x86
 		{797F3CEB-F87A-46D3-979D-D041979F47C8}.netfx4.0-Debug|x86.Build.0 = netfx4.0-Debug|x86
 		{797F3CEB-F87A-46D3-979D-D041979F47C8}.netfx4.0-Release|Any CPU.ActiveCfg = netfx4.0-Release|Any CPU
@@ -137,6 +138,7 @@ Global
 		{AB53862B-3B5C-4EFC-9787-1F01199EBFBF}.netfx4.0-Debug|Mixed Platforms.ActiveCfg = netfx4.0-Debug|Any CPU
 		{AB53862B-3B5C-4EFC-9787-1F01199EBFBF}.netfx4.0-Debug|Mixed Platforms.Build.0 = netfx4.0-Debug|Any CPU
 		{AB53862B-3B5C-4EFC-9787-1F01199EBFBF}.netfx4.0-Debug|x64.ActiveCfg = netfx4.0-Debug|Any CPU
+		{AB53862B-3B5C-4EFC-9787-1F01199EBFBF}.netfx4.0-Debug|x64.Build.0 = netfx4.0-Debug|Any CPU
 		{AB53862B-3B5C-4EFC-9787-1F01199EBFBF}.netfx4.0-Debug|x86.ActiveCfg = netfx4.0-Debug|Any CPU
 		{AB53862B-3B5C-4EFC-9787-1F01199EBFBF}.netfx4.0-Debug|x86.Build.0 = netfx4.0-Debug|Any CPU
 		{AB53862B-3B5C-4EFC-9787-1F01199EBFBF}.netfx4.0-Release|Any CPU.ActiveCfg = netfx4.0-Release|Any CPU
@@ -253,6 +255,7 @@ Global
 		{B9A68E47-237F-4045-A371-D5CCEB896F7F}.netfx4.0-Debug|Mixed Platforms.ActiveCfg = netfx4.0-Debug|x86
 		{B9A68E47-237F-4045-A371-D5CCEB896F7F}.netfx4.0-Debug|Mixed Platforms.Build.0 = netfx4.0-Debug|x86
 		{B9A68E47-237F-4045-A371-D5CCEB896F7F}.netfx4.0-Debug|x64.ActiveCfg = netfx4.0-Debug|Any CPU
+		{B9A68E47-237F-4045-A371-D5CCEB896F7F}.netfx4.0-Debug|x64.Build.0 = netfx4.0-Debug|Any CPU
 		{B9A68E47-237F-4045-A371-D5CCEB896F7F}.netfx4.0-Debug|x86.ActiveCfg = netfx4.0-Debug|x86
 		{B9A68E47-237F-4045-A371-D5CCEB896F7F}.netfx4.0-Debug|x86.Build.0 = netfx4.0-Debug|x86
 		{B9A68E47-237F-4045-A371-D5CCEB896F7F}.netfx4.0-Release|Any CPU.ActiveCfg = netfx4.0-Release|Any CPU
