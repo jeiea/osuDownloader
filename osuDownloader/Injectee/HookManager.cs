@@ -82,6 +82,8 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 
 	WinFormHotKey BossKey;
 
+	Timer CookieTimer;
+
 	public HookManager(RemoteHooking.IContext context)
 	{
 		if (Process.GetCurrentProcess().ProcessName != "iexplore")
@@ -111,11 +113,13 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 			var currentProc = Process.GetCurrentProcess();
 			if (currentProc.ProcessName == "iexplore")
 			{
-				var pid = currentProc.Id;
-				var mutex = new Mutex(true, "osu! Beatmap Downloader IE login mutex id_" + pid);
-
-				Detector = new ForegroundHooker();
-				Detector.MonitorIE(new Process[] {currentProc});
+				// In IE, event not firing well. So use one time stretegy.
+				var newCookie = GetCookie();
+				if (newCookie != Properties.Settings.Default.OfficialSession)
+				{
+					Properties.Settings.Default.OfficialSession = newCookie;
+				}
+				return;
 			}
 			else
 			{
@@ -162,6 +166,20 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 				InjecteeHost = null;
 			}
 		}
+	}
+
+	static string GetCookie()
+	{
+		const int INTERNET_COOKIE_HTTPONLY = 0x2000;
+		const int flag = INTERNET_COOKIE_HTTPONLY;
+
+		uint size = 0;
+		InternetGetCookieEx("http://osu.ppy.sh/", null, null, ref size, flag, IntPtr.Zero);
+
+		var buffer = new StringBuilder((int)size);
+		InternetGetCookieEx("http://osu.ppy.sh/", null, buffer, ref size, flag, IntPtr.Zero);
+
+		return buffer.ToString();
 	}
 
 	/// <summary>   Registers the assembly to app domain. </summary>
@@ -228,7 +246,6 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 		Detector = new ForegroundHooker();
 		Detector.OnForegroundChanged += Foregrounder_OnForegroundChanged;
 		Detector.SetHookState(true);
-		Detector.MonitorIE();
 	}
 
 	void Foregrounder_OnForegroundChanged(Process proc)
@@ -282,7 +299,8 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 		}
 		if (Callbacks.Count == 0)
 		{
-			MainDispatcher.InvokeShutdown();
+			//MainDispatcher.InvokeShutdown();
+			System.Windows.Forms.Application.Exit();
 		}
 	}
 
@@ -293,7 +311,8 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 
 		if (Callbacks.Count <= 0)
 		{
-			MainDispatcher.InvokeShutdown();
+			//MainDispatcher.InvokeShutdown();
+			System.Windows.Forms.Application.Exit();
 		}
 	}
 

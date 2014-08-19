@@ -24,6 +24,8 @@ public partial class MainWindow : Window
 	MainWindowViewModel Hooker = new MainWindowViewModel();
 
 	WpfHotkey IeKey;
+	Injectee.ForegroundHooker Detector;
+	IEHooker IeHooker;
 
 	public MainWindow()
 	{
@@ -34,6 +36,9 @@ public partial class MainWindow : Window
 
 		DataContext = Hooker;
 		InitializeComponent();
+
+		IeHooker = new IEHooker();
+		IeHooker.SetHookState(true);
 
 		#region Tray registration routine
 
