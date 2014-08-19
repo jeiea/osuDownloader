@@ -768,6 +768,26 @@
     <Compile Include="CsQuery\Web\WebRequestState.cs" />
   </ItemGroup> -->
   <!-- CsQuery static embed end -->
+  <!-- IniParser static embed start https://github.com/rickyah/ini-parser -->
+  <ItemGroup>
+    <Compile Include="IniParser\Helpers\Assert.cs" />
+    <Compile Include="IniParser\FileIniParser.cs" />
+    <Compile Include="IniParser\Model\IniData.cs" />
+    <Compile Include="IniParser\Model\KeyData.cs" />
+    <Compile Include="IniParser\Model\KeyDataCollection.cs" />
+    <Compile Include="IniParser\Model\Configuration\DefaultIniParserConfiguration.cs" />
+    <Compile Include="IniParser\Model\Configuration\IIniParserConfiguration.cs" />
+    <Compile Include="IniParser\Parser\IniDataParser.cs" />
+    <Compile Include="IniParser\Model\Configuration\BaseIniParserConfiguration.cs" />
+    <Compile Include="IniParser\Model\SectionData.cs" />
+    <Compile Include="IniParser\Model\SectionDataCollection.cs" />
+    <Compile Include="IniParser\StreamIniDataParser.cs" />
+    <Compile Include="IniParser\StringIniParser.cs" />
+    <Compile Include="IniParser\Exceptions\ParsingException.cs" />
+    <Compile Include="IniParser\Model\Formatting\DefaultIniDataFormatter.cs" />
+    <Compile Include="IniParser\Model\Formatting\IIniDataFormatter.cs" />
+  </ItemGroup>
+  <!-- IniParser static embed end -->
   <ItemGroup>
     <Compile Include="OsuHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
