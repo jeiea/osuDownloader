@@ -178,16 +178,13 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 	///
 	/// <param name="request"> Official beatmap thread url or bloodcat.com beatmap url. </param>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	static void BloodcatDownload(string request)
+	static void AutomaticDownload(string request)
 	{
-		const string BloodcatDownloadUrl = "http://bloodcat.com/osu/m/";
-
-		Uri uri = new Uri(request);
-
 		WebClient client = new WebClient() { Encoding = Encoding.UTF8 };
 		var query = client.QueryString;
 		query.Add("mod", "json");
 
+		Uri uri = new Uri(request);
 		if (uri.Host == "osu.ppy.sh" && "b/d/s/".Contains(uri.Segments[1]))
 		{
 			// b = each diffibulty id, s = beatmap id, d = beatmap id as download link.
@@ -211,22 +208,62 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 		// If we use CsQuery, then below is possible.
 		//dynamic result = JSON.ParseJSON(json);
 
+		string downloadLink = null;
+		int beatmapId = -1;
 		if (container.resultCount != 1)
 		{
-			// If not found or undecidable, open official page.
-			SHELLEXECUTEINFO exInfo = new SHELLEXECUTEINFO()
+			// If not found or undecidable, open official page if not logged in.
+			if (string.IsNullOrEmpty(Properties.Settings.Default.OfficialSession))
 			{
-				nShow = ShowWindowCommands.ShowDefault,
-				lpVerb = "open",
-				lpFile = request,
-			};
-			exInfo.cbSize = Marshal.SizeOf(exInfo);
-			ShellExecuteEx(ref exInfo);
-			return;
+				ContinueOpen(request);
+				return;
+			}
+
+			// If we only have difficulty ID, we should convert it to beatmap ID.
+			if (query["m"] == "b")
+			{
+				string officialBeatmapPage = client.DownloadString(request);
+				string[] beatmapIdPatterns = new string[]
+				{
+					@"osu.ppy.sh/[ds]/(\d+)",
+					@"/pages/include/beatmap-rating-graph.php?s=(\d+)",
+					@"b.ppy.sh/thumb/(\d+)",
+					"s\\s*:\\s*\"(\\d+)\"\\s*,",
+				};
+				foreach (string beatmapIdPattern in beatmapIdPatterns)
+				{
+					Match match = Regex.Match(officialBeatmapPage, beatmapIdPattern);
+					if (match.Success)
+					{
+						beatmapId = int.Parse(match.Groups[1].Value);
+						break;
+					}
+				}
+				// Cannot find beatmap id.
+				if (beatmapId == -1)
+				{
+					ContinueOpen(request);
+					return;
+				}
+			}
+			else
+			{
+				beatmapId = int.Parse(query["q"]);
+			}
+			const string OfficialDownloadUrl = "http://osu.ppy.sh/d/";
+			downloadLink = OfficialDownloadUrl + beatmapId;
+		}
+		else
+		{
+			const string BloodcatDownloadUrl = "http://bloodcat.com/osu/m/";
+			beatmapId = container.results[0].id;
+			downloadLink = BloodcatDownloadUrl + beatmapId;
 		}
 
-		int beatmapId = container.results[0].id;
+		// Copy URL for sharing to clipboard.
+		Clipboard.SetText(downloadLink);
 
+		// Add history if not exists.
 		if (RequestedBeatmaps.ContainsKey(beatmapId) == false)
 		{
 			RequestedBeatmaps[beatmapId] = new RequestHistory()
@@ -237,11 +274,7 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 		}
 		RequestHistory history = RequestedBeatmaps[beatmapId];
 
-		// Copy URL for sharing to clipboard.
-		string downloadLink = BloodcatDownloadUrl + beatmapId;
-		Clipboard.SetText(downloadLink);
-
-		// Download if already exists or double clicked.
+		// Download if not exists or double clicked.
 		if (OsuHelper.IsTakenBeatmap(beatmapId) == false ||
 			(DateTime.Now - history.LastRequested).TotalSeconds < 1)
 		{
@@ -261,11 +294,33 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 
 	}
 
+	private static void ContinueOpen(string request)
+	{
+		Process.Start(new ProcessStartInfo()
+		{
+			UseShellExecute = true,
+			Verb = "open",
+			FileName = request,
+		});
+	}
+
 	static void DownloadAndExecuteOsz(string url)
 	{
 		WebClient client = new WebClient() { Encoding = Encoding.UTF8 };
 
-		string cookie = Properties.Settings.Default.BloodcatOption.ToCookie().ToString();
+		var setting = Properties.Settings.Default;
+		var uri = new Uri(url);
+		string cookie = null;
+		switch (uri.Host)
+		{
+		case "bloodcat.com":
+			cookie = setting.BloodcatOption.ToCookie().ToString();
+			break;
+		case "osu.ppy.sh":
+			client.Headers["User-Agent"] = "Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko";
+			cookie = setting.OfficialSession;
+			break;
+		}
 		client.Headers.Add(HttpRequestHeader.Cookie, cookie);
 
 		client.DownloadProgressChanged += new DownloadProgressChangedEventHandler(client_DownloadProgressChanged);
@@ -274,7 +329,7 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 		string tempFile = Path.GetTempFileName();
 		DownloadPath.Add(client, tempFile);
 
-		client.DownloadFileAsync(new Uri(url), tempFile);
+		client.DownloadFileAsync(uri, tempFile);
 
 		Message(client, new ProgressEntry()
 		{
@@ -486,7 +541,7 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 			{
 				string request = lpExecInfo.lpFile;
 
-				var worker = new Thread(() => InvokeUrlHooker.BloodcatDownload(request));
+				var worker = new Thread(() => InvokeUrlHooker.AutomaticDownload(request));
 				worker.SetApartmentState(ApartmentState.STA);
 				worker.Start();
 
