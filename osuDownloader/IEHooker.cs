@@ -114,6 +114,7 @@ class IEHooker : Injectee.IHookerBase, IDisposable
 					var ieChildProcs = from iexplore in iexplores
 									   where ParentProcessUtilities.GetParentProcess(iexplore.Handle).Id == pid
 									   where RemoteHooking.IsX64Process(iexplore.Id) == false
+									   orderby iexplore.Id
 									   select iexplore;
 					ieProc = ieChildProcs.First();
 				}

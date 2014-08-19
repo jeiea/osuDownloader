@@ -57,6 +57,43 @@ public class BloodcatDownloadOption
 	public System.Windows.Media.Color BackgroundColor = System.Windows.Media.Colors.Black;
 	public bool RemoveVideoAndStoryboard;
 	public bool RemoveSkin;
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>   Convert own option to cookie form. </summary>
+	///
+	/// <returns>   A bloodcat download option cookie. </returns>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	public Cookie ToCookie()
+	{
+		StringBuilder cookieJson = new StringBuilder(100);
+		cookieJson.Append("{\"direct\":false,\"droid\":false,\"bg\":");
+
+		switch (Background)
+		{
+		case BloodcatWallpaperOption.RemoveBackground:
+			cookieJson.Append("\"delete\"");
+			break;
+		case BloodcatWallpaperOption.SolidColor:
+			cookieJson.Append("\"color\"");
+
+			var color = BackgroundColor;
+			byte[] rgb = new byte[] { color.R, color.G, color.B };
+			cookieJson.Append(",\"color\":\"#");
+			cookieJson.Append(BitConverter.ToString(rgb).Replace("-", string.Empty));
+			cookieJson.Append('"');
+			break;
+		default:
+			cookieJson.Append("false");
+			break;
+		}
+		cookieJson.Append(",\"video\":");
+		cookieJson.Append(RemoveVideoAndStoryboard ? "true" : "false");
+		cookieJson.Append(",\"skin\":");
+		cookieJson.Append(RemoveSkin ? "true" : "false");
+		cookieJson.Append('}');
+
+		return new Cookie("DLOPT", Uri.EscapeDataString(cookieJson.ToString()), "/", "bloodcat.com");
+	}
 }
 
 public class MainWindowViewModel : ICallback, INotifyPropertyChanged

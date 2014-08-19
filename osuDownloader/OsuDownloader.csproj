@@ -133,9 +133,7 @@
     <Compile Include="IncompleteSettingsProvider.cs" />
     <Compile Include="Injectee\WinFormHotKey.cs" />
     <Compile Include="Injectee\ForegroundHooker.cs" />
-    <Compile Include="Injectee\InvokeUrlHooker.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="Injectee\InvokeUrlHooker.cs" />
     <Compile Include="Injectee\WPFOverlayer.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Settings.cs" />

@@ -155,6 +155,21 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 
 	#endregion
 
+	static void Message(object key, EntryBase entry)
+	{
+		try
+		{
+			if (Overlayer != null)
+			{
+				Overlayer.AddMessage(key, entry);
+			}
+		}
+		catch (Exception e)
+		{
+			MainWindowViewModel.LogException(e);
+		}
+	}
+
 	// TODO: Consider asynchoronous and case of download file name exists.
 	#region Download routine
 
@@ -246,66 +261,67 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 
 	}
 
-	static void Message(object key, EntryBase entry)
-	{
-		try
-		{
-			if (Overlayer != null)
-			{
-				Overlayer.AddMessage(key, entry);
-			}
-		}
-		catch (Exception e)
-		{
-			MainWindowViewModel.LogException(e);
-		}
-	}
-
 	static void DownloadAndExecuteOsz(string url)
 	{
-		WebClientEx client = new WebClientEx() { Encoding = Encoding.UTF8 };
+		WebClient client = new WebClient() { Encoding = Encoding.UTF8 };
 
-		string cookie = ApplyBloodcatOption().ToString();
+		string cookie = Properties.Settings.Default.BloodcatOption.ToCookie().ToString();
 		client.Headers.Add(HttpRequestHeader.Cookie, cookie);
 
-		client.Method = "HEAD";
-		client.DownloadString(url);
-		if (client.ResponseHeaders["Content-Type"].Contains("application/") == false)
-		{
-			Message(new object(), new NoticeEntry()
-			{
-				Begin = DateTime.Now,
-				Duration = TimeSpan.FromSeconds(2),
-				Message = "다운로드에 실패했습니다. 파일을 찾지 못했습니다."
-			});
-			throw new ApplicationException("Invalid Content-Type: " + client.ResponseHeaders["Content-Type"]);
-		}
-
-		client.Method = null;
 		client.DownloadProgressChanged += new DownloadProgressChangedEventHandler(client_DownloadProgressChanged);
 		client.DownloadFileCompleted += new AsyncCompletedEventHandler(client_DownloadFileCompleted);
 
-		string fileName = GetFileNameFromDisposition(client.ResponseHeaders["Content-Disposition"]);
-		string tempFile = Path.Combine(Path.GetTempPath(), fileName);
+		string tempFile = Path.GetTempFileName();
 		DownloadPath.Add(client, tempFile);
+
+		client.DownloadFileAsync(new Uri(url), tempFile);
 
 		Message(client, new ProgressEntry()
 		{
 			Begin = DateTime.Now,
-			Title = Path.GetFileNameWithoutExtension(fileName),
-			Total = int.Parse(client.ResponseHeaders["Content-Length"]),
+			// TODO: Accurate name via shared information struct.
+			Title = Path.GetFileNameWithoutExtension(url),
+			Total = int.MaxValue,
 		});
-
-		client.DownloadFileAsync(new Uri(url), tempFile, client);
 	}
 
 	static void client_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
 	{
-		if (Overlayer == null)
-			return;
+		try
+		{
+			if (Overlayer == null)
+				return;
 
-		ProgressEntry entry = (ProgressEntry)Overlayer.GetMessageQueue()[e.UserState];
-		entry.Downloaded = e.BytesReceived;
+			ProgressEntry entry = (ProgressEntry)Overlayer.GetMessageQueue()[sender];
+
+			if (entry.Total != e.TotalBytesToReceive)
+			{
+				var client = (WebClient)sender;
+
+				if (client.ResponseHeaders["Content-Type"].Contains("application/") == false)
+				{
+					Message(new object(), new NoticeEntry()
+					{
+						Begin = DateTime.Now,
+						Duration = TimeSpan.FromSeconds(2),
+						Message = "다운로드에 실패했습니다. 파일을 찾지 못했습니다."
+					});
+					client.CancelAsync();
+					return;
+				}
+
+				var fileName = GetFileNameFromDisposition(client.ResponseHeaders["Content-Disposition"]);
+				entry.Title = Path.GetFileNameWithoutExtension(fileName);
+
+				entry.Total = e.TotalBytesToReceive;
+			}
+
+			entry.Downloaded = e.BytesReceived;
+		}
+		catch (Exception ex)
+		{
+			MainWindowViewModel.LogException(ex);
+		}
 	}
 
 	static string GetFileNameFromDisposition(string disposition)
@@ -315,79 +331,52 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 
 	static void client_DownloadFileCompleted(object sender, AsyncCompletedEventArgs e)
 	{
-		if (e.Cancelled)
-		{
-			MainWindowViewModel.LogException(e.Error);
-			return;
-		}
-
-		WebClient client = (WebClient)e.UserState;
-
-		if (Overlayer != null)
-		{
-			Overlayer.GetMessageQueue().Remove(client);
-		}
-
-		string downloadPath = DownloadPath[client];
-
-		string osuExePath = Process.GetCurrentProcess().MainModule.FileName;
-
 		try
 		{
-			Process.Start(osuExePath, downloadPath);
-		}
-		// TODO: IDropTarget으로 강제 갱신하는 방법 있음
-		catch (Win32Exception)
-		{
-			string[] pathElements = new string[]
+			if (e.Cancelled)
 			{
-				Path.GetDirectoryName(osuExePath),
-				"Songs",
-				Path.GetFileName(downloadPath),
-			};
-			// For .NET 3.5
-			string destPath = pathElements.Aggregate(Path.Combine);
-			File.Move(downloadPath, destPath);
+				MainWindowViewModel.LogException(e.Error);
+				return;
+			}
+
+			WebClient client = (WebClient)sender;
+
+			if (Overlayer != null)
+			{
+				Overlayer.GetMessageQueue().Remove(client);
+			}
+
+			var tempFile = DownloadPath[client];
+			var destName = GetFileNameFromDisposition(client.ResponseHeaders["Content-Disposition"]);
+			var destFile = Path.Combine(Path.GetDirectoryName(tempFile), destName);
+
+			File.Move(tempFile, destFile);
+
+			string osuExePath = Process.GetCurrentProcess().MainModule.FileName;
+
+			try
+			{
+				Process.Start(osuExePath, destFile);
+			}
+			// TODO: IDropTarget으로 강제 갱신하는 방법 있음
+			catch (Win32Exception)
+			{
+				string[] pathElements = new string[]
+				{
+					Path.GetDirectoryName(osuExePath), "Songs", destName,
+				};
+				// For .NET 3.5
+				string destPath = pathElements.Aggregate(Path.Combine);
+				File.Move(destName, destPath);
+			}
 		}
-	}
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	/// <summary>   Add cookie which describe download manipulation option. </summary>
-	///
-	/// <param name="request">  WebRequest to use. </param>
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	static Cookie ApplyBloodcatOption()
-	{
-		var option = Properties.Settings.Default.BloodcatOption;
-
-		StringBuilder cookieJson = new StringBuilder(100);
-		cookieJson.Append("{\"direct\":false,\"droid\":false,\"bg\":");
-		switch (option.Background)
+		catch (Exception ex)
 		{
-		case BloodcatWallpaperOption.RemoveBackground:
-			cookieJson.Append("\"delete\"");
-			break;
-		case BloodcatWallpaperOption.SolidColor:
-			cookieJson.Append("\"color\"");
-
-			var color = option.BackgroundColor;
-			byte[] rgb = new byte[] {color.R, color.G, color.B};
-			cookieJson.Append(",\"color\":\"#");
-			cookieJson.Append(BitConverter.ToString(rgb).Replace("-", string.Empty));
-			cookieJson.Append('"');
-			break;
-		default:
-			cookieJson.Append("false");
-			break;
+			MainWindowViewModel.LogException(ex);
 		}
-		cookieJson.Append(",\"video\":");
-		cookieJson.Append(option.RemoveVideoAndStoryboard ? "true" : "false");
-		cookieJson.Append(",\"skin\":");
-		cookieJson.Append(option.RemoveSkin ? "true" : "false");
-		cookieJson.Append('}');
-
-		return new Cookie("DLOPT", Uri.EscapeDataString(cookieJson.ToString()), "/", "bloodcat.com");
 	}
+
+
 
 	enum RequestResult
 	{
@@ -597,25 +586,6 @@ public enum ShowWindowCommands
 	/// </summary>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	ForceMinimize = 11
-}
-
-public class WebClientEx : WebClient
-{
-	public string Method
-	{
-		get;
-		set;
-	}
-
-	protected override WebRequest GetWebRequest(Uri address)
-	{
-		WebRequest webRequest = base.GetWebRequest(address);
-
-		if (!string.IsNullOrEmpty(Method))
-			webRequest.Method = Method;
-
-		return webRequest;
-	}
 }
 
 }
