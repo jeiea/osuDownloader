@@ -129,6 +129,7 @@
     <Compile Include="Injectee\HookerBase.cs" />
     <Compile Include="Injectee\HookManager.cs" />
     <Compile Include="IEHooker.cs" />
+    <Compile Include="Injectee\OszDownloader.cs" />
     <Compile Include="WpfHotkey.cs" />
     <Compile Include="IncompleteSettingsProvider.cs" />
     <Compile Include="Injectee\WinFormHotKey.cs" />

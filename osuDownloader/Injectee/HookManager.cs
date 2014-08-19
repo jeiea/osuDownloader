@@ -62,6 +62,21 @@ internal interface IOverlayer
 	void AddMessage(object key, EntryBase entry);
 }
 
+class EmptyOverlayer : IOverlayer
+{
+	Dictionary<object, EntryBase> Queue = new Dictionary<object, EntryBase>();
+
+	public Dictionary<object, EntryBase> GetMessageQueue()
+	{
+		return Queue;
+	}
+
+	public void AddMessage(object key, EntryBase entry)
+	{
+		Queue.Add(key, entry);
+	}
+}
+
 [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
 public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 {
@@ -76,7 +91,7 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 	// foreground window change and IE navigation, Overlayer overlays display.
 
 	FileNameHooker Blinder;
-	InvokeUrlHooker Downloader;
+	InvokeUrlHooker Snooper;
 	ForegroundHooker Detector;
 	IOverlayer Overlayer;
 
@@ -150,10 +165,10 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 				Blinder.Dispose();
 				Blinder = null;
 			}
-			if (Downloader != null)
+			if (Snooper != null)
 			{
-				Downloader.Dispose();
-				Downloader = null;
+				Snooper.Dispose();
+				Snooper = null;
 			}
 			if (Detector != null)
 			{
@@ -224,12 +239,20 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 		}
 		catch
 		{
-			Overlayer = new WPFOverlayer();
+			try
+			{
+				Overlayer = new WPFOverlayer();
+			}
+			catch (Exception exc)
+			{
+				Overlayer = new EmptyOverlayer();
+				MainWindowViewModel.LogException(exc);
+			}
 		}
 
 		if (Overlayer != null)
 		{
-			InvokeUrlHooker.Overlayer = Overlayer;
+			OszDownloader.Overlayer = Overlayer;
 			Overlayer.AddMessage(new object(), new NoticeEntry()
 			{
 				Begin = DateTime.Now,
@@ -238,8 +261,8 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 			});
 		}
 
-		Downloader = new InvokeUrlHooker();
-		Downloader.SetHookState(true);
+		Snooper = new InvokeUrlHooker();
+		Snooper.SetHookState(true);
 
 		RegisterBossKey();
 
@@ -318,7 +341,7 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 
 	public void SetDownloadHook(bool request)
 	{
-		Downloader.SetHookState(request);
+		Snooper.SetHookState(request);
 		NotifyHookSwitch();
 	}
 
@@ -338,7 +361,7 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 
 	public bool IsHookEnabled()
 	{
-		return Downloader != null;
+		return Snooper != null;
 	}
 
 	public void OptionChanged()
@@ -352,7 +375,7 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 		{
 			try
 			{
-				callback.HookSwitched(Downloader.IsHooking);
+				callback.HookSwitched(Snooper.IsHooking);
 			}
 			catch (Exception)
 			{
