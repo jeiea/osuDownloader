@@ -39,6 +39,18 @@ internal class WOW64Bypass
 	{
 		lock (ThreadSafe)
 		{
+			if (m_Interface != null)
+			{
+				try
+				{
+					m_Interface.Ping();
+				}
+				catch
+				{
+					m_Interface = null;
+				}
+			}
+
 			if (m_Interface == null)
 			{
 				String ChannelName = RemoteHooking.GenerateName();
