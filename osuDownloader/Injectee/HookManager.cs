@@ -322,8 +322,7 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 		}
 		if (Callbacks.Count == 0)
 		{
-			//MainDispatcher.InvokeShutdown();
-			System.Windows.Forms.Application.Exit();
+			MainDispatcher.InvokeShutdown();
 		}
 	}
 
@@ -334,8 +333,7 @@ public class HookManager :  IOsuInjectee, EasyHook.IEntryPoint
 
 		if (Callbacks.Count <= 0)
 		{
-			//MainDispatcher.InvokeShutdown();
-			System.Windows.Forms.Application.Exit();
+			MainDispatcher.InvokeShutdown();
 		}
 	}
 

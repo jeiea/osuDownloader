@@ -2,34 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Runtime.Serialization;
 using System.Threading;
 
 namespace OsuDownloader.Injectee
 {
-
-[DataContract]
-internal class BloodcatResult
-{
-	[DataMember]
-	public int id;
-	[DataMember]
-	public string artist;
-	[DataMember]
-	public string title;
-}
-
-[DataContract]
-internal class BloodcatContainer
-{
-	[DataMember]
-	public int resultCount;
-
-	[DataMember]
-	public BloodcatResult[] results;
-}
 
 class InvokeUrlHooker : IHookerBase, IDisposable
 {
@@ -211,7 +188,7 @@ class InvokeUrlHooker : IHookerBase, IDisposable
 			{
 				string request = lpExecInfo.lpFile;
 
-				var worker = new Thread(() => OszDownloader.AutomaticDownload(request));
+				var worker = new Thread(() => new OszDownloader().AutomaticDownload(request));
 				worker.SetApartmentState(ApartmentState.STA);
 				worker.Start();
 

@@ -1,10 +1,12 @@
-﻿using System;
+﻿using SHDocVw;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -12,10 +14,40 @@ using System.Windows;
 
 namespace OsuDownloader.Injectee
 {
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// <summary>
+/// bloodcat.com JSON result format, also represents beatmap info. For deserialization, member
+/// name casing is treated as exception.
+/// </summary>
+////////////////////////////////////////////////////////////////////////////////////////////////////
+[DataContract]
+internal class BloodcatResult
+{
+	[DataMember]
+	public int id;
+	[DataMember]
+	public string artist = string.Empty;
+	[DataMember]
+	public string title = string.Empty;
+	[DataMember]
+	public string creator = string.Empty;
+}
+
+[DataContract]
+internal class BloodcatContainer
+{
+	[DataMember]
+	public int resultCount;
+
+	[DataMember]
+	public BloodcatResult[] results;
+}
 
 class OszDownloader
 {
 	public static IOverlayer Overlayer;
+
+	const string FakeUserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko";
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>
@@ -25,8 +57,24 @@ class OszDownloader
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	static Dictionary<int, RequestHistory> RequestedBeatmaps = new Dictionary<int, RequestHistory>();
 
-	/// <summary>   Full pathname of the downloading file. </summary>
-	static Dictionary<WebClient, string> DownloadPath = new Dictionary<WebClient, string>();
+	string Request;
+
+	BloodcatResult BeatmapInfo = new BloodcatResult();
+
+	/// <summary>   Full pathname of the temporary downloading file. </summary>
+	string DownloadPath;
+
+	WebClient GetWebClient(string url)
+	{
+		WebClient client = new WebClient() { Encoding = Encoding.UTF8 };
+
+		client.Headers[HttpRequestHeader.UserAgent] = FakeUserAgent;
+
+		client.DownloadProgressChanged += client_DownloadProgressChanged;
+		client.DownloadFileCompleted += client_DownloadFileCompleted;
+
+		return client;
+	}
 
 	// TODO: Consider asynchoronous and case of download file name exists.
 	#region Download routine
@@ -36,9 +84,11 @@ class OszDownloader
 	///
 	/// <param name="request"> Official beatmap thread url or bloodcat.com beatmap url. </param>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	public static void AutomaticDownload(string request)
+	public void AutomaticDownload(string request)
 	{
-		WebClient client = new WebClient() { Encoding = Encoding.UTF8 };
+		Request = request;
+
+		var client = new WebClient();
 		var query = client.QueryString;
 		query.Add("mod", "json");
 
@@ -67,7 +117,6 @@ class OszDownloader
 		//dynamic result = JSON.ParseJSON(json);
 
 		string downloadLink = null;
-		int beatmapId = -1;
 		if (container.resultCount != 1)
 		{
 			// If not found or undecidable, open official page if not logged in.
@@ -80,6 +129,7 @@ class OszDownloader
 			// If we only have difficulty ID, we should convert it to beatmap ID.
 			if (query["m"] == "b")
 			{
+
 				string officialBeatmapPage = client.DownloadString(request);
 				string[] beatmapIdPatterns = new string[]
 				{
@@ -93,12 +143,12 @@ class OszDownloader
 					Match match = Regex.Match(officialBeatmapPage, beatmapIdPattern);
 					if (match.Success)
 					{
-						beatmapId = int.Parse(match.Groups[1].Value);
+						BeatmapInfo.id = int.Parse(match.Groups[1].Value);
 						break;
 					}
 				}
 				// Cannot find beatmap id.
-				if (beatmapId == -1)
+				if (BeatmapInfo.id == -1)
 				{
 					ContinueOpen(request);
 					return;
@@ -106,34 +156,44 @@ class OszDownloader
 			}
 			else
 			{
-				beatmapId = int.Parse(query["q"]);
+				BeatmapInfo.id = int.Parse(query["q"]);
 			}
 			const string OfficialDownloadUrl = "http://osu.ppy.sh/d/";
-			downloadLink = OfficialDownloadUrl + beatmapId;
+			downloadLink = OfficialDownloadUrl + BeatmapInfo.id;
+
+			// Official download page has javascript redirection.
+			var ie = new InternetExplorer();
+			ie.Visible = false;
+			ie.Silent = true;
+			ie.BeforeNavigate2 += ie_BeforeNavigate2;
+			ie.FileDownload += ie_FileDownload;
+			object cookie = "Cookie: " + Properties.Settings.Default.OfficialSession;
+			ie.Navigate2(downloadLink, Headers: ref cookie);
 		}
 		else
 		{
 			const string BloodcatDownloadUrl = "http://bloodcat.com/osu/m/";
-			beatmapId = container.results[0].id;
-			downloadLink = BloodcatDownloadUrl + beatmapId;
+			BeatmapInfo = container.results[0];
+			BeatmapInfo.id = container.results[0].id;
+			downloadLink = BloodcatDownloadUrl + BeatmapInfo.id;
 		}
 
 		// Copy URL for sharing to clipboard.
 		Clipboard.SetText(downloadLink);
 
 		// Add history if not exists.
-		if (RequestedBeatmaps.ContainsKey(beatmapId) == false)
+		if (RequestedBeatmaps.ContainsKey(BeatmapInfo.id) == false)
 		{
-			RequestedBeatmaps[beatmapId] = new RequestHistory()
+			RequestedBeatmaps[BeatmapInfo.id] = new RequestHistory()
 			{
 				LastRequested = DateTime.MinValue,
 				Status = RequestResult.Operating,
 			};
 		}
-		RequestHistory history = RequestedBeatmaps[beatmapId];
+		RequestHistory history = RequestedBeatmaps[BeatmapInfo.id];
 
 		// Download if not exists or double clicked.
-		if (OsuHelper.IsTakenBeatmap(beatmapId) == false ||
+		if (OsuHelper.IsTakenBeatmap(BeatmapInfo.id) == false ||
 			(DateTime.Now - history.LastRequested).TotalSeconds < 1)
 		{
 			DownloadAndExecuteOsz(downloadLink);
@@ -152,6 +212,16 @@ class OszDownloader
 
 	}
 
+	void ie_FileDownload(bool ActiveDocument, ref bool Cancel)
+	{
+		Cancel = true;
+	}
+
+	void ie_BeforeNavigate2(object pDisp, ref object URL, ref object Flags, ref object TargetFrameName,
+							ref object PostData, ref object Headers, ref bool Cancel)
+	{
+	}
+
 	private static void ContinueOpen(string request)
 	{
 		Process.Start(new ProcessStartInfo()
@@ -162,38 +232,37 @@ class OszDownloader
 		});
 	}
 
-	static void DownloadAndExecuteOsz(string url)
+	void DownloadAndExecuteOsz(string url)
 	{
-		WebClient client = new WebClient() { Encoding = Encoding.UTF8 };
-
 		var setting = Properties.Settings.Default;
 		var uri = new Uri(url);
 		string cookie = null;
+
+		var client = GetWebClient(url);
 		switch (uri.Host)
 		{
 		case "bloodcat.com":
 			cookie = setting.BloodcatOption.ToCookie().ToString();
 			break;
 		case "osu.ppy.sh":
-			client.Headers["User-Agent"] = "Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko";
 			cookie = setting.OfficialSession;
 			break;
 		}
 		client.Headers.Add(HttpRequestHeader.Cookie, cookie);
 
-		client.DownloadProgressChanged += new DownloadProgressChangedEventHandler(client_DownloadProgressChanged);
-		client.DownloadFileCompleted += new AsyncCompletedEventHandler(client_DownloadFileCompleted);
+		DownloadPath = Path.GetTempFileName();
 
-		string tempFile = Path.GetTempFileName();
-		DownloadPath.Add(client, tempFile);
+		client.DownloadFileAsync(uri, DownloadPath);
 
-		client.DownloadFileAsync(uri, tempFile);
+		string title = string.IsNullOrEmpty(BeatmapInfo.title)
+					   ? Path.GetFileNameWithoutExtension(url)
+					   : BeatmapInfo.artist + " - " + BeatmapInfo.title;
 
 		Overlayer.AddMessage(client, new ProgressEntry()
 		{
 			Begin = DateTime.Now,
 			// TODO: Accurate name via shared information struct.
-			Title = Path.GetFileNameWithoutExtension(url),
+			Title = title,
 			Total = int.MaxValue,
 		});
 	}
@@ -209,24 +278,15 @@ class OszDownloader
 
 			if (entry.Total != e.TotalBytesToReceive)
 			{
-				var client = (WebClient)sender;
-
-				if (client.ResponseHeaders["Content-Type"].Contains("application/") == false)
+				string disposition = ValidateAndGetFileName(sender as WebClient);
+				if (disposition == null)
 				{
-					Overlayer.AddMessage(new object(), new NoticeEntry()
-					{
-						Begin = DateTime.Now,
-						Duration = TimeSpan.FromSeconds(2),
-						Message = "다운로드에 실패했습니다. 파일을 찾지 못했습니다."
-					});
-					client.CancelAsync();
+					(sender as WebClient).CancelAsync();
 					return;
 				}
 
-				var fileName = GetFileNameFromDisposition(client.ResponseHeaders["Content-Disposition"]);
-				entry.Title = Path.GetFileNameWithoutExtension(fileName);
-
 				entry.Total = e.TotalBytesToReceive;
+				entry.Title = Path.GetFileNameWithoutExtension(disposition);
 			}
 
 			entry.Downloaded = e.BytesReceived;
@@ -237,17 +297,42 @@ class OszDownloader
 		}
 	}
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>   Check whether or not downloaded data is binary stream. </summary>
+	///
+	/// <param name="client" type="WebClient">  . </param>
+	///
+	/// <returns>   If not binary file, null, else Content-Disposition. </returns>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	private static string ValidateAndGetFileName(WebClient client)
+	{
+		if (client.ResponseHeaders["Content-Type"].Contains("application/") == false)
+		{
+			Overlayer.AddMessage(new object(), new NoticeEntry()
+			{
+				Begin = DateTime.Now,
+				Duration = TimeSpan.FromSeconds(2),
+				Message = "다운로드에 실패했습니다. 파일을 찾지 못했습니다."
+			});
+			return null;
+		}
+
+		return GetFileNameFromDisposition(client.ResponseHeaders["Content-Disposition"]);
+	}
+
 	static string GetFileNameFromDisposition(string disposition)
 	{
 		return Regex.Match(disposition, "filename\\s*=\\s*\"(.*?)\"").Groups[1].ToString();
 	}
 
-	static void client_DownloadFileCompleted(object sender, AsyncCompletedEventArgs e)
+	void client_DownloadFileCompleted(object sender, AsyncCompletedEventArgs e)
 	{
 		try
 		{
 			if (e.Cancelled)
 			{
+				// TODO: case of not logged in, retry other mirrors or just retry.
+				Process.Start("iexplore", Request);
 				MainWindowViewModel.LogException(e.Error);
 				return;
 			}
@@ -259,11 +344,14 @@ class OszDownloader
 				Overlayer.GetMessageQueue().Remove(client);
 			}
 
-			var tempFile = DownloadPath[client];
-			var destName = GetFileNameFromDisposition(client.ResponseHeaders["Content-Disposition"]);
-			var destFile = Path.Combine(Path.GetDirectoryName(tempFile), destName);
+			var destName = ValidateAndGetFileName(client);
+			if (destName == null)
+			{
+				return;
+			}
+			var destFile = Path.Combine(Path.GetDirectoryName(DownloadPath), destName);
 
-			File.Move(tempFile, destFile);
+			File.Move(DownloadPath, destFile);
 
 			string osuExePath = Process.GetCurrentProcess().MainModule.FileName;
 

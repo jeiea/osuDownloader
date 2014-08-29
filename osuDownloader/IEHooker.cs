@@ -74,8 +74,7 @@ class IEHooker : Injectee.IHookerBase, IDisposable
 		var currentIEs = new List<InternetExplorer>();
 
 		var activeIEs = from ie in ShWins.OfType<InternetExplorer>()
-						join proc in Process.GetProcessesByName("iexplore")
-						on GetProcessIdFromIE(ie) equals proc.Id
+						where ie.Name.ToUpper().IndexOf("INTERNET EXPLORER") != -1
 						select ie;
 
 		foreach (var ie in activeIEs)
@@ -85,9 +84,7 @@ class IEHooker : Injectee.IHookerBase, IDisposable
 				currentIEs.Add(ie);
 				if (IEs.Contains(ie) == false)
 				{
-					//ie.NavigateComplete2 += InjectIfOfficialPage;
-					// NavigateComplete also catches needless requests.
-					ie.DocumentComplete += InjectIfOfficialPage;
+					ie.NavigateComplete2 += InjectIfOfficialPage;
 				}
 			}
 			catch { }
