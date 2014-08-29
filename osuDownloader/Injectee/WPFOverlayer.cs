@@ -132,7 +132,7 @@ internal class ProgressWindow : Window
 			}
 
 			Refresher = new DispatcherTimer();
-			Refresher.Interval = TimeSpan.FromMilliseconds(50);
+			Refresher.Interval = TimeSpan.FromMilliseconds(15);
 			Refresher.IsEnabled = true;
 			Refresher.Tick += Refresher_Tick;
 			Refresher.Start();
@@ -169,7 +169,7 @@ internal class ProgressWindow : Window
 			}
 		}
 
-		// Remove removed visual fro window
+		// Remove visuals of removed items from window
 		foreach (var pair in Messages.ToArray())
 		{
 			if (queue.ContainsKey(pair.Key) == false)
