@@ -2,19 +2,19 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="OsuDownloader.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="AutoStart" Provider="PortableSettingsProvider" Roaming="true" Type="System.Boolean" Scope="User">
+    <Setting Name="AutoStart" Provider="IniSettingsProvider" Roaming="true" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="StartAsTray" Provider="PortableSettingsProvider" Roaming="true" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="OsuPath" Provider="PortableSettingsProvider" Roaming="true" Type="System.String" Scope="User">
+    <Setting Name="OsuPath" Provider="IniSettingsProvider" Roaming="true" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="AutoTerminate" Provider="PortableSettingsProvider" Roaming="true" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="BloodcatOption" Provider="PortableSettingsProvider" Roaming="true" Type="OsuDownloader.BloodcatDownloadOption" Scope="User">
+    <Setting Name="BloodcatOption" Provider="IniSettingsProvider" Roaming="true" Type="OsuDownloader.BloodcatDownloadOption" Scope="User">
       <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
 &lt;BloodcatDownloadOption xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
   &lt;Background&gt;NoTouch&lt;/Background&gt;

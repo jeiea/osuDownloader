@@ -122,6 +122,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="IniSettingsProvider.cs" />
     <Compile Include="Injectee\BaseDXHook.cs" />
     <Compile Include="Injectee\D3D9.cs" />
     <Compile Include="Injectee\D3D9Hooker.cs" />
@@ -130,6 +131,7 @@
     <Compile Include="Injectee\HookManager.cs" />
     <Compile Include="IEHooker.cs" />
     <Compile Include="Injectee\OszDownloader.cs" />
+    <Compile Include="ResilientIni.cs" />
     <Compile Include="WpfHotkey.cs" />
     <Compile Include="IncompleteSettingsProvider.cs" />
     <Compile Include="Injectee\WinFormHotKey.cs" />

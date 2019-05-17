@@ -9,14 +9,19 @@ using System.Collections.Specialized;
 using Microsoft.Win32;
 using System.Xml;
 using System.IO;
+using IniParser;
+using IniParser.Model;
+using System.Linq;
 
 namespace OsuDownloader
 {
 // http://www.codeproject.com/Articles/20917/Creating-a-Custom-Settings-Provider?msg=2934144#xx2934144xx
 public class IniSettingsProvider : SettingsProvider
 {
-	const string SETTINGSROOT = "Settings";
-	//XML Root Node
+	const string SettingsRoot = "Settings";
+
+	/// <summary>   If true, store ini only to this class assembly directory. </summary>
+	bool IsDistributed = false;
 
 	public override void Initialize(string name, NameValueCollection col)
 	{
@@ -27,21 +32,26 @@ public class IniSettingsProvider : SettingsProvider
 	{
 		get
 		{
-			// Converted only dll path used.
-			return Path.GetFileNameWithoutExtension(System.Reflection.Assembly.GetAssembly(GetType()).Location);
-
-			//if (Application.ProductName.Trim().Length > 0)
-			//{
-			//    return Application.ProductName;
-			//}
-			//else
-			//{
-			//    FileInfo fi = new FileInfo(Application.ExecutablePath);
-			//    return fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
-			//}
+			if (IsDistributed)
+			{
+				if (Application.ProductName.Trim().Length > 0)
+				{
+					return Application.ProductName;
+				}
+				else
+				{
+					FileInfo fi = new FileInfo(Application.ExecutablePath);
+					return fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
+				}
+			}
+			else
+			{
+				// Converted only dll path used.
+				return Path.GetFileNameWithoutExtension(GetType().Assembly.Location);
+			}
 		}
-		set { }
 		//Do nothing
+		set { }
 	}
 
 	public override string Name
@@ -57,11 +67,12 @@ public class IniSettingsProvider : SettingsProvider
 		return Path.GetDirectoryName(GetType().Assembly.Location);
 	}
 
-	public virtual string GetAppSettingsFilename()
+	public virtual string GetAppSettingsFileName()
 	{
 		// Used to determine the filename to store the settings
-		return ApplicationName + ".settings";
+		return ApplicationName + ".ini";
 	}
+
 
 	public override void SetPropertyValues(SettingsContext context, SettingsPropertyValueCollection propvals)
 	{
@@ -69,12 +80,15 @@ public class IniSettingsProvider : SettingsProvider
 		// Only dirty settings are included in propvals, and only ones relevant to this provider
 		foreach (SettingsPropertyValue propval in propvals)
 		{
-			SetValue(propval);
+			SettingsIni.Global[propval.Name] = propval.SerializedValue.ToString();
+			//SetValue(propval);
 		}
 
 		try
 		{
-			SettingsXML.Save(Path.Combine(GetAppSettingsPath(), GetAppSettingsFilename()));
+			//SettingsXML.Save(Path.Combine(GetAppSettingsPath(), GetAppSettingsFileName()));
+			var parser = new FileIniDataParser();
+			parser.WriteFile(Path.Combine(GetAppSettingsPath(), GetAppSettingsFileName()), SettingsIni);
 		}
 		catch (Exception ex)
 		{
@@ -82,19 +96,31 @@ public class IniSettingsProvider : SettingsProvider
 		// Ignore if cant save, device been ejected
 	}
 
+	/// <summary>   The setting data held. </summary>
+	IniData SettingsIni = new IniData();
+
 	public override SettingsPropertyValueCollection GetPropertyValues(SettingsContext context, SettingsPropertyCollection props)
 	{
 		// Create new collection of values
 		SettingsPropertyValueCollection values = new SettingsPropertyValueCollection();
+
+		try
+		{
+			var parser = new FileIniDataParser();
+			SettingsIni = parser.ReadFile(Path.Combine(GetAppSettingsPath(), GetAppSettingsFileName()));
+		}
+		catch { }
 
 		// Iterate through the settings to be retrieved
 		foreach (SettingsProperty setting in props)
 		{
 			SettingsPropertyValue value = new SettingsPropertyValue(setting);
 			value.IsDirty = false;
-			value.SerializedValue = GetValue(setting);
+			value.SerializedValue = SettingsIni.Global[setting.Name] ?? string.Empty;
+			//value.SerializedValue = GetValue(setting);
 			values.Add(value);
 		}
+
 		return values;
 	}
 
@@ -112,7 +138,7 @@ public class IniSettingsProvider : SettingsProvider
 
 				try
 				{
-					_settingsXML.Load(Path.Combine(GetAppSettingsPath(), GetAppSettingsFilename()));
+					_settingsXML.Load(Path.Combine(GetAppSettingsPath(), GetAppSettingsFileName()));
 				}
 				catch (Exception ex)
 				{
@@ -122,7 +148,7 @@ public class IniSettingsProvider : SettingsProvider
 
 					XmlNode nodeRoot = default(XmlNode);
 
-					nodeRoot = _settingsXML.CreateNode(XmlNodeType.Element, SETTINGSROOT, "");
+					nodeRoot = _settingsXML.CreateNode(XmlNodeType.Element, SettingsRoot, "");
 					_settingsXML.AppendChild(nodeRoot);
 				}
 			}
@@ -139,11 +165,11 @@ public class IniSettingsProvider : SettingsProvider
 		{
 			if (IsRoaming(setting))
 			{
-				ret = SettingsXML.SelectSingleNode(SETTINGSROOT + "/" + setting.Name).InnerText;
+				ret = SettingsXML.SelectSingleNode(SettingsRoot + "/" + setting.Name).InnerText;
 			}
 			else
 			{
-				ret = SettingsXML.SelectSingleNode(SETTINGSROOT + "/" + Environment.MachineName + "/" + setting.Name).InnerText;
+				ret = SettingsXML.SelectSingleNode(SettingsRoot + "/" + Environment.MachineName + "/" + setting.Name).InnerText;
 			}
 		}
 
@@ -174,11 +200,11 @@ public class IniSettingsProvider : SettingsProvider
 		{
 			if (IsRoaming(propVal.Property))
 			{
-				SettingNode = (XmlElement)SettingsXML.SelectSingleNode(SETTINGSROOT + "/" + propVal.Name);
+				SettingNode = (XmlElement)SettingsXML.SelectSingleNode(SettingsRoot + "/" + propVal.Name);
 			}
 			else
 			{
-				SettingNode = (XmlElement)SettingsXML.SelectSingleNode(SETTINGSROOT + "/" + Environment.MachineName + "/" + propVal.Name);
+				SettingNode = (XmlElement)SettingsXML.SelectSingleNode(SettingsRoot + "/" + Environment.MachineName + "/" + propVal.Name);
 			}
 		}
 		catch (Exception ex)
@@ -198,7 +224,7 @@ public class IniSettingsProvider : SettingsProvider
 				// Store the value as an element of the Settings Root Node
 				SettingNode = SettingsXML.CreateElement(propVal.Name);
 				SettingNode.InnerText = propVal.SerializedValue.ToString();
-				SettingsXML.SelectSingleNode(SETTINGSROOT).AppendChild(SettingNode);
+				SettingsXML.SelectSingleNode(SettingsRoot).AppendChild(SettingNode);
 			}
 			else
 			{
@@ -206,18 +232,18 @@ public class IniSettingsProvider : SettingsProvider
 				// creating a new machine name node if one doesn't exist.
 				try
 				{
-					MachineNode = (XmlElement)SettingsXML.SelectSingleNode(SETTINGSROOT + "/" + Environment.MachineName);
+					MachineNode = (XmlElement)SettingsXML.SelectSingleNode(SettingsRoot + "/" + Environment.MachineName);
 				}
 				catch (Exception ex)
 				{
 					MachineNode = SettingsXML.CreateElement(Environment.MachineName);
-					SettingsXML.SelectSingleNode(SETTINGSROOT).AppendChild(MachineNode);
+					SettingsXML.SelectSingleNode(SettingsRoot).AppendChild(MachineNode);
 				}
 
 				if (MachineNode == null)
 				{
 					MachineNode = SettingsXML.CreateElement(Environment.MachineName);
-					SettingsXML.SelectSingleNode(SETTINGSROOT).AppendChild(MachineNode);
+					SettingsXML.SelectSingleNode(SettingsRoot).AppendChild(MachineNode);
 				}
 
 				SettingNode = SettingsXML.CreateElement(propVal.Name);
